@@ -32,7 +32,16 @@ $(document).ready(function() {
             $.each(data, function(p_id, project) {
                 tr = $("<tr>");
                 tr.attr("project_id", p_id);
-                tr.dblclick(function() {fetchProject($(this).attr("project_id"))});
+                tr.attr("is_imported", project.is_imported);
+                tr.dblclick(function() {
+                  fetchProject($(this).attr("project_id"));
+                  if (tr.attr("is_imported") == "true") {
+                    $("#btn_create_new_project_package").hide();
+                  }
+                  else {
+                    $("#btn_create_new_project_package").show();
+                  }
+                });
                 title_td = $("<td class='project_title'>");
                 title_td.text(project.title);
                 tr.append(title_td);
