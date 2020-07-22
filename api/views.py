@@ -117,7 +117,8 @@ def project_directory(request):
     for project in Project.objects.all():
         projects_dict[project.id] = {'title': project.title,
                                     'source_language': project.get_source_language(),
-                                    'target_language': project.get_target_language()}
+                                    'target_language': project.get_target_language(),
+                                    'is_imported': project.is_imported}
 
     return JsonResponse(projects_dict)
 
