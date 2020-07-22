@@ -207,12 +207,29 @@ def project_file(request, project_id, file_id):
 def project_view(request, project_id):
     project = Project.objects.get(id=project_id)
 
-    files_dict = {}
+    if request.method == 'POST':
+        files_to_package = request.POST['files_to_package'].split(';')
 
-    for project_file in File.objects.filter(project=project):
-        files_dict[project_file.id] = {'title':project_file.title}
+        for i in range(len(files_to_package)):
+            file_to_package = files_to_package[i]
+            files_to_package[i] = (
+                os.path.join(project.get_source_dir(), file_to_package),
+                os.path.join(project.get_source_dir(), file_to_package) + '.xml',
+                os.path.join(project.get_target_dir(), file_to_package) + '.xml'
+            )
+        if request.POST.get('task') == 'create_new_project_package':
+            create_new_project_package(project.get_project_metadata(),
+                                       files_to_package,
+                                       os.path.join(project.directory, 'packages'))
 
-    return JsonResponse(files_dict)
+            return JsonResponse({'status': 'success'})
+    else:
+        files_dict = {}
+
+        for project_file in File.objects.filter(project=project):
+            files_dict[project_file.id] = {'title':project_file.title}
+
+        return JsonResponse(files_dict)
 
 def tm_directory(request):
     if request.GET.get('source_language') and request.GET.get('target_language'):
