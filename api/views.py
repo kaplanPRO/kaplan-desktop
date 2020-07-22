@@ -176,7 +176,8 @@ def project_file(request, project_id, file_id):
 
         return JsonResponse(segments)
 
-def project_files(request, project_id):
+@csrf_exempt
+def project_view(request, project_id):
     project = Project.objects.get(id=project_id)
 
     files_dict = {}
