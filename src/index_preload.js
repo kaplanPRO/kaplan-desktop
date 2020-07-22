@@ -1,5 +1,5 @@
-const { ipcRenderer } = require('electron');
-const { BrowserWindow, getCurrentWindow, Menu, MenuItem } = require('electron').remote;
+const { ipcRenderer, remote } = require('electron');
+const { BrowserWindow, getCurrentWindow, Menu, MenuItem } = remote;
 const path = require('path');
 
 ipcRenderer.on('kaplan-index', (event, arg) => {
