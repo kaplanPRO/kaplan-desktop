@@ -231,6 +231,32 @@ $(document).ready(function() {
     $("#btn_create_tm").click(function() {
         window.createNewTM();
     })
+    $("#btn_import_project").click(function() {
+        window.importProject();
+    })
+
+    $("form#form_create_project_package").submit(function() {
+        filesToPackage = [];
+        $(this).find("th input:checked").each(function(i, checkbox) {
+            filesToPackage.push($(checkbox).attr("filename"));
+        });
+
+        if (filesToPackage.length == 0) {
+            $(this).closest("main").hide();
+            return false;
+        }
+
+        $.post(
+            "http://127.0.0.1:8000/project/" + files_view.attr("cur_p_id"),
+            {
+                files_to_package: filesToPackage.join(';'),
+                task: "create_new_project_package"
+            }
+        )
+
+        $(this).closest("main").hide();
+        return false;
+    })
 
     window.fetchSegments = fetchSegments;
 });

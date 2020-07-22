@@ -38,6 +38,21 @@ window.createNewTM = () => {
     newTMWindow.loadFile(path.join(__dirname, 'new_tm.html'));
 }
 
+window.importProject = () => {
+    const importProjectWindow = new BrowserWindow({
+        width: 800,
+        height: 600,
+        modal: true,
+        parent: indexWindow,
+        webPreferences: {
+            enableRemoteModule: true,
+            preload: path.join(__dirname, 'import_project_preload.js')
+        }
+    })
+
+    importProjectWindow.loadFile(path.join(__dirname, 'import_project.html'));
+}
+
 const fileMenu = new Menu();
 fileMenu.append(new MenuItem({ label: 'Finalize', click() { getTargetTranslation(window.fileId) } }));
 
