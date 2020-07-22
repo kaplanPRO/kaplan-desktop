@@ -14,6 +14,33 @@ import os
 # Create your views here.
 
 @csrf_exempt
+def import_project(request):
+    path_to_package = request.POST['path']
+    project_dir = request.POST['directory']
+
+    if os.path.isfile(project_dir) or (os.path.isdir(project_dir) and len(os.listdir(project_dir))>0):
+        return JsonResponse({'error': 'Project directory must be an empty folder!'}, status=500)
+
+    project_metadata = open_new_project_package(path_to_package, project_dir)
+
+    imported_project = Project()
+    imported_project.title = project_metadata['title']
+    imported_project.directory = project_dir
+    imported_project.source_language = project_metadata['src']
+    imported_project.target_language = project_metadata['trgt']
+    imported_project.save()
+
+    for filename in project_metadata['files']:
+        imported_file = File()
+        imported_file.title = filename
+        imported_file.project = imported_project
+        imported_file.save()
+
+    return JsonResponse({imported_project.id: {'title': imported_project.title,
+                                               'source_language': imported_project.get_source_language(),
+                                               'target_language': imported_project.get_target_language()}})
+
+@csrf_exempt
 def new_project(request):
     project_title = request.POST['title']
     project_dir = request.POST['directory']
