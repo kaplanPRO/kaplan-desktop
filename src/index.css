@@ -9,10 +9,6 @@ body, button, div, h4, main, nav, p, td, th {
 body.loading * {
     transition: 0s !important;
 }
-body#index main {
-    margin-left: 7rem;
-    position: relative;
-}
 button#btn_segment_merge {
     display: none;
 }
@@ -44,7 +40,11 @@ div#sidebar button#toggle_sidebar {
 h4 {
     font-size: 16px;
 }
-main#editor_view, main#files_view, main#tm_view {
+main {
+    margin-left: 7rem;
+    position: relative;
+}
+main#editor_view, main#files_view, main#tm_view, main#overlay {
     display: none;
     width: auto;
 }
@@ -115,9 +115,6 @@ table#hits_table td, table#segments_table td {
     border: 1px solid black;
     padding: 0.5rem;
     width: 48%;
-}
-table td, table th {
-    border-right: 1px solid black;
 }
 table td.language {
     text-align: center;
