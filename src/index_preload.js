@@ -2,6 +2,8 @@ const { ipcRenderer, remote } = require('electron');
 const { BrowserWindow, getCurrentWindow, Menu, MenuItem } = remote;
 const path = require('path');
 
+const indexWindow = remote.getCurrentWindow();
+
 ipcRenderer.on('kaplan-index', (event, arg) => {
     location.reload();
 })
@@ -10,6 +12,8 @@ window.createNewProject = () => {
     const newProjectWindow = new BrowserWindow({
         width: 800,
         height: 600,
+        modal: true,
+        parent: indexWindow,
         webPreferences: {
             enableRemoteModule: true,
             preload: path.join(__dirname, 'new_project_preload.js')
@@ -23,6 +27,8 @@ window.createNewTM = () => {
     const newTMWindow = new BrowserWindow({
         width: 800,
         height: 600,
+        modal: true,
+        parent: indexWindow,
         webPreferences: {
             enableRemoteModule: true,
             preload: path.join(__dirname, 'new_tm_preload.js')
