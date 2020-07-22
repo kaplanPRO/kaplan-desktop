@@ -17,5 +17,3 @@ window.selectPath = () => {
         document.getElementById('input_path').value = data.filePaths[0];
     })
 }
-
-
