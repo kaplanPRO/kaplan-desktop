@@ -20,6 +20,15 @@ class Project(models.Model):
     translation_memories = models.ManyToManyField('TranslationMemory')
     is_imported = models.BooleanField(default=False)
 
+    def get_project_metadata(self):
+        project_metadata = {
+            'title': self.title,
+            'src': self.source_language,
+            'trgt': self.target_language
+        }
+
+        return project_metadata
+
     def get_source_dir(self):
         return os.path.join(self.directory, self.source_language)
 
