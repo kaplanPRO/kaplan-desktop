@@ -28,6 +28,7 @@ def import_project(request):
     imported_project.directory = project_dir
     imported_project.source_language = project_metadata['src']
     imported_project.target_language = project_metadata['trgt']
+    imported_project.is_imported = True
     imported_project.save()
 
     for filename in project_metadata['files']:
