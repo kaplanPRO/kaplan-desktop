@@ -13,7 +13,11 @@ window.selectDirectory = () => {
 };
 
 window.selectPath = () => {
-    dialog.showOpenDialog().then((data) => {
+    dialog.showOpenDialog({
+      filters: [
+        {name: 'Kaplan New Project Packages', extensions: ['knpp']}
+      ]
+    }).then((data) => {
         document.getElementById('input_path').value = data.filePaths[0];
     })
 }
