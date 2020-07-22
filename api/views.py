@@ -133,7 +133,7 @@ def project_file(request, project_id, file_id):
                     project_tm = TM(project_tm.path,
                                 project.source_language,
                                 project.target_language)
-                
+
                     project_tm.submit_segment(source_segment,
                                               target_segment,
                                               author_id)
