@@ -20,7 +20,7 @@ $(document).ready(function() {
     setTimeout(() => {
         fetchProjects();
         fetchTMs();
-    }, 1000); 
+    }, 1000);
 
     // Fetches a list of the projects
     function fetchProjects() {
