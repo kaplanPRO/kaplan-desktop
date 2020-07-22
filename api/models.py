@@ -18,6 +18,7 @@ class Project(models.Model):
     source_language = models.CharField(max_length=20)
     target_language = models.CharField(max_length=20)
     translation_memories = models.ManyToManyField('TranslationMemory')
+    is_imported = models.BooleanField(default=False)
 
     def get_source_dir(self):
         return os.path.join(self.directory, self.source_language)
