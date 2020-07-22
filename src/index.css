@@ -48,6 +48,27 @@ main#editor_view, main#files_view, main#tm_view {
     display: none;
     width: auto;
 }
+main#overlay {
+    background-color: rgb(256,256,256,0.5);
+    height: 100vh;
+    left: 0px;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    top: 0px;
+    vertical-align: middle;
+    width: 100vw;
+}
+main#overlay form {
+    background-color: white;
+    position: absolute;
+    top: 25%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+main#overlay form td {
+    min-width: 25rem;
+}
 nav button {
     background-color: inherit;
     border: 1px solid #46649e;

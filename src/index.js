@@ -2,6 +2,7 @@ $(document).ready(function() {
     const editor_view = $("#editor_view");
     const files_table = $("#files_table");
     const files_view = $("#files_view");
+    const overlay = $("main#overlay");
     const projects_table = $("#projects_table");
     const segments_table = $("#segments_table");
     const segment_hits_table = $("#hits_table");
@@ -198,6 +199,34 @@ $(document).ready(function() {
 
     $("#btn_create_project").click(function() {
         window.createNewProject();
+    })
+    $("#btn_create_project_package").click(function() {
+        overlay.show();
+
+        $.getJSON(
+            "http://127.0.0.1:8000/project/" + files_view.attr("cur_p_id")
+        ).done(function(data) {
+            overlay.find("table").empty()
+            $.each(data, function(f_id, file) {
+                tr = $("<tr>");
+                th = $("<th>");
+                checkbox = $("<input>");
+                checkbox.attr("type", "checkbox");
+                checkbox.attr("filename", file.title);
+                th.append(checkbox);
+                tr.append(th);
+                td = $("<td>");
+                td.text(file.title);
+                tr.append(td);
+                overlay.find("table").append(tr);
+            })
+            tr = $("<tr>");
+            td = $("<td colspan=\"2\">");
+            submit = $("<input type=\"submit\" value=\"Create Package\"/>");
+            td.append(submit);
+            tr.append(td);
+            overlay.find("table").append(tr);
+        })
     })
     $("#btn_create_tm").click(function() {
         window.createNewTM();
