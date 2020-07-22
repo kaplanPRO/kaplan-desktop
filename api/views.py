@@ -7,7 +7,7 @@ from .models import File, Project, TranslationMemory
 from kaplan.bilingualfile import BilingualFile
 from kaplan.sourcefile import SourceFile
 from kaplan.translationmemory import TranslationMemory as TM
-from kaplan.utils import html_to_segment, segment_to_html, supported_file_formats
+from kaplan.utils import create_new_project_package, html_to_segment, open_new_project_package, segment_to_html, supported_file_formats
 
 import os
 
