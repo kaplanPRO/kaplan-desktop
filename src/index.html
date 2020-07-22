@@ -12,54 +12,58 @@
         <script type="text/javascript" src="batch_tasks.js"></script>
     </head>
     <body class="loading" id="index">
-    <div id="sidebar">
-        <nav>
-        <button class="active" id="btn_projects_view">P<span>rojects</span></button>
-        <button id="btn_files_view" disabled>F<span>iles</span></button>
-        <button id="btn_editor_view" disabled>E<span>ditor</span></button>
-        <button id="btn_tm_view">TM</button>
-        </nav>
-        <button id="toggle_sidebar"><</button>
-    </div>
-    <main id="projects_view">
-        <div class="headbar">
-        <button id="btn_create_project">New Project</button>
+        <div id="sidebar">
+            <nav>
+            <button class="active" id="btn_projects_view">P<span>rojects</span></button>
+            <button id="btn_files_view" disabled>F<span>iles</span></button>
+            <button id="btn_editor_view" disabled>E<span>ditor</span></button>
+            <button id="btn_tm_view">TM</button>
+            </nav>
+            <button id="toggle_sidebar"><</button>
         </div>
-        <table id="projects_table">
-        <tr>
-            <th colspan="3">Loading...</th>
-        </tr>
-        </table>
-    </main>
-    <main id="files_view">
-        <table id="files_table">
-        <tr>
-            <th>
-            <h4>File Name</h4>
-            </th>
-            <th></th>
-        </tr>
-        </table>
-    </main>
-    <main id="editor_view">
-        <div id="hits_div">
-            <button id="btn_segment_merge" disabled>Merge</button>
-            <table id="hits_table"></table>
-        </div>
-        <div id="segments_div">
-            <table id="segments_table"></table>
-        </div>
-    </main>
-    <main id="tm_view">
-        <div class="headbar">
-        <button id="btn_create_tm">Create TM</button>
-        </div>
-        <table id="tms_table">
-        <tr>
-            <th colspan="3">Loading...</th>
-        </tr>
-        </table>
-    </main>
+        <main id="projects_view">
+            <div class="headbar">
+                <button id="btn_create_project">New Project</button>
+                <button id="btn_import_project">Import Project</button>
+            </div>
+            <table id="projects_table">
+            <tr>
+                <th colspan="3">Loading...</th>
+            </tr>
+            </table>
+        </main>
+        <main id="files_view">
+            <div class="headbar">
+                <button id="btn_create_project_package">Create Project Package</button>
+            </div>
+            <table id="files_table">
+                <tr>
+                    <th>
+                        <h4>File Name</h4>
+                    </th>
+                    <th></th>
+                </tr>
+            </table>
+        </main>
+        <main id="editor_view">
+            <div id="hits_div">
+                <button id="btn_segment_merge" disabled>Merge</button>
+                <table id="hits_table"></table>
+            </div>
+            <div id="segments_div">
+                <table id="segments_table"></table>
+            </div>
+        </main>
+        <main id="tm_view">
+            <div class="headbar">
+                <button id="btn_create_tm">Create TM</button>
+            </div>
+            <table id="tms_table">
+                <tr>
+                    <th colspan="3">Loading...</th>
+                </tr>
+            </table>
+        </main>
         <main id="overlay">
             <form id="form_create_project_package">
                 <table></table>
