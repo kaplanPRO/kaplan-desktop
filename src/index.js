@@ -206,9 +206,6 @@ $(document).ready(function() {
         }
     })
 
-    $("#btn_create_project").click(function() {
-        window.createNewProject();
-    })
     $("#btn_create_new_project_package").click(function() {
         overlay.show();
 
