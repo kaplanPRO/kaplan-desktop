@@ -78,16 +78,16 @@ $(document).ready(function() {
             files_table.empty();
             files_table.append($("<tr><th class=\"name\"><h4>File Name</h4></th></tr>"));
             $.each(data, function(f_id, file) {
-            tr = $("<tr>");
-            tr.attr("file_id", f_id);
-            tr.dblclick(function() {fetchSegments(project_id, f_id)});
-            tr.contextmenu(function(e) {window.openFileContextMenu(e, this)});
-            title_td = $("<td>");
-            title_td.text(file.title);
-            tr.append(title_td);
-            empty_td = $("<td>");
-            tr.append(empty_td);
-            files_table.append(tr);
+                tr = $("<tr>");
+                tr.attr("file_id", f_id);
+                tr.dblclick(function() {fetchSegments(project_id, f_id)});
+                tr.contextmenu(function(e) {window.openFileContextMenu(e, this)});
+                title_td = $("<td>");
+                title_td.text(file.title);
+                tr.append(title_td);
+                empty_td = $("<td>");
+                tr.append(empty_td);
+                files_table.append(tr);
             })
             $("main#files_view").attr("cur_p_id", project_id);
             toggleView("main#files_view", $("button#btn_files_view"));
@@ -103,29 +103,29 @@ $(document).ready(function() {
         .done(function(data) {
             segments_table.empty();
             $.each(data, function(s_id, segment) {
-            tr = $("<tr>");
-            tr.attr("id", s_id);
-            tr.attr("p_id", segment.paragraph);
-            if (segment.status) {
-                tr.addClass(segment.status);
-            }
-            s_id_th = $("<th>");
-            s_id_th.text(s_id);
-            s_id_th.click(function() { segmentSelect($(this).closest("tr")) });
-            tr.append(s_id_th);
-            source_td = $("<td class='source'>");
-            source_td.html(segment.source);
-            $(source_td).find("tag").click(function() { tagClickHandler(this) });
-            tr.append(source_td);
-            target_td = $("<td class='target'>");
-            target_td.html(segment.target);
-            target_td.attr("contenteditable", true);
-            target_td.keydown(function(e) { targetKeydownHandler(e, $(this)) });
-            target_td.keyup(function() { $(this).find("br").remove() });
-            target_td.focus(function () { segmentLookup($(this).closest("tr").find("td.source"), segment_hits_table) });
-            target_td.focusout(function () { submitSegment($(this), "draft") });
-            tr.append(target_td);
-            segments_table.append(tr);
+                tr = $("<tr>");
+                tr.attr("id", s_id);
+                tr.attr("p_id", segment.paragraph);
+                if (segment.status) {
+                    tr.addClass(segment.status);
+                }
+                s_id_th = $("<th>");
+                s_id_th.text(s_id);
+                s_id_th.click(function() { segmentSelect($(this).closest("tr")) });
+                tr.append(s_id_th);
+                source_td = $("<td class='source'>");
+                source_td.html(segment.source);
+                $(source_td).find("tag").click(function() { tagClickHandler(this) });
+                tr.append(source_td);
+                target_td = $("<td class='target'>");
+                target_td.html(segment.target);
+                target_td.attr("contenteditable", true);
+                target_td.keydown(function(e) { targetKeydownHandler(e, $(this)) });
+                target_td.keyup(function() { $(this).find("br").remove() });
+                target_td.focus(function () { segmentLookup($(this).closest("tr").find("td.source"), segment_hits_table) });
+                target_td.focusout(function () { submitSegment($(this), "draft") });
+                tr.append(target_td);
+                segments_table.append(tr);
             })
             $("main#editor_view").attr("cur_f_id", file_id);
             toggleView("main#editor_view", $("button#btn_editor_view"));
