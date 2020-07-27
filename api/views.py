@@ -7,7 +7,7 @@ from .models import File, Project, TranslationMemory
 from kaplan.bilingualfile import BilingualFile
 from kaplan.sourcefile import SourceFile
 from kaplan.translationmemory import TranslationMemory as TM
-from kaplan.utils import create_new_project_package, html_to_segment, open_new_project_package, segment_to_html, supported_file_formats
+from kaplan.utils import create_new_project_package, create_return_project_package, html_to_segment, open_new_project_package, segment_to_html, supported_file_formats
 
 import os
 
@@ -210,19 +210,31 @@ def project_view(request, project_id):
     project = Project.objects.get(id=project_id)
 
     if request.method == 'POST':
-        files_to_package = request.POST['files_to_package'].split(';')
-
-        for i in range(len(files_to_package)):
-            file_to_package = files_to_package[i]
-            files_to_package[i] = (
-                os.path.join(project.get_source_dir(), file_to_package),
-                os.path.join(project.get_source_dir(), file_to_package) + '.xml',
-                os.path.join(project.get_target_dir(), file_to_package) + '.xml'
-            )
         if request.POST.get('task') == 'create_new_project_package':
+            files_to_package = request.POST['files_to_package'].split(';')
+
+            for i in range(len(files_to_package)):
+                file_to_package = files_to_package[i]
+                files_to_package[i] = (
+                    os.path.join(project.get_source_dir(), file_to_package),
+                    os.path.join(project.get_source_dir(), file_to_package) + '.xml',
+                    os.path.join(project.get_target_dir(), file_to_package) + '.xml'
+                )
+
             create_new_project_package(project.get_project_metadata(),
                                        files_to_package,
                                        os.path.join(project.directory, 'packages'))
+
+            return JsonResponse({'status': 'success'})
+        elif request.POST.get('task') == 'create_return_project_package':
+            files_to_package = request.POST['files_to_package'].split(';')
+
+            for i in range(len(files_to_package)):
+                files_to_package[i] = os.path.join(project.get_target_dir(), files_to_package[i]) + '.xml'
+
+            create_return_project_package(project.get_project_metadata(),
+                                          files_to_package,
+                                          os.path.join(project.directory, 'packages'))
 
             return JsonResponse({'status': 'success'})
     else:
