@@ -8,21 +8,6 @@ ipcRenderer.on('kaplan-index', (event, arg) => {
     location.reload();
 })
 
-window.createNewProject = () => {
-    const newProjectWindow = new BrowserWindow({
-        width: 800,
-        height: 600,
-        modal: true,
-        parent: indexWindow,
-        webPreferences: {
-            enableRemoteModule: true,
-            preload: path.join(__dirname, 'new_project_preload.js')
-        }
-    })
-
-    newProjectWindow.loadFile(path.join(__dirname, 'new_project.html'));
-}
-
 window.createNewTM = () => {
     const newTMWindow = new BrowserWindow({
         width: 800,
