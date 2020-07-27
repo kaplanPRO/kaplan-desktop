@@ -35,10 +35,12 @@ $(document).ready(function() {
                 tr.attr("is_imported", project.is_imported);
                 tr.dblclick(function() {
                   fetchProject($(this).attr("project_id"));
-                  if (tr.attr("is_imported") == "true") {
+                  if ($(this).attr("is_imported") == "true") {
                     $("#btn_create_new_project_package").hide();
+                    $("#btn_create_return_project_package").show();
                   }
                   else {
+                    $("#btn_create_return_project_package").hide();
                     $("#btn_create_new_project_package").show();
                   }
                 });
@@ -206,33 +208,40 @@ $(document).ready(function() {
         }
     })
 
-    $("#btn_create_new_project_package").click(function() {
-        overlay.show();
+    function populate_package_creation_menu(task) {
+      overlay.show();
 
-        $.getJSON(
-            "http://127.0.0.1:8000/project/" + files_view.attr("cur_p_id")
-        ).done(function(data) {
-            overlay.find("table").empty()
-            $.each(data, function(f_id, file) {
-                tr = $("<tr>");
-                th = $("<th>");
-                checkbox = $("<input>");
-                checkbox.attr("type", "checkbox");
-                checkbox.attr("filename", file.title);
-                th.append(checkbox);
-                tr.append(th);
-                td = $("<td>");
-                td.text(file.title);
-                tr.append(td);
-                overlay.find("table").append(tr);
-            })
-            tr = $("<tr>");
-            td = $("<td colspan=\"2\">");
-            submit = $("<input type=\"submit\" value=\"Create Package\"/>");
-            td.append(submit);
-            tr.append(td);
-            overlay.find("table").append(tr);
-        })
+      $.getJSON(
+          "http://127.0.0.1:8000/project/" + files_view.attr("cur_p_id")
+      ).done(function(data) {
+          overlay.find("form").attr("task", task);
+          overlay.find("table").empty()
+          $.each(data, function(f_id, file) {
+              tr = $("<tr>");
+              th = $("<th>");
+              checkbox = $("<input>");
+              checkbox.attr("type", "checkbox");
+              checkbox.attr("filename", file.title);
+              th.append(checkbox);
+              tr.append(th);
+              td = $("<td>");
+              td.text(file.title);
+              tr.append(td);
+              overlay.find("table").append(tr);
+          })
+          tr = $("<tr>");
+          td = $("<td colspan=\"2\">");
+          submit = $("<input type=\"submit\" value=\"Create Package\"/>");
+          td.append(submit);
+          tr.append(td);
+          overlay.find("table").append(tr);
+      })
+    }
+    $("#btn_create_new_project_package").click(function() {
+      populate_package_creation_menu("create_new_project_package");
+    })
+    $("#btn_create_return_project_package").click(function() {
+      populate_package_creation_menu("create_return_project_package");
     })
     $("#btn_create_tm").click(function() {
         window.createNewTM();
@@ -256,7 +265,7 @@ $(document).ready(function() {
             "http://127.0.0.1:8000/project/" + files_view.attr("cur_p_id"),
             {
                 files_to_package: filesToPackage.join(';'),
-                task: "create_new_project_package"
+                task: $(this).attr("task")
             }
         )
 
