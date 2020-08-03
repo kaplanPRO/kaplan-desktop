@@ -33,14 +33,22 @@ $(document).ready(function() {
                 tr = $("<tr>");
                 tr.attr("project_id", p_id);
                 tr.attr("is_imported", project.is_imported);
+                tr.attr("is_exported", project.is_exported);
                 tr.dblclick(function() {
                   fetchProject($(this).attr("project_id"));
                   if ($(this).attr("is_imported") == "true") {
                     $("#btn_create_new_project_package").hide();
                     $("#btn_create_return_project_package").show();
+                    $("#btn_update_from_krpp").hide();
+                  }
+                  else if ($(this).attr("is_exported") == "true") {
+                    $("#btn_create_return_project_package").hide();
+                    $("#btn_update_from_krpp").show();
+                    $("#btn_create_new_project_package").show();
                   }
                   else {
                     $("#btn_create_return_project_package").hide();
+                    $("#btn_update_from_krpp").hide();
                     $("#btn_create_new_project_package").show();
                   }
                 });
@@ -243,8 +251,45 @@ $(document).ready(function() {
     $("#btn_create_return_project_package").click(function() {
       populate_package_creation_menu("create_return_project_package");
     })
+    $("#btn_update_from_krpp").click(function() {
+      pathToKRPP = window.selectKRPP()[0];
+
+      $.post(
+        "http://127.0.0.1:8000/package",
+        {
+          path_to_package: pathToKRPP
+        }
+      )
+      .done(function(data) {
+          overlay.show();
+          overlay.find("form").attr("task", "update_from_krpp");
+          overlay.find("table").empty()
+          $.each(data.files_to_unpack, function(i ,filename) {
+              tr = $("<tr>");
+              th = $("<th>");
+              checkbox = $("<input>");
+              checkbox.attr("type", "checkbox");
+              checkbox.attr("filename", filename);
+              th.append(checkbox);
+              tr.append(th);
+              td = $("<td>");
+              td.text(filename);
+              tr.append(td);
+              overlay.find("table").append(tr);
+          })
+          tr = $("<tr>");
+          td = $("<td colspan=\"2\">");
+          submit = $("<input type=\"submit\" value=\"Create Package\"/>");
+          td.append(submit);
+          tr.append(td);
+          overlay.find("table").append(tr);
+      })
+    })
     $("#btn_create_tm").click(function() {
         window.createNewTM();
+    })
+    $("#btn_create_project").click(function() {
+        window.newProject();
     })
     $("#btn_import_project").click(function() {
         window.importProject();
@@ -261,12 +306,18 @@ $(document).ready(function() {
             return false;
         }
 
+        parameters = {
+            files_to_package: filesToPackage.join(";"),
+            task: $(this).attr("task")
+        }
+
+        if (parameters.task == "update_from_krpp") {
+          parameters.path_to_krpp = pathToKRPP;
+        }
+
         $.post(
             "http://127.0.0.1:8000/project/" + files_view.attr("cur_p_id"),
-            {
-                files_to_package: filesToPackage.join(';'),
-                task: $(this).attr("task")
-            }
+            parameters
         )
 
         $(this).closest("main").hide();
