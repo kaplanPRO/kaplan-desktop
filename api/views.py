@@ -9,7 +9,11 @@ from kaplan.sourcefile import SourceFile
 from kaplan.translationmemory import TranslationMemory as TM
 from kaplan.utils import create_new_project_package, create_return_project_package, html_to_segment, open_new_project_package, segment_to_html, supported_file_formats
 
+from lxml import etree
+
+from io import BytesIO
 import os
+import zipfile
 
 # Create your views here.
 
