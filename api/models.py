@@ -18,6 +18,7 @@ class Project(models.Model):
     source_language = models.CharField(max_length=20)
     target_language = models.CharField(max_length=20)
     translation_memories = models.ManyToManyField('TranslationMemory', blank=True)
+    is_exported = models.BooleanField(default=False)
     is_imported = models.BooleanField(default=False)
 
     def get_project_metadata(self):

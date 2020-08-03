@@ -137,6 +137,7 @@ def project_directory(request):
         projects_dict[project.id] = {'title': project.title,
                                     'source_language': project.get_source_language(),
                                     'target_language': project.get_target_language(),
+                                    'is_exported': project.is_exported,
                                     'is_imported': project.is_imported}
 
     return JsonResponse(projects_dict)
@@ -242,6 +243,9 @@ def project_view(request, project_id):
             create_new_project_package(project.get_project_metadata(),
                                        files_to_package,
                                        os.path.join(project.directory, 'packages'))
+
+            project.is_exported = true
+            project.save()
 
             return JsonResponse({'status': 'success'})
         elif request.POST.get('task') == 'create_return_project_package':
