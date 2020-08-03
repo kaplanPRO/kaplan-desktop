@@ -259,6 +259,17 @@ def project_view(request, project_id):
                                           os.path.join(project.directory, 'packages'))
 
             return JsonResponse({'status': 'success'})
+        elif request.POST.get('task') == 'update_from_krpp':
+            path_to_krpp = request.POST['path_to_krpp']
+            files_to_unpack = request.POST['files_to_package'].split(';')
+
+            with zipfile.ZipFile(path_to_krpp) as krpp:
+                for file_to_unpack in files_to_unpack:
+                    BilingualFile(os.path.join(project.get_target_dir(), file_to_unpack))
+                    krpp.extract(os.path.join(os.path.basename(project.get_target_dir()), file_to_unpack),
+                                 project.directory)
+
+            return JsonResponse({'status': 'success'})
     else:
         files_dict = {}
 
