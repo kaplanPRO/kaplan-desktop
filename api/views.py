@@ -116,6 +116,20 @@ def new_tm(request):
 
     return HttpResponse("Success!")
 
+@csrf_exempt
+def package(request):
+    path_to_package = request.POST['path_to_package']
+
+    with zipfile.ZipFile(path_to_package) as return_project_package:
+        metadata_xml = etree.parse(BytesIO(return_project_package.open('project.xml').read())).getroot()
+
+    files_to_unpack = []
+
+    for file_to_unpack in metadata_xml[-1]:
+        files_to_unpack.append(file_to_unpack.text)
+
+    return JsonResponse({'files_to_unpack': files_to_unpack})
+
 def project_directory(request):
     projects_dict = {}
 
