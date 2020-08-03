@@ -1,4 +1,4 @@
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 
@@ -93,7 +93,7 @@ def new_project(request):
         sf.write_bilingual_file(source_dir)
         sf.write_bilingual_file(target_dir)
 
-    return HttpResponse('Tamam')
+    return JsonResponse({'status': 'success'})
 
 @csrf_exempt
 def new_tm(request):
@@ -114,7 +114,7 @@ def new_tm(request):
 
     tm.save()
 
-    return HttpResponse("Success!")
+    return JsonResponse({'status': 'success'})
 
 @csrf_exempt
 def package(request):
@@ -155,13 +155,13 @@ def project_file(request, project_id, file_id):
             bf.generate_target_translation(os.path.join(project.get_source_dir(), project_file.title),
                                                         project.get_target_dir())
 
-            return HttpResponse("Success!")
+            return JsonResponse({'status': 'success'})
 
         elif request.POST.get('task') == 'merge_segments':
             bf.merge_segments(request.POST['segment_list'].split(';'))
             bf.save(project.get_target_dir())
 
-            return HttpResponse("Success!")
+            return JsonResponse({'status': 'success'})
 
         else:
             segment_status = request.POST['segment_status']
@@ -186,7 +186,7 @@ def project_file(request, project_id, file_id):
                                               target_segment,
                                               author_id)
 
-            return HttpResponse("Success!")
+            return JsonResponse({'status': 'success'})
 
     elif request.GET.get('task') == 'lookup':
         source_segment = html_to_segment(request.GET['source_segment'], 'source')
