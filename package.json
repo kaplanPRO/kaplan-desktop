@@ -21,7 +21,8 @@
     "config": {
         "forge": {
             "packagerConfig": {
-                "icon": "src/icon/icon.png"
+                "executableName": "kaplan-desktop",
+                "icon": "src/icon/icon.ico"
             },
             "makers": [
                 {
@@ -34,10 +35,20 @@
                     ]
                 },
                 {
-                    "name": "@electron-forge/maker-deb"
+                    "name": "@electron-forge/maker-deb",
+                    "config": {
+                        "options": {
+                          "icon": "src/icon/icon.png"
+                        }
+                    }
                 },
                 {
-                    "name": "@electron-forge/maker-rpm"
+                    "name": "@electron-forge/maker-rpm",
+                    "config": {
+                        "options": {
+                          "icon": "src/icon/icon.png"
+                        }
+                    }
                 }
             ]
         }

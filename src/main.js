@@ -2,7 +2,7 @@ const electron = require('electron');
 const { app, BrowserWindow, Menu, shell } = electron;
 const fs = require('fs');
 const path = require('path');
-const { spawn, spawnSync } = require('child_process');
+const { exec, spawn, spawnSync } = require('child_process');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) { // eslint-disable-line global-require
@@ -10,24 +10,31 @@ if (require('electron-squirrel-startup')) { // eslint-disable-line global-requir
 }
 else if (fs.existsSync(path.join(app.getAppPath(), 'backend')))
 {
-    const backendPath = path.join(app.getAppPath(), 'backend', 'backend.exe');
+    var backendPath;
+    var pathToIcon;
 
+    if (['deb','linux','rpm'].includes(process.platform)) {
+        backendPath = path.join(app.getAppPath(), 'backend', 'backend');
+        pathToIcon = path.join(__dirname, 'icon', 'icon-64.png');
+    }
+    else {
+        backendPath = path.join(app.getAppPath(), 'backend', 'backend.exe');
+        pathToIcon = path.join(__dirname, 'icon', 'icon.ico');
+    }
     process.env.KAPLAN_DB_PATH = path.join(app.getPath('userData'), 'kaplan.sqlite3');
 
-    if (!fs.existsSync(process.env.KAPLAN_DB_PATH)) {
-        spawnSync(backendPath,
-                    ['migrate']);
+    spawnSync(backendPath,
+              ['migrate'])
 
-        spawnSync(backendPath,
-                    ['makemigrations api']);
+    spawnSync(backendPath,
+              ['makemigrations api']);
 
-        spawnSync(backendPath,
-                    ['migrate']);
-    };
+    spawnSync(backendPath,
+              ['migrate']);
 
     const child = spawn(backendPath,
                         ['runserver'],
-                        {detached: true });
+                        {detached: true});
 };
 
 const createWindow = () => {
@@ -35,6 +42,7 @@ const createWindow = () => {
     const mainWindow = new BrowserWindow({
         minWidth: 800,
         minHeight: 600,
+        icon: pathToIcon,
         webPreferences: {
             enableRemoteModule: true,
             preload: path.join(__dirname, 'index_preload.js')
@@ -51,8 +59,8 @@ const createWindow = () => {
 app.on('ready', createWindow);
 
 // This method will be called by app.quit().
-app.on('will-quit', () => {
-    if (fs.existsSync(path.join(app.getAppPath(), 'backend'))) { child.kill('SIGINT'); }
+app.on('before-quit', () => {
+    if (fs.existsSync(path.join(app.getAppPath(), 'backend'))) {process.kill(-child.pid)}
 });
 
 // Quit when all windows are closed.
