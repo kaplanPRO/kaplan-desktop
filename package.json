@@ -38,7 +38,7 @@
                     "name": "@electron-forge/maker-deb",
                     "config": {
                         "options": {
-                          "icon": "src/icon/icon.png"
+                          "icon": "src/icon/icon-256.png"
                         }
                     }
                 },
@@ -46,7 +46,7 @@
                     "name": "@electron-forge/maker-rpm",
                     "config": {
                         "options": {
-                          "icon": "src/icon/icon.png"
+                          "icon": "src/icon/icon-256.png"
                         }
                     }
                 }
