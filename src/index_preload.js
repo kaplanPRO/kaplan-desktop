@@ -78,7 +78,16 @@ window.selectKRPP = () => {
 }
 
 window.setSpellCheckerLanguages = (arrayOfLanguages) => {
-    indexWindow.webContents.session.setSpellCheckerLanguages(arrayOfLanguages);
+    let finalArrayOfLanguages = [];
+    indexWindow.webContents.session.availableSpellCheckerLanguages.forEach((lang_code, i) => {
+        arrayOfLanguages.forEach((project_lang_code, i) => {
+            if (lang_code.startsWith(project_lang_code)) {
+              finalArrayOfLanguages.push(lang_code);
+            }
+        });
+    });
+
+    indexWindow.webContents.session.setSpellCheckerLanguages(finalArrayOfLanguages);
 }
 
 const fileMenu = new Menu();
