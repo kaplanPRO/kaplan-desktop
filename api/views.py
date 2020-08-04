@@ -136,7 +136,9 @@ def project_directory(request):
     for project in Project.objects.all():
         projects_dict[project.id] = {'title': project.title,
                                     'source_language': project.get_source_language(),
+                                    'source_language_code': project.source_language,
                                     'target_language': project.get_target_language(),
+                                    'target_language_code': project.target_language,
                                     'is_exported': project.is_exported,
                                     'is_imported': project.is_imported}
 
