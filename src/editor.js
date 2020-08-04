@@ -23,8 +23,7 @@ function submitSegment(target_cell, segment_status) {
     target_segment = target_cell.html().replace(/&nbsp;/g, ' ');
 
     if (target_segment == "") {
-        console.log("Segment #" + segment_no + " is empty!");
-        return false;
+        segment_status = "blank";
     }
 
     if (segment_status == "draft" && !target_cell.closest("tr").hasClass("draft")) {
