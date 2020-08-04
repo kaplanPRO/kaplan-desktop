@@ -77,6 +77,10 @@ window.selectKRPP = () => {
   })
 }
 
+window.setSpellCheckerLanguages = (arrayOfLanguages) => {
+    indexWindow.webContents.session.setSpellCheckerLanguages(arrayOfLanguages);
+}
+
 const fileMenu = new Menu();
 fileMenu.append(new MenuItem({ label: 'Finalize', click() { getTargetTranslation(window.fileId) } }));
 

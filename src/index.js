@@ -34,35 +34,39 @@ $(document).ready(function() {
                 tr.attr("project_id", p_id);
                 tr.attr("is_imported", project.is_imported);
                 tr.attr("is_exported", project.is_exported);
-                tr.dblclick(function() {
-                  fetchProject($(this).attr("project_id"));
-                  if ($(this).attr("is_imported") == "true") {
-                    $("#btn_create_new_project_package").hide();
-                    $("#btn_create_return_project_package").show();
-                    $("#btn_update_from_krpp").hide();
-                  }
-                  else if ($(this).attr("is_exported") == "true") {
-                    $("#btn_create_return_project_package").hide();
-                    $("#btn_update_from_krpp").show();
-                    $("#btn_create_new_project_package").show();
-                  }
-                  else {
-                    $("#btn_create_return_project_package").hide();
-                    $("#btn_update_from_krpp").hide();
-                    $("#btn_create_new_project_package").show();
-                  }
-                });
                 title_td = $("<td class='project_title'>");
                 title_td.text(project.title);
                 tr.append(title_td);
-                src_lng_td = $("<td>");
-                src_lng_td.addClass("language");
+                src_lng_td = $("<td class='source language'>");
+                src_lng_td.attr("lang_code", project.source_language_code);
                 src_lng_td.text(project.source_language);
                 tr.append(src_lng_td);
-                trg_lng_td = $("<td>");
-                trg_lng_td.addClass("language");
+                trg_lng_td = $("<td class='target language'>");
+                trg_lng_td.attr("lang_code", project.target_language_code);
                 trg_lng_td.text(project.target_language);
                 tr.append(trg_lng_td);
+                tr.dblclick(function() {
+                    lang_pair = [$(this).find("td.source").attr("lang_code"),
+                                 $(this).find("td.target").attr("lang_code")];
+                    window.setSpellCheckerLanguages(lang_pair);
+                    fetchProject($(this).attr("project_id"));
+                    if ($(this).attr("is_imported") == "true") {
+                        $("#btn_create_new_project_package").hide();
+                        $("#btn_create_return_project_package").show();
+                        $("#btn_update_from_krpp").hide();
+                    }
+                    else if ($(this).attr("is_exported") == "true") {
+                        $("#btn_create_return_project_package").hide();
+                        $("#btn_update_from_krpp").show();
+                        $("#btn_create_new_project_package").show();
+                    }
+                    else {
+                        $("#btn_create_return_project_package").hide();
+                        $("#btn_update_from_krpp").hide();
+                        $("#btn_create_new_project_package").show();
+                    }
+                });
+
                 projects_table.prepend(tr);
             });
             projects_table.prepend($("<tr><th class=\"name\"><h4>Project Name</h4></th><th><h4>Source Language</h4></th><th><h4>Target Language</h4></th></tr>"));
