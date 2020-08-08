@@ -15,7 +15,7 @@ window.selectDirectory = () => {
 window.selectFiles = () => {
     const options = {
         filters: [
-            { name: 'Source Files', extensions: ['docx', 'odp', 'ods', 'odt', 'txt', 'xliff'] }
+            { name: 'Source Files', extensions: ['docx', 'odp', 'ods', 'odt', 'txt', 'xliff', 'po'] }
         ],
         properties: ['openFile', 'multiSelections']
     };
