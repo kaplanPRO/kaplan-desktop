@@ -26,12 +26,6 @@ else if (fs.existsSync(path.join(app.getAppPath(), 'backend')))
     spawnSync(backendPath,
               ['migrate'])
 
-    spawnSync(backendPath,
-              ['makemigrations api']);
-
-    spawnSync(backendPath,
-              ['migrate']);
-
     const child = spawn(backendPath,
                         ['runserver'],
                         {detached: true});
