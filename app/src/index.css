@@ -1,0 +1,155 @@
+body, button, div, h4, main, nav, p, td, th {
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+    font-size: 1rem;
+    margin: 0;
+    padding: 0;
+    transition: 0.4s;
+}
+body.loading * {
+    transition: 0s !important;
+}
+button#btn_segment_merge {
+    display: none;
+}
+div.headbar {
+    border-bottom: 1px solid #26070c;
+    margin-bottom: 1rem;
+}
+div#hits_div {
+    height: 20vh;
+    overflow-y: scroll;
+}
+div#segments_div {
+    height: 80vh;
+    padding: 0 1rem;
+    overflow-y: scroll;
+}
+div#sidebar {
+    border-right: 1px solid #26070c;
+    height: 100%;
+    padding-top: 40vh;
+    position: fixed;
+    width: 7rem;
+}
+div#sidebar button#toggle_sidebar {
+    bottom: 1rem;
+    left: 1rem;
+    position: fixed;
+}
+h4 {
+    font-size: 16px;
+}
+main {
+    margin-left: 7rem;
+    position: relative;
+}
+main#editor_view, main#files_view, main#tm_view, main#overlay {
+    display: none;
+    width: auto;
+}
+main#overlay {
+    background-color: rgb(256,256,256,0.5);
+    height: 100vh;
+    left: 0px;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    top: 0px;
+    vertical-align: middle;
+    width: 100vw;
+}
+main#overlay form {
+    background-color: white;
+    position: absolute;
+    top: 25%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+main#overlay form td {
+    min-width: 25rem;
+}
+nav button {
+    background-color: inherit;
+    border: 1px solid #46649e;
+    color: #46649e;
+    display: block;
+    font-weight: 700;
+    outline: none;
+    padding: 0.5rem;
+    width: 100%;
+}
+nav button:hover {
+    border: 1px solid #232c7c;
+    color: #232c7c;
+}
+nav button.active, nav button:active {
+    background-color: #232c7c;
+    border: 1px solid #FFFFFF;
+    color: #FFFFFF;
+}
+nav button:disabled {
+    background-color: #96b6c6;
+    border: 1px dotted #96b6c6;
+    color: slategrey;
+    opacity: 0.2;
+}
+select {
+    width: 100%;
+}
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+table#hits_table, table#segments_table {
+    overflow-wrap: break-word;
+    table-layout: fixed;
+}
+table#hits_table th, table#segments_table th {
+    border: 1px solid black;
+    font-size: 1.25vw;
+    user-select: none;
+    width: 4%;
+}
+table#hits_table td, table#segments_table td {
+    border: 1px solid black;
+    padding: 0.5rem;
+    width: 48%;
+}
+table td.language {
+    text-align: center;
+}
+table th.name {
+    width: 40%;
+}
+tag {
+    background-color: orangered;
+    color: #FFF;
+    cursor: pointer;
+    margin: 0 1px;
+    padding: 0 8px;
+    user-select: none;
+}
+tag.beginning {
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+    padding: 0 4px 0 8px;
+}
+tag.end {
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+    padding: 0 8px 0 4px;
+}
+tag.standalone {
+    border-radius: 4px;
+}
+tr.draft th {
+    background-color: tan;
+}
+tr.translated th {
+    background-color: teal;
+}
+tr.selected th {
+    background-color: orangered;
+    color: white;
+}
