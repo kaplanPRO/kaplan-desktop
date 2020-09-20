@@ -111,40 +111,90 @@ $(document).ready(function() {
 
     // Fetches the segments in a file
     function fetchSegments(project_id, file_id) {
-        $.getJSON(
-            "http://127.0.0.1:8000/project/" + project_id + "/file/" + file_id
-        )
-        .done(function(data) {
-            segments_table.empty();
-            $.each(data, function(s_id, segment) {
-                tr = $("<tr>");
-                tr.attr("id", s_id);
-                tr.attr("p_id", segment.paragraph);
-                if (segment.status) {
-                    tr.addClass(segment.status);
+        var parser = new DOMParser();
+        var segments_div = document.getElementById("segments_div");
+        var xhttp = new XMLHttpRequest();
+
+        var p_i;
+        var segment_row;
+        var source_td;
+        var tags;
+        var target_td;
+        var translation_unit_table;
+        var translation_units;
+
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                segments_div.innerHTML = "";
+                translation_units = parser.parseFromString(this.responseText, "text/xml").documentElement.childNodes;
+                for (i = 0; i < translation_units.length; i++) {
+                    p_id = translation_units[i].getAttribute("id");
+                    segments = translation_units[i].getElementsByTagName("segment")
+                    if (segments.length > 0) {
+                        translation_unit_table = document.createElement("table");
+                        translation_unit_table.classList.add("segments_table");
+                        for (s_i = 0; s_i < segments.length; s_i++) {
+                            segment_row = document.createElement("tr");
+                            segment_row.id = segments[s_i].id
+                            segment_row.setAttribute("p_id", p_id)
+                            if (segments[s_i].getAttribute("state") != null) {
+                              segment_row.classList.add(segments[s_i].getAttribute("state"));
+                            }
+                            s_i_th = document.createElement("th");
+                            s_i_th.innerHTML = segments[s_i].id;
+                            segment_row.appendChild(s_i_th);
+
+                            source_td = document.createElement("td");
+                            source_td.classList.add("source");
+                            source_td.innerHTML = segments[s_i].getElementsByTagName("source")[0].innerHTML;
+                            tags = source_td.getElementsByTagName("sc");
+                            for (t_i = 0; t_i < tags.length; t_i++) {
+                                tags[t_i].addEventListener("click", function() { tagClickHandler(this) });
+                                tags[t_i].contentEditable = "false";
+                            }
+                            tags = source_td.getElementsByTagName("ec");
+                            for (t_i = 0; t_i < tags.length; t_i++) {
+                                tags[t_i].addEventListener("click", function() { tagClickHandler(this) });
+                                tags[t_i].contentEditable = "false";
+                            }
+                            tags = source_td.getElementsByTagName("ph");
+                            for (t_i = 0; t_i < tags.length; t_i++) {
+                                tags[t_i].addEventListener("click", function() { tagClickHandler(this) });
+                                tags[t_i].contentEditable = "false";
+                            }
+                            tags = source_td.getElementsByTagName("g");
+                            for (t_i = 0; t_i < tags.length; t_i++) {
+                                tags[t_i].addEventListener("click", function() { tagClickHandler(this) });
+                                tags[t_i].contentEditable = "false";
+                            }
+                            segment_row.appendChild(source_td);
+
+                            target_td = document.createElement("td");
+                            target_td.classList.add("target");
+                            target_td.contentEditable = "true";
+                            target_td.innerHTML = segments[s_i].getElementsByTagName("target")[0].innerHTML;
+                            target_td.addEventListener("keydown", function(e) { targetKeydownHandler(e, $(this)) });
+                            target_td.addEventListener("keyup", function() { $(this).find("br").remove() });
+                            target_td.addEventListener("focus", function () { segmentLookup($(this).closest("tr").find("td.source"), segment_hits_table) });
+                            target_td.addEventListener("focusout", function () { submitSegment($(this), "draft") });
+                            segment_row.appendChild(target_td);
+
+                            translation_unit_table.appendChild(segment_row);
+                        }
+                        segments_div.appendChild(translation_unit_table);
+
+                        if (i < translation_units.length - 1) {
+                            segments_div.appendChild(document.createElement("hr"));
+                        }
+                    }
                 }
-                s_id_th = $("<th>");
-                s_id_th.text(s_id);
-                s_id_th.click(function() { segmentSelect($(this).closest("tr")) });
-                tr.append(s_id_th);
-                source_td = $("<td class='source'>");
-                source_td.html(segment.source);
-                $(source_td).find("tag").click(function() { tagClickHandler(this) });
-                tr.append(source_td);
-                target_td = $("<td class='target'>");
-                target_td.html(segment.target);
-                target_td.attr("contenteditable", true);
-                target_td.keydown(function(e) { targetKeydownHandler(e, $(this)) });
-                target_td.keyup(function() { $(this).find("br").remove() });
-                target_td.focus(function () { segmentLookup($(this).closest("tr").find("td.source"), segment_hits_table) });
-                target_td.focusout(function () { submitSegment($(this), "draft") });
-                tr.append(target_td);
-                segments_table.append(tr);
-            })
-            $("main#editor_view").attr("cur_f_id", file_id);
-            toggleView("main#editor_view", $("button#btn_editor_view"));
-            $("button#btn_editor_view").prop("disabled", false);
-        })
+                $("main#editor_view").attr("cur_f_id", file_id);
+                toggleView("main#editor_view", $("button#btn_editor_view"));
+                $("button#btn_editor_view").prop("disabled", false);
+            }
+        }
+        xhttp.open("GET", "http://127.0.0.1:8000/project/" + project_id + "/file/" + file_id);
+        xhttp.send();
     }
 
     // Fetches a list of the translation memories
