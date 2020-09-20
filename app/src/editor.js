@@ -16,24 +16,24 @@ $(document).ready(function () {
 
 let selectedSegments = [];
 
-function submitSegment(target_cell, segment_status) {
+function submitSegment(target_cell, segment_state) {
     paragraph_no = target_cell.closest("tr").attr("p_id");
     segment_no = target_cell.closest("tr").attr("id");
     source_segment = target_cell.closest("tr").find("td.source").html();
     target_segment = target_cell.html().replace(/&nbsp;/g, ' ');
 
     if (target_segment == "") {
-        segment_status = "blank";
+        segment_state = "blank";
     }
 
-    if (segment_status == "draft" && !target_cell.closest("tr").hasClass("draft")) {
+    if (segment_state == "draft" && !target_cell.closest("tr").hasClass("draft")) {
         return false;
     }
 
     $.post(
         "http://127.0.0.1:8000/project/" + $(files_view).attr("cur_p_id") + "/file/" + $(editor_view).attr("cur_f_id"),
         {
-            segment_status: segment_status,
+            segment_state: segment_state,
             source_segment: source_segment,
             target_segment: target_segment,
             paragraph_no: paragraph_no,
@@ -43,9 +43,9 @@ function submitSegment(target_cell, segment_status) {
         )
         .done(function(data) {
             console.log("Segment #" + segment_no + " submitted succesfully!");
-            target_cell.closest("tr").removeAttr("class").addClass(segment_status);
+            target_cell.closest("tr").removeAttr("class").addClass(segment_state);
 
-            if (segment_status == "translated") {
+            if (segment_state == "translated") {
                 target_cell.closest("tr").next().find("td.target").focus();
             }
         })
