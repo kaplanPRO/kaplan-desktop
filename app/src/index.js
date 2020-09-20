@@ -258,16 +258,6 @@ $(document).ready(function() {
 
     $("button#toggle_sidebar").click(function() {
         $("div#sidebar span").toggle()
-        if ($(this).text() == "<") {
-            $("div#sidebar").css("width", "4rem");
-            $("body#index main").css("margin-left", "4rem");
-            $(this).text(">");
-        }
-        else {
-            $("div#sidebar").css("width", "7rem");
-            $("body#index main").css("margin-left", "7rem");
-            $(this).text("<");
-        }
     })
 
     function populate_package_creation_menu(task) {
