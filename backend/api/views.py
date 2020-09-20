@@ -1,11 +1,10 @@
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 
 from .models import File, Project, TranslationMemory
 
-from kaplan.bilingualfile import BilingualFile
-from kaplan.sourcefile import SourceFile
+from kaplan.kxliff import KXLIFF
 from kaplan.translationmemory import TranslationMemory as TM
 from kaplan.utils import create_new_project_package, create_return_project_package, html_to_segment, open_new_project_package, segment_to_html, supported_file_formats
 
@@ -52,7 +51,7 @@ def new_project(request):
     project_source = request.POST['source_language']
     project_target = request.POST['target_language']
     project_tms = [TranslationMemory.objects.get(id=int(tm_id)) for tm_id in request.POST['translation_memories'].split(';') if tm_id]
-    project_files = [project_file for project_file in request.POST.get('files').split(';') if project_file.endswith(supported_file_formats)]
+    project_files = [project_file for project_file in request.POST.get('files').split(';') if KXLIFF.can_process(project_file)]
 
     if len(project_files) == 0:
         return JsonResponse({'error': 'No compatible files selected!'}, status=500)
@@ -82,6 +81,7 @@ def new_project(request):
         new_file = File()
         new_file.title = file_title
         new_file.project = project
+        new_file.is_kliff = not file_title.lower().endswith(('.xliff', '.sdlxliff'))
         new_file.save()
 
         with open(project_file, 'rb') as infile:
@@ -89,9 +89,9 @@ def new_project(request):
                 for line in infile:
                     outfile.write(line)
 
-        sf = SourceFile(os.path.join(source_dir, file_title))
-        sf.write_bilingual_file(source_dir)
-        sf.write_bilingual_file(target_dir)
+        kxliff = KXLIFF.new(os.path.join(source_dir, file_title), project_source)
+        kxliff.save(source_dir)
+        kxliff.save(target_dir)
 
     return JsonResponse({'status': 'success'})
 
@@ -150,35 +150,32 @@ def project_file(request, project_id, file_id):
     project_file = File.objects.filter(project=project)
     project_file = project_file.get(id=file_id)
 
-    bf = BilingualFile(os.path.join(project.directory, project.target_language, (project_file.title + '.xml')))
+    filename = project_file.title + '.kxliff' if project_file.is_kxliff else project_file.title
+    kxliff = KXLIFF(os.path.join(project.get_target_dir(), filename))
 
     if request.method == 'POST':
         if request.POST.get('task') == 'generate_target_translation':
-            bf.generate_target_translation(os.path.join(project.get_source_dir(), project_file.title),
-                                                        project.get_target_dir())
+            kxliff.generate_target_translation(project.get_target_dir())
 
             return JsonResponse({'status': 'success'})
 
         elif request.POST.get('task') == 'merge_segments':
-            bf.merge_segments(request.POST['segment_list'].split(';'))
-            bf.save(project.get_target_dir())
 
-            return JsonResponse({'status': 'success'})
+            return JsonResponse({'status': 'failed'},
+                                {'message': 'Feature temporarily unavailable.'})
 
         else:
-            segment_status = request.POST['segment_status']
-            source_segment = html_to_segment(request.POST['source_segment'], 'source')
-            target_segment = html_to_segment(request.POST['target_segment'], 'target')
+            segment_state = request.POST['segment_state']
+            target_segment = request.POST['target_segment']
             author_id = request.POST['author_id']
 
-            bf.update_segment(segment_status,
-                            target_segment,
-                            int(request.POST['paragraph_no']),
-                            int(request.POST['segment_no']),
-                            request.POST['author_id'])
-            bf.save(project.get_target_dir())
+            kxliff.update_segment(segment_state,
+                                 target_segment,
+                                 request.POST['paragraph_no'],
+                                 request.POST['segment_no'])
+            kxliff.save(project.get_target_dir())
 
-            if segment_status == 'translated':
+            if segment_state == 'translated':
                 for project_tm in project.translation_memories.all():
                     project_tm = TM(project_tm.path,
                                 project.source_language,
@@ -214,17 +211,7 @@ def project_file(request, project_id, file_id):
         return JsonResponse(tm_hits_dict)
 
     else:
-        segments = {}
-        for paragraph in bf.paragraphs:
-            for segment in paragraph:
-                current_segment = {}
-                current_segment['source'] = segment_to_html(segment[0])
-                current_segment['status'] = segment[1].text
-                current_segment['target'] = segment_to_html(segment[2])
-                current_segment['paragraph'] = segment[-2]
-                segments[segment[-1]] = current_segment
-
-        return JsonResponse(segments)
+        return HttpResponse(etree.tostring(kxliff.translation_units, encoding="UTF-8"))
 
 @csrf_exempt
 def project_view(request, project_id):

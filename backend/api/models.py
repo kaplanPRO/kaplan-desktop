@@ -10,6 +10,7 @@ import os
 class File(models.Model):
     title = models.CharField(max_length=60)
     project = models.ForeignKey('Project', on_delete=models.CASCADE)
+    is_kxliff = models.BooleanField(default=False)
 
 
 class Project(models.Model):

@@ -20,10 +20,13 @@ function submitSegment(target_cell, segment_state) {
     paragraph_no = target_cell.closest("tr").attr("p_id");
     segment_no = target_cell.closest("tr").attr("id");
     source_segment = target_cell.closest("tr").find("td.source").html();
-    target_segment = target_cell.html().replace(/&nbsp;/g, ' ');
+    target_segment = target_cell.html().replace(/&nbsp;/g, ' ')
 
     if (target_segment == "") {
         segment_state = "blank";
+        target_segment = "<target/>"
+    } else {
+      target_segment = "<target>" + target_segment + "</target>";
     }
 
     if (segment_state == "draft" && !target_cell.closest("tr").hasClass("draft")) {
