@@ -81,7 +81,7 @@ def new_project(request):
         new_file = File()
         new_file.title = file_title
         new_file.project = project
-        new_file.is_kliff = not file_title.lower().endswith(('.xliff', '.sdlxliff'))
+        new_file.is_kxliff = not file_title.lower().endswith(('.xliff', '.sdlxliff'))
         new_file.save()
 
         with open(project_file, 'rb') as infile:
