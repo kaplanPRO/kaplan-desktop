@@ -10,6 +10,7 @@ from kaplan.utils import create_new_project_package, create_return_project_packa
 
 from lxml import etree
 
+import html
 from io import BytesIO
 import os
 import zipfile
@@ -134,7 +135,7 @@ def project_directory(request):
     projects_dict = {}
 
     for project in Project.objects.all():
-        projects_dict[project.id] = {'title': project.title,
+        projects_dict[project.id] = {'title': html.escape(project.title),
                                     'source_language': project.get_source_language(),
                                     'source_language_code': project.source_language,
                                     'target_language': project.get_target_language(),
