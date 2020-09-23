@@ -3,8 +3,8 @@ $(document).ready(function() {
     const files_table = $("#files_table");
     const files_view = $("#files_view");
     const overlay = $("main#overlay");
-    const projects_table = $("#projects_table");
-    const segments_table = $("#segments_table");
+    const projectsTable = document.getElementById("projects_table");
+    const segmentsDiv = document.getElementById("segments_div");
     const segment_hits_table = $("#hits_table");
     const tms_table = $("#tms_table");
 
@@ -25,62 +25,90 @@ $(document).ready(function() {
 
     // Fetches a list of the projects
     function fetchProjects() {
-        $.getJSON(
-            "http://127.0.0.1:8000/",
-            function(data) {
-            projects_table.empty();
-            $.each(data, function(p_id, project) {
-                tr = $("<tr>");
-                tr.attr("project_id", p_id);
-                tr.attr("is_imported", project.is_imported);
-                tr.attr("is_exported", project.is_exported);
-                title_td = $("<td class='project_title'>");
-                title_td.text(project.title);
-                tr.append(title_td);
-                src_lng_td = $("<td class='source language'>");
-                src_lng_td.attr("lang_code", project.source_language_code);
-                src_lng_td.text(project.source_language);
-                tr.append(src_lng_td);
-                trg_lng_td = $("<td class='target language'>");
-                trg_lng_td.attr("lang_code", project.target_language_code);
-                trg_lng_td.text(project.target_language);
-                tr.append(trg_lng_td);
-                tr.dblclick(function() {
-                    lang_pair = [$(this).find("td.source").attr("lang_code"),
-                                 $(this).find("td.target").attr("lang_code")];
-                    window.setSpellCheckerLanguages(lang_pair);
-                    fetchProject($(this).attr("project_id"));
-                    if ($(this).attr("is_imported") == "true") {
-                        $("#btn_create_new_project_package").hide();
-                        $("#btn_create_return_project_package").show();
-                        $("#btn_update_from_krpp").hide();
-                    }
-                    else if ($(this).attr("is_exported") == "true") {
-                        $("#btn_create_return_project_package").hide();
-                        $("#btn_update_from_krpp").show();
-                        $("#btn_create_new_project_package").show();
-                    }
-                    else {
-                        $("#btn_create_return_project_package").hide();
-                        $("#btn_update_from_krpp").hide();
-                        $("#btn_create_new_project_package").show();
-                    }
-                });
+        var projects;
+        var projectsKeys;
+        var xhttp = new XMLHttpRequest();
 
-                projects_table.prepend(tr);
-            });
-            projects_table.prepend($("<tr><th class=\"name\"><h4>Project Name</h4></th><th><h4>Source Language</h4></th><th><h4>Target Language</h4></th></tr>"));
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                projects = JSON.parse(this.responseText);
+                projectsKeys = Object.keys(projects);
+
+                projectsTable.innerHTML = "";
+
+                for (i = 0; i < projectsKeys.length; i++) {
+                    project_id = projectsKeys[i];
+                    project = projects[project_id];
+                    tr = document.createElement("tr");
+                    tr.setAttribute("project_id", projectsKeys[i]);
+                    tr.setAttribute("is_imported", project.is_imported);
+                    tr.setAttribute("is_exported", project.is_exported);
+
+                    td = document.createElement("td");
+                    td.className = "project_title";
+                    td.innerHTML = project.title;
+                    tr.append(td);
+
+                    td = document.createElement("td");
+                    td.className = "source language";
+                    td.setAttribute("lang_code", project.source_language_code);
+                    td.innerHTML = project.source_language;
+                    tr.append(td);
+
+                    td = document.createElement("td");
+                    td.className = "target language";
+                    td.setAttribute("lang_code", project.target_language_code)
+                    td.innerHTML = project.target_language;
+                    tr.append(td);
+
+                    tr.ondblclick = function() {
+                        lang_pair = [project.source_language_code, project.target_language_code];
+                        window.setSpellCheckerLanguages(lang_pair);
+                        fetchProject(project_id);
+                        if ($(this).attr("is_imported") == "true") {
+                            document.getElementById("btn_create_new_project_package").style.display = "none";
+                            document.getElementById("btn_create_return_project_package").style.display = "inline-block";
+                            document.getElementById("btn_update_from_krpp").style.display = "none";
+                        }
+                        else if ($(this).attr("is_exported") == "true") {
+                            document.getElementById("btn_create_return_project_package").style.display = "none";
+                            document.getElementById("btn_update_from_krpp").style.display = "inline-block";
+                            document.getElementById("btn_create_new_project_package").style.display = "inline-block";
+                        }
+                        else {
+                            document.getElementById("btn_create_return_project_package").style.display = "none";
+                            document.getElementById("btn_update_from_krpp").style.display = "none";
+                            document.getElementById("btn_create_new_project_package").style.display = "inline-block";
+                        }
+                    }
+
+                    projectsTable.prepend(tr);
+                }
+                tr = document.createElement("tr");
+                th = document.createElement("th");
+                th.className = "name";
+                th.innerHTML = "Project Name";
+                tr.append(th);
+                th = document.createElement("th");
+                th.innerHTML = "Source Language";
+                tr.append(th);
+                th = document.createElement("th");
+                th.innerHTML = "Target Language";
+                tr.append(th)
+                projectsTable.prepend(tr);
+
+                console.log("Projects fetched.")
             }
-        )
-        .done(() => {
-            console.log("Projects fetched.")
-        })
-        .fail(() => {
-            console.log("Projects not fetched. Trying again in 2 seconds.")
-            setTimeout(() => {
-            fetchProjects();
-            }, 2000)
-        })
+            else if (this.readyState == 4 && this.status != 200) {
+                console.log("Projects not fetched. Trying again in 2 seconds.")
+                setTimeout(() => {
+                fetchProjects();
+                }, 2000)
+            }
+        }
+
+        xhttp.open("GET", "http://127.0.0.1:8000/");
+        xhttp.send();
     }
 
     // Fetches a list of the files in a project
@@ -112,7 +140,6 @@ $(document).ready(function() {
     // Fetches the segments in a file
     function fetchSegments(project_id, file_id) {
         var parser = new DOMParser();
-        var segments_div = document.getElementById("segments_div");
         var xhttp = new XMLHttpRequest();
 
         var p_i;
@@ -125,7 +152,7 @@ $(document).ready(function() {
 
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
-                segments_div.innerHTML = "";
+                segmentsDiv.innerHTML = "";
                 translation_units = parser.parseFromString(this.responseText, "text/xml").documentElement.childNodes;
                 for (i = 0; i < translation_units.length; i++) {
                     p_id = translation_units[i].getAttribute("id");
@@ -181,10 +208,10 @@ $(document).ready(function() {
 
                             translation_unit_table.appendChild(segment_row);
                         }
-                        segments_div.appendChild(translation_unit_table);
+                        segmentsDiv.appendChild(translation_unit_table);
 
                         if (i < translation_units.length - 1) {
-                            segments_div.appendChild(document.createElement("hr"));
+                            segmentsDiv.appendChild(document.createElement("hr"));
                         }
                     }
                 }
