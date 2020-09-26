@@ -63,7 +63,8 @@ $(document).ready(function() {
                     tr.append(td);
 
                     tr.ondblclick = function() {
-                        window.projectTitle = project.title;
+                        window.projectTitle = this.getElementsByTagName("td")[0].innerHTML;
+                        window.fileTitle = undefined;
                         setFooter();
 
                         lang_pair = [project.source_language_code, project.target_language_code];
@@ -142,8 +143,13 @@ $(document).ready(function() {
                     f_id = filesKeys[i];
                     tr = document.createElement("tr");
                     tr.setAttribute("file_id", f_id);
+
+                    td = document.createElement("td");
+                    td.innerHTML = files[f_id].title;
+                    tr.append(td);
+
                     tr.ondblclick = function() {
-                        window.fileTitle = files[f_id].title;
+                        window.fileTitle = this.getElementsByTagName("td")[0].innerHTML;
                         setFooter();
 
                         fetchSegments(project_id, f_id);
@@ -151,10 +157,6 @@ $(document).ready(function() {
                     tr.oncontextmenu = function(e) {
                         window.openFileContextMenu(e, f_id)
                     }
-
-                    td = document.createElement("td");
-                    td.innerHTML = files[f_id].title;
-                    tr.append(td);
 
                     filesTable.append(tr);
                 }
@@ -312,19 +314,19 @@ $(document).ready(function() {
     }
 
     function setFooter() {
-        var footer_string;
+        var footerString;
 
         if (window.projectTitle == undefined) {
           return false;
         }
 
-        footer_string = window.projectTitle;
+        footerString = window.projectTitle;
 
         if (window.fileTitle != undefined) {
-            footer_string +=  " | " + window.fileTitle;
+            footerString +=  " | " + window.fileTitle;
         }
 
-        footer.innerHTML = footer_string
+        footer.innerHTML = footerString
     }
 
     function toggleView(viewId, viewDisplay, buttonId) {
