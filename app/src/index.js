@@ -312,9 +312,27 @@ $(document).ready(function() {
         footer.innerHTML = footer_string
     }
 
-    $("button#toggle_sidebar").click(function() {
-        $("div#sidebar span").toggle()
-    })
+    function toggleView(viewId, viewDisplay, buttonId) {
+        activeView.style.display = "none";
+        activeButton.classList.remove("active");
+        activeView = document.getElementById(viewId);
+        activeView.style.display = viewDisplay;
+        activeButton = document.getElementById(buttonId);
+        activeButton.classList.add("active");
+    }
+
+    document.getElementById("toggle_sidebar").onclick = function() {
+        var sidebar = document.getElementById("sidebar");
+
+        if (sidebar.classList.contains("minimized")) {
+            sidebar.classList.remove("minimized");
+            this.innerHTML = "<";
+        }
+        else {
+            sidebar.classList.add("minimized");
+            this.innerHTML = ">";
+        }
+    }
 
     function populate_package_creation_menu(task) {
       overlay.show();
