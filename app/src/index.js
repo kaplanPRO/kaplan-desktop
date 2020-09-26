@@ -8,8 +8,8 @@ $(document).ready(function() {
     const segment_hits_table = $("#hits_table");
     const tms_table = $("#tms_table");
 
-    let active_view = $("main#projects_view");
-    let active_button = $("button#btn_projects_view");
+    let activeView = document.getElementById("projects_view");
+    let activeButton = document.getElementById("btn_projects_view");
 
     var tr;
     var title_td;
@@ -150,7 +150,7 @@ $(document).ready(function() {
                     filesTable.append(tr);
                 }
                 $("main#files_view").attr("cur_p_id", project_id);
-                toggleView("main#files_view", $("button#btn_files_view"));
+                toggleView("files_view", "block", "btn_files_view");
                 $("button#btn_files_view").prop("disabled", false);
             }
         }
@@ -238,7 +238,7 @@ $(document).ready(function() {
                     }
                 }
                 $("main#editor_view").attr("cur_f_id", file_id);
-                toggleView("main#editor_view", $("button#btn_editor_view"));
+                toggleView("editor_view", "grid", "btn_editor_view");
                 $("button#btn_editor_view").prop("disabled", false);
             }
         }
@@ -283,26 +283,33 @@ $(document).ready(function() {
     }
 
     // Navigation
-    $("button#btn_projects_view").click(function() {
-        toggleView("main#projects_view", $(this));
-    })
-    $("button#btn_files_view").click(function() {
-        toggleView("main#files_view", $(this));
-    })
-    $("button#btn_editor_view").click(function() {
-        toggleView("main#editor_view", $(this));
-    })
-    $("button#btn_tm_view").click(function() {
-        toggleView("main#tm_view", $(this));
-    })
+    document.getElementById("btn_projects_view").onclick = function() {
+        toggleView("projects_view", "block", "btn_projects_view");
+    }
+    document.getElementById("btn_files_view").onclick = function() {
+        toggleView("files_view", "block", "btn_files_view");
+    }
+    document.getElementById("btn_editor_view").onclick = function() {
+        toggleView("editor_view", "grid", "btn_editor_view");
+    }
+    document.getElementById("btn_tm_view").onclick = function() {
+        toggleView("tm_view", "block", "btn_tm_view");
+    }
 
-    function toggleView(to_view_id, button) {
-        active_view.fadeOut(0);
-        active_button.removeClass("active");
-        active_view = $(to_view_id);
-        active_view.fadeIn(400);
-        active_button = button;
-        button.addClass("active");
+    function setFooter() {
+        var footer_string;
+
+        if (window.projectTitle == undefined) {
+          return false;
+        }
+
+        footer_string = window.projectTitle;
+
+        if (window.fileTitle != undefined) {
+            footer_string +=  " | " + window.fileTitle;
+        }
+
+        footer.innerHTML = footer_string
     }
 
     $("button#toggle_sidebar").click(function() {
