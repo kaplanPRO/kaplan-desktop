@@ -2,6 +2,7 @@ $(document).ready(function() {
     const editor_view = $("#editor_view");
     const filesTable = document.getElementById("files_table");
     const files_view = $("#files_view");
+    const footer = document.getElementsByTagName("footer")[0];
     const overlay = $("main#overlay");
     const projectsTable = document.getElementById("projects_table");
     const segmentsDiv = document.getElementById("segments_div");
@@ -62,9 +63,14 @@ $(document).ready(function() {
                     tr.append(td);
 
                     tr.ondblclick = function() {
+                        window.projectTitle = project.title;
+                        setFooter();
+
                         lang_pair = [project.source_language_code, project.target_language_code];
                         window.setSpellCheckerLanguages(lang_pair);
+
                         fetchProject(project_id);
+
                         if ($(this).attr("is_imported") == "true") {
                             document.getElementById("btn_create_new_project_package").style.display = "none";
                             document.getElementById("btn_create_return_project_package").style.display = "inline-block";
@@ -137,6 +143,9 @@ $(document).ready(function() {
                     tr = document.createElement("tr");
                     tr.setAttribute("file_id", f_id);
                     tr.ondblclick = function() {
+                        window.fileTitle = files[f_id].title;
+                        setFooter();
+
                         fetchSegments(project_id, f_id);
                     }
                     tr.oncontextmenu = function(e) {
