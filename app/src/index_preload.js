@@ -93,8 +93,8 @@ window.setSpellCheckerLanguages = (arrayOfLanguages) => {
 const fileMenu = new Menu();
 fileMenu.append(new MenuItem({ label: 'Finalize', click() { getTargetTranslation(window.fileId) } }));
 
-window.openFileContextMenu = (e, file_row) => {
+window.openFileContextMenu = (e, f_id) => {
     e.preventDefault();
-    window.fileId = $(file_row).attr("file_id");
+    window.fileId = f_id;
     fileMenu.popup({ window: getCurrentWindow() });
 }
