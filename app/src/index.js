@@ -1,6 +1,6 @@
 $(document).ready(function() {
     const editor_view = $("#editor_view");
-    const files_table = $("#files_table");
+    const filesTable = document.getElementById("files_table");
     const files_view = $("#files_view");
     const overlay = $("main#overlay");
     const projectsTable = document.getElementById("projects_table");
@@ -113,28 +113,50 @@ $(document).ready(function() {
 
     // Fetches a list of the files in a project
     function fetchProject(project_id) {
-        $.getJSON(
-            "http://127.0.0.1:8000/project/" + project_id
-        )
-        .done(function(data) {
-            files_table.empty();
-            files_table.append($("<tr><th class=\"name\"><h4>File Name</h4></th></tr>"));
-            $.each(data, function(f_id, file) {
-                tr = $("<tr>");
-                tr.attr("file_id", f_id);
-                tr.dblclick(function() {fetchSegments(project_id, f_id)});
-                tr.contextmenu(function(e) {window.openFileContextMenu(e, this)});
-                title_td = $("<td>");
-                title_td.text(file.title);
-                tr.append(title_td);
-                empty_td = $("<td>");
-                tr.append(empty_td);
-                files_table.append(tr);
-            })
-            $("main#files_view").attr("cur_p_id", project_id);
-            toggleView("main#files_view", $("button#btn_files_view"));
-            $("button#btn_files_view").prop("disabled", false);
-        })
+        var files;
+        var filesKeys;
+        var xhttp = new XMLHttpRequest();
+
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                files = JSON.parse(this.responseText);
+                filesKeys = Object.keys(files);
+
+                filesTable.innerHTML = "";
+
+                tr = document.createElement("tr");
+                th = document.createElement("th");
+                th.className = "name";
+                th.innerHTML = "File Name";
+                tr.append(th);
+
+                filesTable.append(tr);
+
+                for (i = 0; i < filesKeys.length; i++) {
+                    f_id = filesKeys[i];
+                    tr = document.createElement("tr");
+                    tr.setAttribute("file_id", f_id);
+                    tr.ondblclick = function() {
+                        fetchSegments(project_id, f_id);
+                    }
+                    tr.oncontextmenu = function(e) {
+                        window.openFileContextMenu(e, f_id)
+                    }
+
+                    td = document.createElement("td");
+                    td.innerHTML = files[f_id].title;
+                    tr.append(td);
+
+                    filesTable.append(tr);
+                }
+                $("main#files_view").attr("cur_p_id", project_id);
+                toggleView("main#files_view", $("button#btn_files_view"));
+                $("button#btn_files_view").prop("disabled", false);
+            }
+        }
+
+        xhttp.open("GET", "http://127.0.0.1:8000/project/" + project_id);
+        xhttp.send();
     }
 
     // Fetches the segments in a file
