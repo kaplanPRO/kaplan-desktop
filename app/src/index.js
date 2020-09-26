@@ -204,7 +204,10 @@ $(document).ready(function() {
 
                             source_td = document.createElement("td");
                             source_td.classList.add("source");
-                            source_td.innerHTML = segments[s_i].getElementsByTagName("source")[0].innerHTML;
+                            source_td.innerHTML = segments[s_i].getElementsByTagName("source")[0].innerHTML
+                                                  .replace(/\\n/g, "<kaplan:placeholder>")
+                                                  .replace(/\n/g, "<ph>\\n</ph>")
+                                                  .replace(/<kaplan:placeholder>/g, "\\n");
                             tags = source_td.getElementsByTagName("sc");
                             for (t_i = 0; t_i < tags.length; t_i++) {
                                 tags[t_i].addEventListener("click", function() { tagClickHandler(this) });
@@ -230,7 +233,10 @@ $(document).ready(function() {
                             target_td = document.createElement("td");
                             target_td.classList.add("target");
                             target_td.contentEditable = "true";
-                            target_td.innerHTML = segments[s_i].getElementsByTagName("target")[0].innerHTML;
+                            target_td.innerHTML = segments[s_i].getElementsByTagName("target")[0].innerHTML
+                                                  .replace(/\\n/g, "<kaplan:placeholder>")
+                                                  .replace(/\n/g, "<ph>\\n</ph>")
+                                                  .replace(/<kaplan:placeholder>/g, "\\n");
                             target_td.addEventListener("keydown", function(e) { targetKeydownHandler(e, $(this)) });
                             target_td.addEventListener("keyup", function() { $(this).find("br").remove() });
                             target_td.addEventListener("focus", function () { segmentLookup($(this).closest("tr").find("td.source"), segment_hits_table) });
