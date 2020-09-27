@@ -152,10 +152,10 @@ $(document).ready(function() {
                         window.fileTitle = this.getElementsByTagName("td")[0].innerHTML;
                         setFooter();
 
-                        fetchSegments(project_id, f_id);
+                        fetchSegments(project_id, this.getAttribute("file_id"));
                     }
                     tr.oncontextmenu = function(e) {
-                        window.openFileContextMenu(e, f_id)
+                        window.openFileContextMenu(e, this.getAttribute("file_id"))
                     }
 
                     filesTable.append(tr);
