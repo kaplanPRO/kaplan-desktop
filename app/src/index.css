@@ -162,7 +162,7 @@ ec {
     border-bottom-right-radius: 4px;
     padding: 0 8px 0 4px;
 }
-ph {
+ph, g {
     border-radius: 4px;
 }
 tr.draft th {
