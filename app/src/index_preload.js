@@ -1,4 +1,4 @@
-const { ipcRenderer, remote } = require('electron');
+const { ipcRenderer, remote, shell } = require('electron');
 const { BrowserWindow, dialog, getCurrentWindow, Menu, MenuItem } = remote;
 const path = require('path');
 
@@ -90,11 +90,21 @@ window.setSpellCheckerLanguages = (arrayOfLanguages) => {
     indexWindow.webContents.session.setSpellCheckerLanguages(finalArrayOfLanguages);
 }
 
-const fileMenu = new Menu();
-fileMenu.append(new MenuItem({ label: 'Finalize', click() { getTargetTranslation(window.fileId) } }));
-
-window.openFileContextMenu = (e, f_id) => {
+openFileContextMenu = (e, f_id, filePath) => {
     e.preventDefault();
-    window.fileId = f_id;
-    fileMenu.popup({ window: getCurrentWindow() });
+
+    const fileMenu = new Menu();
+    fileMenu.append(new MenuItem({ label: 'Generate target translation', click() { getTargetTranslation(fileId) } }));
+    fileMenu.append(new MenuItem({ label: 'Show in file explorer', click() { shell.showItemInFolder(filePath) } }))
+
+    fileMenu.popup({ window: indexWindow });
+}
+
+openTMContextMenu = (e, tMPath) => {
+    e.preventDefault();
+
+    const tMMenu = new Menu();
+    tMMenu.append(new MenuItem({ label: 'Show in file explorer', click() { shell.showItemInFolder(tMPath) } }))
+
+    tMMenu.popup({ window: indexWindow });
 }
