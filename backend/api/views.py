@@ -114,7 +114,7 @@ def new_tm(request):
 
     XLIFF.new(tm.path,
               tm.source_language,
-              tm.target_language)
+              tm.target_language).save(os.path.dirname(tm.path))
 
     tm.save()
 
