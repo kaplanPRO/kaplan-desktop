@@ -273,7 +273,9 @@ def project_view(request, project_id):
         files_dict = {}
 
         for project_file in File.objects.filter(project=project):
-            files_dict[project_file.id] = {'title':project_file.title}
+            filename = project_file.title + '.kxliff' if project_file.is_kxliff else project_file.title
+            files_dict[project_file.id] = {'title':project_file.title,
+                                           'path':os.path.join(project.get_target_dir(), filename)}
 
         return JsonResponse(files_dict)
 
@@ -288,10 +290,11 @@ def tm_directory(request):
     for tm in tms:
         tm_dict = {
             'id': tm.id,
-            'title': tm.title,
+            'title': html.escape(tm.title),
             'source_language': tm.get_source_language(),
-            'target_language': tm.get_target_language()
+            'target_language': tm.get_target_language(),
+            'path': tm.path,
         }
-        tms_dict[tm.title] = tm_dict
+        tms_dict[tm.id] = tm_dict
 
     return JsonResponse(tms_dict)
