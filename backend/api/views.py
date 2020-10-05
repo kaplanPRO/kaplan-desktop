@@ -19,6 +19,9 @@ import zipfile
 
 @csrf_exempt
 def import_project(request):
+    return JsonResponse({'status': 'failed',
+                        'message': 'Feature temporarily unavailable.'},
+                        status=403)
     path_to_package = request.POST['path']
     project_dir = request.POST['directory']
 
@@ -221,6 +224,10 @@ def project_view(request, project_id):
     project = Project.objects.get(id=project_id)
 
     if request.method == 'POST':
+        return JsonResponse({'status': 'failed',
+                            'message': 'Feature temporarily unavailable.'},
+                            status=403)
+
         if request.POST.get('task') == 'create_new_project_package':
             files_to_package = request.POST['files_to_package'].split(';')
 
