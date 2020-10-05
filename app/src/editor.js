@@ -19,7 +19,7 @@ let selectedSegments = [];
 function submitSegment(target_cell, segment_state) {
     paragraph_no = target_cell.closest("tr").attr("p_id");
     segment_no = target_cell.closest("tr").attr("id");
-    source_segment = target_cell.closest("tr").find("td.source").html();
+    source_segment = "<source>" + target_cell.closest("tr").find("td.source").html().replace(/<ph>\\n<\/ph>/g, "\n") + "</source>";
     target_segment = target_cell.html().replace(/&nbsp;/g, " ").replace(/<ph>\\n<\/ph>/g, "\n");
 
     if (target_segment == "") {
