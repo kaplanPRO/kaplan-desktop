@@ -4,8 +4,8 @@ from django.views.decorators.csrf import csrf_exempt
 
 from .models import File, Project, TranslationMemory
 
-from kaplan.kxliff import KXLIFF
-from kaplan.translationmemory import TranslationMemory as TM
+from kaplan.kxliff import KXLIFF # Bilingual file
+from kaplan.xliff import XLIFF # Translation memory
 from kaplan.utils import create_new_project_package, create_return_project_package, html_to_segment, open_new_project_package, segment_to_html, supported_file_formats
 
 from lxml import etree
@@ -109,9 +109,9 @@ def new_tm(request):
     tm.source_language = tm_source_language
     tm.target_language = tm_target_language
 
-    TM.new(tm.path,
-       tm.source_language,
-       tm.target_language)
+    XLIFF.new(tm.path,
+              tm.source_language,
+              tm.target_language)
 
     tm.save()
 
@@ -162,11 +162,13 @@ def project_file(request, project_id, file_id):
 
         elif request.POST.get('task') == 'merge_segments':
 
-            return JsonResponse({'status': 'failed'},
-                                {'message': 'Feature temporarily unavailable.'})
+            return JsonResponse({'status': 'failed',
+                                'message': 'Feature temporarily unavailable.'},
+                                status=403)
 
         else:
             segment_state = request.POST['segment_state']
+            source_segment = request.POST['source_segment']
             target_segment = request.POST['target_segment']
             author_id = request.POST['author_id']
 
@@ -178,13 +180,12 @@ def project_file(request, project_id, file_id):
 
             if segment_state == 'translated':
                 for project_tm in project.translation_memories.all():
-                    project_tm = TM(project_tm.path,
-                                project.source_language,
-                                project.target_language)
+                    project_tm = XLIFF(project_tm.path,
+                                       project.source_language,
+                                       project.target_language)
 
                     project_tm.submit_segment(source_segment,
-                                              target_segment,
-                                              author_id)
+                                              target_segment)
 
             return JsonResponse({'status': 'success'})
 
@@ -199,15 +200,16 @@ def project_file(request, project_id, file_id):
 
             for tm_result in project_tm.lookup(source_segment):
                 tm_result = {'ratio': int(tm_result[0]*100),
-                             'source': segment_to_html(tm_result[1]),
-                             'target': segment_to_html(tm_result[2])}
+                             'source': etree.tostring(tm_result[1][0], encoding='UTF-8'),
+                             'target': etree.tostring(tm_result[1][1], encoding='UTF-8')}
 
                 if tm_result not in tm_hits:
                     tm_hits.append(tm_result)
 
+        tm_hits.sort(reverse=True)
         tm_hits_dict = {}
         for tm_hit in tm_hits:
-            tm_hits_dict[tm_hit['ratio']] = tm_hit
+            tm_hits_dict[len(tm_hits)] = tm_hit
 
         return JsonResponse(tm_hits_dict)
 
