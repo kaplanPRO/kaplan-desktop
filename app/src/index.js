@@ -7,7 +7,7 @@ $(document).ready(function() {
     const projectsTable = document.getElementById("projects_table");
     const segmentsDiv = document.getElementById("segments_div");
     const segment_hits_table = $("#hits_table");
-    const tms_table = $("#tms_table");
+    const tMTable = document.getElementById("tms_table");
 
     let activeView = document.getElementById("projects_view");
     let activeButton = document.getElementById("btn_projects_view");
@@ -143,6 +143,7 @@ $(document).ready(function() {
                     f_id = filesKeys[i];
                     tr = document.createElement("tr");
                     tr.setAttribute("file_id", f_id);
+                    tr.setAttribute("filePath", files[f_id].path);
 
                     td = document.createElement("td");
                     td.innerHTML = files[f_id].title;
@@ -155,7 +156,7 @@ $(document).ready(function() {
                         fetchSegments(project_id, this.getAttribute("file_id"));
                     }
                     tr.oncontextmenu = function(e) {
-                        window.openFileContextMenu(e, this.getAttribute("file_id"))
+                        openFileContextMenu(e, this.getAttribute("file_id"), this.getAttribute("filePath"));
                     }
 
                     filesTable.append(tr);
@@ -265,38 +266,55 @@ $(document).ready(function() {
 
     // Fetches a list of the translation memories
     function fetchTMs() {
-        $.getJSON(
-            "http://127.0.0.1:8000/tms",
-            function(data) {
-            tms_table.empty();
-            tms_table.append($("<tr><th class=\"name\"><h4>Translation Memory</h4></th><th><h4>Source Language</h4></th><th><h4>Target Language</h4></th></tr>"));
-            $.each(data, function(tm_title, tm) {
-                tr = $("<tr>");
-                tr.attr("id", tm.id);
-                title_td = $("<td>");
-                title_td.text(tm.title);
-                tr.append(title_td);
-                src_lng_td = $("<td>");
-                src_lng_td.text(tm.source_language);
-                src_lng_td.addClass("language");
-                tr.append(src_lng_td);
-                trg_lng_td = $("<td>");
-                trg_lng_td.addClass("language");
-                trg_lng_td.text(tm.target_language);
-                tr.append(trg_lng_td);
-                tms_table.append(tr);
-            })
+        var xhttp = new XMLHttpRequest();
+
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                tMs = JSON.parse(this.responseText);
+                tMKeys = Object.keys(tMs);
+
+                tMTable.innerHTML = "";
+
+                tr = document.createElement("tr");
+                tr.innerHTML = "<th class=\"name\"><h4>Translation Memory</h4></th><th><h4>Source Language</h4></th><th><h4>Target Language</h4></th>"
+                tMTable.appendChild(tr);
+
+                for (i = 0; i < tMKeys.length; i++) {
+                    translationMemory = tMs[tMKeys[i]];
+                    tr = document.createElement("tr");
+                    tr.setAttribute("id", translationMemory.id);
+                    tr.setAttribute("path", translationMemory.path);
+                    tr.oncontextmenu = function(e) {
+                        openTMContextMenu(e, this.getAttribute("path"));
+                    }
+
+                    td = document.createElement("td");
+                    td.innerHTML = translationMemory.title;
+                    tr.appendChild(td);
+
+                    td = document.createElement("td")
+                    td.innerHTML= translationMemory.source_language;
+                    tr.appendChild(td);
+
+                    td = document.createElement("td")
+                    td.innerHTML= translationMemory.target_language;
+                    tr.appendChild(td);
+
+                    tMTable.appendChild(tr);
+
+                  console.log("TMs fetched.");
+                }
             }
-        )
-        .done(() => {
-            console.log("TMs fetched.")
-        })
-        .fail(() => {
-            console.log("TMs not fetched. Trying again in 2 seconds.")
-            setTimeout(() => {
-            fetchTMs();
-            }, 2000)
-        })
+            else if (this.readyState == 4 && this.status != 200) {
+                console.log("TMs not fetched. Trying again in 2 seconds.")
+                setTimeout(() => {
+                    fetchTMs();
+                }, 2000)
+            }
+        }
+
+        xhttp.open("GET", "http://127.0.0.1:8000/tms");
+        xhttp.send();
     }
 
     // Navigation
