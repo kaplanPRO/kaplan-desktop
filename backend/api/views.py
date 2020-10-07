@@ -54,8 +54,8 @@ def new_project(request):
     project_dir = request.POST['directory']
     project_source = request.POST['source_language']
     project_target = request.POST['target_language']
-    project_tms = [TranslationMemory.objects.get(id=int(tm_id)) for tm_id in request.POST['translation_memories'].split(';') if tm_id]
-    project_files = [project_file for project_file in request.POST.get('files').split(';') if KXLIFF.can_process(project_file)]
+    project_tms = [TranslationMemory.objects.get(id=int(tm_id)) for tm_id in request.POST.get('translation_memories', '').split(',') if tm_id]
+    project_files = [project_file for project_file in request.POST['files'].split(',') if KXLIFF.can_process(project_file)]
 
     if len(project_files) == 0:
         return JsonResponse({'error': 'No compatible files selected!'}, status=500)
