@@ -93,7 +93,7 @@ def new_project(request):
                 for line in infile:
                     outfile.write(line)
 
-        kxliff = KXLIFF.new(os.path.join(source_dir, file_title), project_source)
+        kxliff = KXLIFF.new(os.path.join(source_dir, file_title), project_source, project_target)
         kxliff.save(source_dir)
         kxliff.save(target_dir)
 
@@ -108,13 +108,14 @@ def new_tm(request):
 
     tm = TranslationMemory()
     tm.title = tm_title
-    tm.path = tm_path
+    tm.path = tm_path if tm_path.lower().endswith('.xliff') else tm_path + '.xliff'
     tm.source_language = tm_source_language
     tm.target_language = tm_target_language
 
-    XLIFF.new(tm.path,
-              tm.source_language,
-              tm.target_language).save(os.path.dirname(tm.path))
+    xliff = XLIFF.new(tm.path,
+                      tm.source_language,
+                      tm.target_language)
+    xliff.save(os.path.dirname(tm.path))
 
     tm.save()
 
@@ -183,28 +184,29 @@ def project_file(request, project_id, file_id):
 
             if segment_state == 'translated':
                 for project_tm in project.translation_memories.all():
-                    project_tm = XLIFF(project_tm.path,
-                                       project.source_language,
-                                       project.target_language)
+                    xliff = XLIFF(project_tm.path,
+                                  project.source_language,
+                                  project.target_language)
 
-                    project_tm.submit_segment(source_segment,
-                                              target_segment)
+                    xliff.submit_segment(source_segment,
+                                         target_segment)
+                    xliff.save(os.path.dirname(project_tm.path))
 
             return JsonResponse({'status': 'success'})
 
     elif request.GET.get('task') == 'lookup':
-        source_segment = html_to_segment(request.GET['source_segment'], 'source')
+        source_segment = request.GET['source_segment']
 
         tm_hits = []
         for project_tm in project.translation_memories.all():
-            project_tm = TM(project_tm.path,
+            project_tm = XLIFF(project_tm.path,
                          project.source_language,
                          project.target_language)
 
-            for tm_result in project_tm.lookup(source_segment):
+            for tm_result in project_tm.lookup_segment(source_segment):
                 tm_result = {'ratio': int(tm_result[0]*100),
-                             'source': etree.tostring(tm_result[1][0], encoding='UTF-8'),
-                             'target': etree.tostring(tm_result[1][1], encoding='UTF-8')}
+                             'source': etree.tostring(tm_result[1][0], encoding='UTF-8').decode(),
+                             'target': etree.tostring(tm_result[1][1], encoding='UTF-8').decode()}
 
                 if tm_result not in tm_hits:
                     tm_hits.append(tm_result)
