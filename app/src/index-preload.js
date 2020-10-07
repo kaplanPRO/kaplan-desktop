@@ -16,11 +16,11 @@ window.createNewTM = () => {
         parent: indexWindow,
         webPreferences: {
             enableRemoteModule: true,
-            preload: path.join(__dirname, 'new_tm_preload.js')
+            preload: path.join(__dirname, 'new-tm-preload.js')
         }
     })
 
-    newTMWindow.loadFile(path.join(__dirname, 'new_tm.html'));
+    newTMWindow.loadFile(path.join(__dirname, 'new-tm.html'));
 }
 
 window.newProject = () => {
@@ -31,11 +31,11 @@ window.newProject = () => {
         parent: indexWindow,
         webPreferences: {
             enableRemoteModule: true,
-            preload: path.join(__dirname, 'new_project_preload.js')
+            preload: path.join(__dirname, 'new-project-preload.js')
         }
     })
 
-    importProjectWindow.loadFile(path.join(__dirname, 'new_project.html'));
+    importProjectWindow.loadFile(path.join(__dirname, 'new-project.html'));
 }
 
 window.importProject = () => {
@@ -46,11 +46,11 @@ window.importProject = () => {
         parent: indexWindow,
         webPreferences: {
             enableRemoteModule: true,
-            preload: path.join(__dirname, 'import_project_preload.js')
+            preload: path.join(__dirname, 'import-project-preload.js')
         }
     })
 
-    importProjectWindow.loadFile(path.join(__dirname, 'import_project.html'));
+    importProjectWindow.loadFile(path.join(__dirname, 'import-project.html'));
 }
 
 window.updateFromKRPP = () => {
@@ -61,11 +61,11 @@ window.updateFromKRPP = () => {
         parent: indexWindow,
         webPreferences: {
             enableRemoteModule: true,
-            preload: path.join(__dirname, 'update_from_krpp_preload.js')
+            preload: path.join(__dirname, 'update-from-krpp-preload.js')
         }
     })
 
-    updateFromKRPPWindow.loadFile(path.join(__dirname, 'update_from_krpp.html'));
+    updateFromKRPPWindow.loadFile(path.join(__dirname, 'update-from-krpp.html'));
 }
 
 window.selectKRPP = () => {
@@ -90,7 +90,7 @@ window.setSpellCheckerLanguages = (arrayOfLanguages) => {
     indexWindow.webContents.session.setSpellCheckerLanguages(finalArrayOfLanguages);
 }
 
-openFileContextMenu = (e, f_id, filePath) => {
+window.openFileContextMenu = (e, fileId, filePath) => {
     e.preventDefault();
 
     const fileMenu = new Menu();
@@ -100,7 +100,7 @@ openFileContextMenu = (e, f_id, filePath) => {
     fileMenu.popup({ window: indexWindow });
 }
 
-openTMContextMenu = (e, tMPath) => {
+window.openTMContextMenu = (e, tMPath) => {
     e.preventDefault();
 
     const tMMenu = new Menu();

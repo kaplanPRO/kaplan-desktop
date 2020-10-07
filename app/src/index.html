@@ -9,36 +9,36 @@
         <script type="text/javascript" src="jquery-3.5.1.min.js"></script>
         <script type="text/javascript" src="index.js"></script>
         <script type="text/javascript" src="editor.js"></script>
-        <script type="text/javascript" src="batch_tasks.js"></script>
+        <script type="text/javascript" src="batch-tasks.js"></script>
     </head>
     <body class="loading" id="index">
         <div id="sidebar">
             <nav>
-            <button class="active" id="btn_projects_view">P<span>rojects</span></button>
-            <button id="btn_files_view" disabled>F<span>iles</span></button>
-            <button id="btn_editor_view" disabled>E<span>ditor</span></button>
-            <button id="btn_tm_view">TM</button>
+                <button class="active" id="btn-projects-view">P<span>rojects</span></button>
+                <button id="btn-files-view" disabled>F<span>iles</span></button>
+                <button id="btn-editor-view" disabled>E<span>ditor</span></button>
+                <button id="btn-tm-view">TM</button>
             </nav>
-            <button id="toggle_sidebar"><</button>
+            <button id="toggle-sidebar"><</button>
         </div>
-        <main id="projects_view">
-            <div class="headbar">
-                <button id="btn_create_project">New Project</button>
-                <button id="btn_import_project" disabled>Import Project</button>
-            </div>
-            <table id="projects_table">
+        <header id="projects-header">
+            <button id="btn-create-project">New Project</button>
+            <button id="btn-import-project" disabled>Import Project</button>
+        </header>
+        <main id="projects-view">
+            <table id="projects-table">
             <tr>
                 <th colspan="3">Loading...</th>
             </tr>
             </table>
         </main>
-        <main id="files_view">
-            <div class="headbar">
-                <button id="btn_create_new_project_package" disabled>Create Project Package</button>
-                <button id="btn_create_return_project_package" disabled>Create Return Package</button>
-                <button id="btn_update_from_krpp" disabled>Open Return Package</button>
-            </div>
-            <table id="files_table">
+        <header id="files-header">
+            <button id="btn-create-new-project-package" disabled>Create Project Package</button>
+            <button id="btn-create-return-project-package" disabled>Create Return Package</button>
+            <button id="btn-update-from-krpp" disabled>Open Return Package</button>
+        </header>
+        <main id="files-view">
+            <table id="files-table">
                 <tr>
                     <th>
                         <h4>File Name</h4>
@@ -47,25 +47,27 @@
                 </tr>
             </table>
         </main>
-        <main id="editor_view">
-            <div id="hits_div">
-                <button id="btn_segment_merge" disabled>Merge</button>
-                <table id="hits_table"></table>
+        <header id="editor-header">
+            <button id="btn-segment-merge" disabled>Merge</button>
+        </header>
+        <main id="editor-view">
+            <div id="hits-div">
+                <table id="hits-table"></table>
             </div>
-            <div id="segments_div"></div>
+            <div id="segments-div"></div>
         </main>
-        <main id="tm_view">
-            <div class="headbar">
-                <button id="btn_create_tm">Create TM</button>
-            </div>
-            <table id="tms_table">
+        <header id="tm-header">
+            <button id="btn-create-tm">Create TM</button>
+        </header>
+        <main id="tm-view">
+            <table id="tms-table">
                 <tr>
                     <th colspan="3">Loading...</th>
                 </tr>
             </table>
         </main>
         <main id="overlay">
-            <form id="form_create_project_package">
+            <form id="form-create-project-package">
                 <table></table>
             </form>
         </main>

@@ -1,23 +1,20 @@
-$(document).ready(function() {
-    const editor_view = $("#editor_view");
-    const filesTable = document.getElementById("files_table");
-    const files_view = $("#files_view");
-    const footer = document.getElementsByTagName("footer")[0];
-    const overlay = $("main#overlay");
-    const projectsTable = document.getElementById("projects_table");
-    const segmentsDiv = document.getElementById("segments_div");
-    const segment_hits_table = $("#hits_table");
-    const tMTable = document.getElementById("tms_table");
+function fireOnReady() {
+    window.editor_view = $("#editor-view");
+    window.filesTable = document.getElementById("files-table");
+    window.files_view = $("#files-view");
+    window.footer = document.getElementsByTagName("footer")[0];
+    window.overlay = $("main#overlay");
+    window.projectsTable = document.getElementById("projects-table");
+    window.segmentsDiv = document.getElementById("segments-div");
+    window.segment_hits_table = $("#hits-table");
+    window.tMTable = document.getElementById("tms-table");
 
-    let activeView = document.getElementById("projects_view");
-    let activeButton = document.getElementById("btn_projects_view");
+    let activeButton = document.getElementById("btn-projects-view");
+    let activeHeader = document.getElementById("projects-header");
+    let activeView = document.getElementById("projects-view");
+    let activeSegment;
 
-    var tr;
-    var title_td;
-    var src_lng_td;
-    var trg_lng_td;
-
-    $("body.loading").removeAttr("class");
+    document.getElementsByTagName("body")[0].removeAttribute("class");
 
     setTimeout(() => {
         fetchProjects();
@@ -26,9 +23,9 @@ $(document).ready(function() {
 
     // Fetches a list of the projects
     function fetchProjects() {
-        var projects;
-        var projectsKeys;
-        var xhttp = new XMLHttpRequest();
+        let projects;
+        let projectsKeys;
+        let xhttp = new XMLHttpRequest();
 
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
@@ -41,24 +38,24 @@ $(document).ready(function() {
                     project_id = projectsKeys[i];
                     project = projects[project_id];
                     tr = document.createElement("tr");
-                    tr.setAttribute("project_id", projectsKeys[i]);
-                    tr.setAttribute("is_imported", project.is_imported);
-                    tr.setAttribute("is_exported", project.is_exported);
+                    tr.setAttribute("project-id", projectsKeys[i]);
+                    tr.setAttribute("is-imported", project.is_imported);
+                    tr.setAttribute("is-exported", project.is_exported);
 
                     td = document.createElement("td");
-                    td.className = "project_title";
+                    td.className = "project-title";
                     td.innerHTML = project.title;
                     tr.append(td);
 
                     td = document.createElement("td");
                     td.className = "source language";
-                    td.setAttribute("lang_code", project.source_language_code);
+                    td.setAttribute("lang-code", project.source_language_code);
                     td.innerHTML = project.source_language;
                     tr.append(td);
 
                     td = document.createElement("td");
                     td.className = "target language";
-                    td.setAttribute("lang_code", project.target_language_code)
+                    td.setAttribute("lang-code", project.target_language_code)
                     td.innerHTML = project.target_language;
                     tr.append(td);
 
@@ -72,20 +69,20 @@ $(document).ready(function() {
 
                         fetchProject(project_id);
 
-                        if ($(this).attr("is_imported") == "true") {
-                            document.getElementById("btn_create_new_project_package").style.display = "none";
-                            document.getElementById("btn_create_return_project_package").style.display = "inline-block";
-                            document.getElementById("btn_update_from_krpp").style.display = "none";
+                        if ($(this).attr("is-imported") == "true") {
+                            document.getElementById("btn-create-new-project-package").style.display = "none";
+                            document.getElementById("btn-create-return-project-package").style.display = "inline-block";
+                            document.getElementById("btn-update-from-krpp").style.display = "none";
                         }
-                        else if ($(this).attr("is_exported") == "true") {
-                            document.getElementById("btn_create_return_project_package").style.display = "none";
-                            document.getElementById("btn_update_from_krpp").style.display = "inline-block";
-                            document.getElementById("btn_create_new_project_package").style.display = "inline-block";
+                        else if ($(this).attr("is-exported") == "true") {
+                            document.getElementById("btn-create-return-project-package").style.display = "none";
+                            document.getElementById("btn-update-from-krpp").style.display = "inline-block";
+                            document.getElementById("btn-create-new-project-package").style.display = "inline-block";
                         }
                         else {
-                            document.getElementById("btn_create_return_project_package").style.display = "none";
-                            document.getElementById("btn_update_from_krpp").style.display = "none";
-                            document.getElementById("btn_create_new_project_package").style.display = "inline-block";
+                            document.getElementById("btn-create-return-project-package").style.display = "none";
+                            document.getElementById("btn-update-from-krpp").style.display = "none";
+                            document.getElementById("btn-create-new-project-package").style.display = "inline-block";
                         }
                     }
 
@@ -120,9 +117,9 @@ $(document).ready(function() {
 
     // Fetches a list of the files in a project
     function fetchProject(project_id) {
-        var files;
-        var filesKeys;
-        var xhttp = new XMLHttpRequest();
+        let files;
+        let filesKeys;
+        let xhttp = new XMLHttpRequest();
 
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
@@ -142,7 +139,7 @@ $(document).ready(function() {
                 for (i = 0; i < filesKeys.length; i++) {
                     f_id = filesKeys[i];
                     tr = document.createElement("tr");
-                    tr.setAttribute("file_id", f_id);
+                    tr.setAttribute("file-id", f_id);
                     tr.setAttribute("filePath", files[f_id].path);
 
                     td = document.createElement("td");
@@ -153,17 +150,17 @@ $(document).ready(function() {
                         window.fileTitle = this.getElementsByTagName("td")[0].innerHTML;
                         setFooter();
 
-                        fetchSegments(project_id, this.getAttribute("file_id"));
+                        fetchSegments(project_id, this.getAttribute("file-id"));
                     }
                     tr.oncontextmenu = function(e) {
-                        openFileContextMenu(e, this.getAttribute("file_id"), this.getAttribute("filePath"));
+                        openFileContextMenu(e, this.getAttribute("file-id"), this.getAttribute("filePath"));
                     }
 
                     filesTable.append(tr);
                 }
-                $("main#files_view").attr("cur_p_id", project_id);
-                toggleView("files_view", "block", "btn_files_view");
-                $("button#btn_files_view").prop("disabled", false);
+                $("main#files-view").attr("cur-p-id", project_id);
+                toggleView("files-view", "block", "files-header", "btn-files-view");
+                $("button#btn-files-view").prop("disabled", false);
             }
         }
 
@@ -173,16 +170,16 @@ $(document).ready(function() {
 
     // Fetches the segments in a file
     function fetchSegments(project_id, file_id) {
-        var parser = new DOMParser();
-        var xhttp = new XMLHttpRequest();
+        let parser = new DOMParser();
+        let xhttp = new XMLHttpRequest();
 
-        var p_i;
-        var segment_row;
-        var source_td;
-        var tags;
-        var target_td;
-        var translation_unit_table;
-        var translation_units;
+        let p_i;
+        let segment_row;
+        let source_td;
+        let tags;
+        let target_td;
+        let translation_unit_table;
+        let translation_units;
 
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
@@ -193,11 +190,11 @@ $(document).ready(function() {
                     segments = translation_units[i].getElementsByTagName("segment")
                     if (segments.length > 0) {
                         translation_unit_table = document.createElement("table");
-                        translation_unit_table.classList.add("segments_table");
+                        translation_unit_table.classList.add("segments-table");
                         for (s_i = 0; s_i < segments.length; s_i++) {
                             segment_row = document.createElement("tr");
                             segment_row.id = segments[s_i].id
-                            segment_row.setAttribute("p_id", p_id)
+                            segment_row.setAttribute("p-id", p_id)
                             if (segments[s_i].getAttribute("state") != null) {
                               segment_row.classList.add(segments[s_i].getAttribute("state"));
                             }
@@ -255,9 +252,9 @@ $(document).ready(function() {
                         }
                     }
                 }
-                $("main#editor_view").attr("cur_f_id", file_id);
-                toggleView("editor_view", "grid", "btn_editor_view");
-                $("button#btn_editor_view").prop("disabled", false);
+                $("main#editor-view").attr("cur-f-id", file_id);
+                toggleView("editor-view", "grid", "editor-header", "btn-editor-view");
+                $("button#btn-editor-view").prop("disabled", false);
             }
         }
         xhttp.open("GET", "http://127.0.0.1:8000/project/" + project_id + "/file/" + file_id);
@@ -266,7 +263,7 @@ $(document).ready(function() {
 
     // Fetches a list of the translation memories
     function fetchTMs() {
-        var xhttp = new XMLHttpRequest();
+        let xhttp = new XMLHttpRequest();
 
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
@@ -302,8 +299,8 @@ $(document).ready(function() {
 
                     tMTable.appendChild(tr);
 
-                  console.log("TMs fetched.");
                 }
+                console.log("TMs fetched.");
             }
             else if (this.readyState == 4 && this.status != 200) {
                 console.log("TMs not fetched. Trying again in 2 seconds.")
@@ -318,21 +315,21 @@ $(document).ready(function() {
     }
 
     // Navigation
-    document.getElementById("btn_projects_view").onclick = function() {
-        toggleView("projects_view", "block", "btn_projects_view");
+    document.getElementById("btn-projects-view").onclick = function() {
+        toggleView("projects-view", "block", "projects-header", "btn-projects-view");
     }
-    document.getElementById("btn_files_view").onclick = function() {
-        toggleView("files_view", "block", "btn_files_view");
+    document.getElementById("btn-files-view").onclick = function() {
+        toggleView("files-view", "block", "files-header", "btn-files-view");
     }
-    document.getElementById("btn_editor_view").onclick = function() {
-        toggleView("editor_view", "grid", "btn_editor_view");
+    document.getElementById("btn-editor-view").onclick = function() {
+        toggleView("editor-view", "grid", "editor-header", "btn-editor-view");
     }
-    document.getElementById("btn_tm_view").onclick = function() {
-        toggleView("tm_view", "block", "btn_tm_view");
+    document.getElementById("btn-tm-view").onclick = function() {
+        toggleView("tm-view", "block", "tm-header", "btn-tm-view");
     }
 
     function setFooter() {
-        var footerString;
+        let footerString;
 
         if (window.projectTitle == undefined) {
           return false;
@@ -347,17 +344,20 @@ $(document).ready(function() {
         footer.innerHTML = footerString
     }
 
-    function toggleView(viewId, viewDisplay, buttonId) {
+    function toggleView(viewId, viewDisplay, headerId, buttonId) {
         activeView.style.display = "none";
+        activeHeader.style.display = "none";
         activeButton.classList.remove("active");
         activeView = document.getElementById(viewId);
         activeView.style.display = viewDisplay;
+        activeHeader = document.getElementById(headerId);
+        activeHeader.style.display = "block";
         activeButton = document.getElementById(buttonId);
         activeButton.classList.add("active");
     }
 
-    document.getElementById("toggle_sidebar").onclick = function() {
-        var sidebar = document.getElementById("sidebar");
+    document.getElementById("toggle-sidebar").onclick = function() {
+        const sidebar = document.getElementById("sidebar");
 
         if (sidebar.classList.contains("minimized")) {
             sidebar.classList.remove("minimized");
@@ -373,7 +373,7 @@ $(document).ready(function() {
       overlay.show();
 
       $.getJSON(
-          "http://127.0.0.1:8000/project/" + files_view.attr("cur_p_id")
+          "http://127.0.0.1:8000/project/" + files_view.attr("cur-p-id")
       ).done(function(data) {
           overlay.find("form").attr("task", task);
           overlay.find("table").empty()
@@ -398,13 +398,13 @@ $(document).ready(function() {
           overlay.find("table").append(tr);
       })
     }
-    $("#btn_create_new_project_package").click(function() {
-      populate_package_creation_menu("create_new_project_package");
+    $("#btn-create-new-project-package").click(function() {
+      populate_package_creation_menu("create-new-project-package");
     })
-    $("#btn_create_return_project_package").click(function() {
-      populate_package_creation_menu("create_return_project_package");
+    $("#btn-create-return-project-package").click(function() {
+      populate_package_creation_menu("create-return-project-package");
     })
-    $("#btn_update_from_krpp").click(function() {
+    $("#btn-update-from-krpp").click(function() {
       pathToKRPP = window.selectKRPP()[0];
 
       $.post(
@@ -438,18 +438,18 @@ $(document).ready(function() {
           overlay.find("table").append(tr);
       })
     })
-    $("#btn_create_tm").click(function() {
+    $("#btn-create-tm").click(function() {
         window.createNewTM();
     })
-    $("#btn_create_project").click(function() {
+    $("#btn-create-project").click(function() {
         window.newProject();
     })
-    $("#btn_import_project").click(function() {
+    $("#btn-import-project").click(function() {
         window.importProject();
     })
 
-    $("form#form_create_project_package").submit(function() {
-        filesToPackage = [];
+    $("form#form-create-project-package").submit(function() {
+        let filesToPackage = [];
         $(this).find("th input:checked").each(function(i, checkbox) {
             filesToPackage.push($(checkbox).attr("filename"));
         });
@@ -469,7 +469,7 @@ $(document).ready(function() {
         }
 
         $.post(
-            "http://127.0.0.1:8000/project/" + files_view.attr("cur_p_id"),
+            "http://127.0.0.1:8000/project/" + files_view.attr("cur-p-id"),
             parameters
         )
 
@@ -478,4 +478,10 @@ $(document).ready(function() {
     })
 
     window.fetchSegments = fetchSegments;
-});
+};
+
+if (document.readyState === "complete") {
+    fireOnReady();
+} else {
+    document.addEventListener("DOMContentLoaded", fireOnReady);
+}

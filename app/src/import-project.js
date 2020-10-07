@@ -1,8 +1,8 @@
 $(document).ready(function() {
-    $("#btn_choose_dir").click(() => {
+    $("#btn-choose-dir").click(() => {
         window.selectDirectory();
     });
-    $("#btn_choose_path").click(() => {
+    $("#btn-choose-path").click(() => {
         window.selectPath();
     });
 
@@ -10,8 +10,8 @@ $(document).ready(function() {
         $.post(
             "http://127.0.0.1:8000/project/import",
             {
-            path: $("input#input_path").val(),
-            directory: $("input#input_dir").val(),
+            path: $("input#input-path").val(),
+            directory: $("input#input-dir").val(),
             }
         )
         .done(function() {

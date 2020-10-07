@@ -1,15 +1,15 @@
 $(document).ready(function () {
-    $("button#btn_segment_merge").click(function () {
+    $("button#btn-segment-merge").click(function () {
         $.post(
-            "http://127.0.0.1:8000/project/" + $(files_view).attr("cur_p_id") + "/file/" + $(editor_view).attr("cur_f_id"),
+            "http://127.0.0.1:8000/project/" + $(files_view).attr("cur-p-id") + "/file/" + $(editor_view).attr("cur-f-id"),
             {
                 segment_list: selectedSegments.join(';'),
                 task: "merge_segments"
             }
         ).done(function() {
             selectedSegments = [];
-            $("button#btn_segment_merge").prop("disabled", true).fadeOut(400);
-            window.fetchSegments($(files_view).attr("cur_p_id"), $(editor_view).attr("cur_f_id"));
+            $("button#btn-segment-merge").prop("disabled", true).fadeOut(400);
+            window.fetchSegments($(files_view).attr("cur-p-id"), $(editor_view).attr("cur-f-id"));
         })
     });
 })
@@ -17,7 +17,7 @@ $(document).ready(function () {
 let selectedSegments = [];
 
 function submitSegment(target_cell, segment_state) {
-    paragraph_no = target_cell.closest("tr").attr("p_id");
+    paragraph_no = target_cell.closest("tr").attr("p-id");
     segment_no = target_cell.closest("tr").attr("id");
     source_segment = "<source>" + target_cell.closest("tr").find("td.source").html().replace(/<ph>\\n<\/ph>/g, "\n") + "</source>";
     target_segment = target_cell.html().replace(/&nbsp;/g, " ").replace(/<ph>\\n<\/ph>/g, "\n");
@@ -34,7 +34,7 @@ function submitSegment(target_cell, segment_state) {
     }
 
     $.post(
-        "http://127.0.0.1:8000/project/" + $(files_view).attr("cur_p_id") + "/file/" + $(editor_view).attr("cur_f_id"),
+        "http://127.0.0.1:8000/project/" + $(files_view).attr("cur-p-id") + "/file/" + $(editor_view).attr("cur-f-id"),
         {
             segment_state: segment_state,
             source_segment: source_segment,
@@ -58,9 +58,9 @@ function submitSegment(target_cell, segment_state) {
 }
 function segmentLookup(source_segment, tm_hits_table) {
     $.getJSON(
-        "http://127.0.0.1:8000/project/" + $(files_view).attr("cur_p_id") + "/file/" + $(editor_view).attr("cur_f_id"),
+        "http://127.0.0.1:8000/project/" + $(files_view).attr("cur-p-id") + "/file/" + $(editor_view).attr("cur-f-id"),
         {
-            source_segment: source_segment.html(),
+            source_segment: "<source>" + source_segment.html() + "</source>",
             task: "lookup",
         }
     )
@@ -82,7 +82,7 @@ function segmentLookup(source_segment, tm_hits_table) {
     })
 }
 function segmentSelect(segmentRow) {
-    mergeButton = $("button#btn_segment_merge");
+    mergeButton = $("button#btn-segment-merge");
     segmentNo = segmentRow.find("th").text();
 
     if (selectedSegments.includes(segmentNo)) {

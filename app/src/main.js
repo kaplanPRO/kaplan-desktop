@@ -45,7 +45,7 @@ const createWindow = () => {
         icon: pathToIcon,
         webPreferences: {
             enableRemoteModule: true,
-            preload: path.join(__dirname, 'index_preload.js')
+            preload: path.join(__dirname, 'index-preload.js')
         },
     });
 

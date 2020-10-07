@@ -3,12 +3,12 @@ const { dialog } = require('electron').remote;
 const path = require('path');
 
 window.indexRefresh = () => {
-    ipcRenderer.sendTo(1, 'kaplan-index', 'main#projects_view');
+    ipcRenderer.sendTo(1, 'kaplan-index', 'main#projects-view');
 };
 
 window.selectDirectory = () => {
     dialog.showOpenDialog({ properties: ['createDirectory', 'openDirectory'] }).then((data) => {
-        document.getElementById('input_dir').value = data.filePaths[0];
+        document.getElementById('input-dir').value = data.filePaths[0];
     });
 };
 
@@ -30,7 +30,7 @@ window.selectFiles = () => {
                 li.setAttribute('path', element);
                 li.textContent = filename;
                 li.ondblclick = () => {li.parentNode.removeChild(li)};
-                document.getElementById('list_files').append(li);
+                document.getElementById('list-files').append(li);
             }
             else {
                 console.error("Selected multiple files with the same basename.");
