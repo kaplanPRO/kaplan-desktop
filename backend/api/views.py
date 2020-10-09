@@ -197,7 +197,6 @@ def project_file(request, project_id, file_id):
 
     elif request.GET.get('task') == 'lookup':
         source_segment = urllib.parse.unquote(request.GET['source_segment'])
-        print(source_segment)
 
         tm_hits = []
         for project_tm in project.translation_memories.all():
