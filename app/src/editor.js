@@ -1,4 +1,4 @@
-$(document).ready(function () {
+function fireOnReady () {
     $("button#btn-segment-merge").click(function () {
         $.post(
             "http://127.0.0.1:8000/project/" + $(files_view).attr("cur-p-id") + "/file/" + $(editor_view).attr("cur-f-id"),
@@ -12,7 +12,7 @@ $(document).ready(function () {
             window.fetchSegments($(files_view).attr("cur-p-id"), $(editor_view).attr("cur-f-id"));
         })
     });
-})
+}
 
 let selectedSegments = [];
 
@@ -20,7 +20,7 @@ function submitSegment(target_cell, segment_state) {
     paragraph_no = target_cell.closest("tr").attr("p-id");
     segment_no = target_cell.closest("tr").attr("id");
     source_segment = "<source>" + target_cell.closest("tr").find("td.source").html().replace(/<ph>\\n<\/ph>/g, "\n") + "</source>";
-    target_segment = target_cell.html().replace(/&nbsp;/g, " ").replace(/<ph>\\n<\/ph>/g, "\n");
+    target_segment = target_cell.html().replace(/&nbsp;/g, " ").replace(/<ph contenteditable="false">\\n<\/ph>/g, "\n");
 
     if (target_segment == "") {
         segment_state = "blank";
@@ -34,7 +34,7 @@ function submitSegment(target_cell, segment_state) {
     }
 
     $.post(
-        "http://127.0.0.1:8000/project/" + $(files_view).attr("cur-p-id") + "/file/" + $(editor_view).attr("cur-f-id"),
+        "http://127.0.0.1:8000/project/" + $(filesView).attr("cur-p-id") + "/file/" + $(editorView).attr("cur-f-id"),
         {
             segment_state: segment_state,
             source_segment: source_segment,
@@ -56,30 +56,61 @@ function submitSegment(target_cell, segment_state) {
             console.log(data);
     })
 }
-function segmentLookup(source_segment, tm_hits_table) {
-    $.getJSON(
-        "http://127.0.0.1:8000/project/" + $(files_view).attr("cur-p-id") + "/file/" + $(editor_view).attr("cur-f-id"),
-        {
-            source_segment: "<source>" + source_segment.html() + "</source>",
-            task: "lookup",
+function lookupSegment(sourceSegment, hitsTable) {
+    let fileURL = "http://127.0.0.1:8000/project/"
+                  + filesView.getAttribute("cur-p-id")
+                  + "/file/"
+                  + editorView.getAttribute("cur-f-id")
+                  + "?task=lookup"
+                  + "&source_segment="
+                  + encodeURIComponent("<source>" + sourceSegment.innerHTML + "</source>");
+
+    let xhttp = new XMLHttpRequest();
+
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            translationUnits = JSON.parse(this.responseText);
+            hitsTable.innerHTML = "";
+            [...Object.keys(translationUnits)].forEach(function(i) {
+                translationUnit = document.createElement("unit");
+                translationUnit.innerHTML = translationUnits[i].source;
+                translationUnit.innerHTML += translationUnits[i].target;
+
+                tr = document.createElement("tr");
+
+                th = document.createElement("th");
+                th.textContent = translationUnits[i].ratio + "%";
+                tr.appendChild(th);
+
+                td = document.createElement("td");
+                td.innerHTML = translationUnit.getElementsByTagName("source")[0].innerHTML
+                               .replace(/\\n/g, "<kaplan:placeholder>")
+                               .replace(/\n/g, "<ph>\\n</ph>")
+                               .replace(/<kaplan:placeholder>/g, "\\n");
+                tr.appendChild(td);
+
+                td = document.createElement("td");
+                td.innerHTML = translationUnit.getElementsByTagName("target")[0].innerHTML
+                               .replace(/\\n/g, "<kaplan:placeholder>")
+                               .replace(/\n/g, "<ph>\\n</ph>")
+                               .replace(/<kaplan:placeholder>/g, "\\n");
+                tr.appendChild(td);
+
+                ["sc", "ec", "ph", "g"].forEach(function(tagName) {
+                    [...tr.getElementsByTagName(tagName)].forEach(function(tag) {
+                        tag.contentEditable = "false";
+                    })
+                })
+
+
+                hitsTable.append(tr);
+            })
         }
-    )
-    .done(function(data) {
-        tm_hits_table.empty();
-        $.each(data, function(match, tm_hit) {
-            tr = $("<tr>");
-            match_th = $("<th>");
-            match_th.text(tm_hit.ratio + "%");
-            tr.append(match_th);
-            source_td = $("<td>");
-            source_td.html(tm_hit.source);
-            tr.append(source_td);
-            target_td = $("<td>");
-            target_td.html(tm_hit.target);
-            tr.append(target_td);
-            tm_hits_table.prepend(tr);
-        })
-    })
+    }
+
+    xhttp.open("GET", fileURL);
+    xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded; charset=utf-8");
+    xhttp.send();
 }
 function segmentSelect(segmentRow) {
     mergeButton = $("button#btn-segment-merge");
@@ -127,4 +158,10 @@ function targetKeydownHandler(e, target_cell) {
     else {
         target_cell.closest("tr").removeClass("translated").addClass("draft");
     }
+};
+
+if (document.readyState === "complete") {
+    fireOnReady();
+} else {
+    document.addEventListener("DOMContentLoaded", fireOnReady);
 }

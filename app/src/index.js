@@ -1,18 +1,20 @@
 function fireOnReady() {
-    window.editor_view = $("#editor-view");
+    window.editorView = document.getElementById("editor-view");
     window.filesTable = document.getElementById("files-table");
-    window.files_view = $("#files-view");
+    window.filesView = document.getElementById("files-view");
     window.footer = document.getElementsByTagName("footer")[0];
     window.overlay = $("main#overlay");
     window.projectsTable = document.getElementById("projects-table");
     window.segmentsDiv = document.getElementById("segments-div");
-    window.segment_hits_table = $("#hits-table");
     window.tMTable = document.getElementById("tms-table");
+
+    const hitsTable = document.getElementById("hits-table");
+
+    window.activeSegment = null;
 
     let activeButton = document.getElementById("btn-projects-view");
     let activeHeader = document.getElementById("projects-header");
     let activeView = document.getElementById("projects-view");
-    let activeSegment;
 
     document.getElementsByTagName("body")[0].removeAttribute("class");
 
@@ -35,8 +37,8 @@ function fireOnReady() {
                 projectsTable.innerHTML = "";
 
                 for (i = 0; i < projectsKeys.length; i++) {
-                    project_id = projectsKeys[i];
-                    project = projects[project_id];
+                    projectId = projectsKeys[i];
+                    project = projects[projectId];
                     tr = document.createElement("tr");
                     tr.setAttribute("project-id", projectsKeys[i]);
                     tr.setAttribute("is-imported", project.is_imported);
@@ -64,17 +66,17 @@ function fireOnReady() {
                         window.fileTitle = undefined;
                         setFooter();
 
-                        lang_pair = [project.source_language_code, project.target_language_code];
-                        window.setSpellCheckerLanguages(lang_pair);
+                        langPair = [this.children[1].getAttribute("lang-code"), this.children[2].getAttribute("lang-code")];
+                        window.setSpellCheckerLanguages(langPair);
 
-                        fetchProject(project_id);
+                        fetchProject(this.getAttribute("project-id"));
 
-                        if ($(this).attr("is-imported") == "true") {
+                        if (this.getAttribute("is-imported") == "true") {
                             document.getElementById("btn-create-new-project-package").style.display = "none";
                             document.getElementById("btn-create-return-project-package").style.display = "inline-block";
                             document.getElementById("btn-update-from-krpp").style.display = "none";
                         }
-                        else if ($(this).attr("is-exported") == "true") {
+                        else if (this.getAttribute("is-exported") == "true") {
                             document.getElementById("btn-create-return-project-package").style.display = "none";
                             document.getElementById("btn-update-from-krpp").style.display = "inline-block";
                             document.getElementById("btn-create-new-project-package").style.display = "inline-block";
@@ -116,7 +118,7 @@ function fireOnReady() {
     }
 
     // Fetches a list of the files in a project
-    function fetchProject(project_id) {
+    function fetchProject(projectId) {
         let files;
         let filesKeys;
         let xhttp = new XMLHttpRequest();
@@ -137,20 +139,20 @@ function fireOnReady() {
                 filesTable.append(tr);
 
                 for (i = 0; i < filesKeys.length; i++) {
-                    f_id = filesKeys[i];
+                    fId = filesKeys[i];
                     tr = document.createElement("tr");
-                    tr.setAttribute("file-id", f_id);
-                    tr.setAttribute("filePath", files[f_id].path);
+                    tr.setAttribute("file-id", fId);
+                    tr.setAttribute("filePath", files[fId].path);
 
                     td = document.createElement("td");
-                    td.innerHTML = files[f_id].title;
+                    td.innerHTML = files[fId].title;
                     tr.append(td);
 
                     tr.ondblclick = function() {
                         window.fileTitle = this.getElementsByTagName("td")[0].innerHTML;
                         setFooter();
 
-                        fetchSegments(project_id, this.getAttribute("file-id"));
+                        fetchSegments(projectId, this.getAttribute("file-id"));
                     }
                     tr.oncontextmenu = function(e) {
                         openFileContextMenu(e, this.getAttribute("file-id"), this.getAttribute("filePath"));
@@ -158,22 +160,22 @@ function fireOnReady() {
 
                     filesTable.append(tr);
                 }
-                $("main#files-view").attr("cur-p-id", project_id);
+                $("main#files-view").attr("cur-p-id", projectId);
                 toggleView("files-view", "block", "files-header", "btn-files-view");
                 $("button#btn-files-view").prop("disabled", false);
             }
         }
 
-        xhttp.open("GET", "http://127.0.0.1:8000/project/" + project_id);
+        xhttp.open("GET", "http://127.0.0.1:8000/project/" + projectId);
         xhttp.send();
     }
 
     // Fetches the segments in a file
-    function fetchSegments(project_id, file_id) {
+    function fetchSegments(projectId, fileId) {
         let parser = new DOMParser();
         let xhttp = new XMLHttpRequest();
 
-        let p_i;
+        let pI;
         let segment_row;
         let source_td;
         let tags;
@@ -184,9 +186,9 @@ function fireOnReady() {
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 segmentsDiv.innerHTML = "";
-                translation_units = parser.parseFromString(this.responseText, "text/xml").documentElement.childNodes;
+                translation_units = parser.parseFromString(this.responseText, "text/xml").documentElement.children;
                 for (i = 0; i < translation_units.length; i++) {
-                    p_id = translation_units[i].getAttribute("id");
+                    pId = translation_units[i].getAttribute("id");
                     segments = translation_units[i].getElementsByTagName("segment")
                     if (segments.length > 0) {
                         translation_unit_table = document.createElement("table");
@@ -194,7 +196,7 @@ function fireOnReady() {
                         for (s_i = 0; s_i < segments.length; s_i++) {
                             segment_row = document.createElement("tr");
                             segment_row.id = segments[s_i].id
-                            segment_row.setAttribute("p-id", p_id)
+                            segment_row.setAttribute("p-id", pId)
                             if (segments[s_i].getAttribute("state") != null) {
                               segment_row.classList.add(segments[s_i].getAttribute("state"));
                             }
@@ -208,26 +210,7 @@ function fireOnReady() {
                                                   .replace(/\\n/g, "<kaplan:placeholder>")
                                                   .replace(/\n/g, "<ph>\\n</ph>")
                                                   .replace(/<kaplan:placeholder>/g, "\\n");
-                            tags = source_td.getElementsByTagName("sc");
-                            for (t_i = 0; t_i < tags.length; t_i++) {
-                                tags[t_i].addEventListener("click", function() { tagClickHandler(this) });
-                                tags[t_i].contentEditable = "false";
-                            }
-                            tags = source_td.getElementsByTagName("ec");
-                            for (t_i = 0; t_i < tags.length; t_i++) {
-                                tags[t_i].addEventListener("click", function() { tagClickHandler(this) });
-                                tags[t_i].contentEditable = "false";
-                            }
-                            tags = source_td.getElementsByTagName("ph");
-                            for (t_i = 0; t_i < tags.length; t_i++) {
-                                tags[t_i].addEventListener("click", function() { tagClickHandler(this) });
-                                tags[t_i].contentEditable = "false";
-                            }
-                            tags = source_td.getElementsByTagName("g");
-                            for (t_i = 0; t_i < tags.length; t_i++) {
-                                tags[t_i].addEventListener("click", function() { tagClickHandler(this) });
-                                tags[t_i].contentEditable = "false";
-                            }
+
                             segment_row.appendChild(source_td);
 
                             target_td = document.createElement("td");
@@ -238,10 +221,22 @@ function fireOnReady() {
                                                   .replace(/\n/g, "<ph>\\n</ph>")
                                                   .replace(/<kaplan:placeholder>/g, "\\n");
                             target_td.addEventListener("keydown", function(e) { targetKeydownHandler(e, $(this)) });
-                            target_td.addEventListener("keyup", function() { $(this).find("br").remove() });
-                            target_td.addEventListener("focus", function () { segmentLookup($(this).closest("tr").find("td.source"), segment_hits_table) });
+                            target_td.addEventListener("keyup", function() { [...document.getElementsByTagName("br")].forEach(function(br) { br.remove() }) });
+                            target_td.addEventListener("focus", function () {
+                                window.activeSegment = this.parentNode;
+                                lookupSegment(this.parentNode.children[1], hitsTable);
+                            });
                             target_td.addEventListener("focusout", function () { submitSegment($(this), "draft") });
                             segment_row.appendChild(target_td);
+
+                            ["sc", "ec", "ph", "g"].forEach(function(tagName) {
+                                [...segment_row.getElementsByTagName(tagName)].forEach(function(tag) {
+                                    if (tag.parentNode.classList.contains("source")) {
+                                        tag.addEventListener("click", function() { tagClickHandler(this) });    
+                                    }
+                                    tag.contentEditable = "false";
+                                })
+                            })
 
                             translation_unit_table.appendChild(segment_row);
                         }
@@ -252,12 +247,12 @@ function fireOnReady() {
                         }
                     }
                 }
-                $("main#editor-view").attr("cur-f-id", file_id);
+                $("main#editor-view").attr("cur-f-id", fileId);
                 toggleView("editor-view", "grid", "editor-header", "btn-editor-view");
                 $("button#btn-editor-view").prop("disabled", false);
             }
         }
-        xhttp.open("GET", "http://127.0.0.1:8000/project/" + project_id + "/file/" + file_id);
+        xhttp.open("GET", "http://127.0.0.1:8000/project/" + projectId + "/file/" + fileId);
         xhttp.send();
     }
 
@@ -377,7 +372,7 @@ function fireOnReady() {
       ).done(function(data) {
           overlay.find("form").attr("task", task);
           overlay.find("table").empty()
-          $.each(data, function(f_id, file) {
+          $.each(data, function(fId, file) {
               tr = $("<tr>");
               th = $("<th>");
               checkbox = $("<input>");

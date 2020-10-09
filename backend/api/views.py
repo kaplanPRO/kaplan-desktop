@@ -13,6 +13,7 @@ from lxml import etree
 import html
 from io import BytesIO
 import os
+import urllib
 import zipfile
 
 # Create your views here.
@@ -50,12 +51,12 @@ def import_project(request):
 
 @csrf_exempt
 def new_project(request):
-    project_title = request.POST['title']
-    project_dir = request.POST['directory']
-    project_source = request.POST['source_language']
-    project_target = request.POST['target_language']
-    project_tms = [TranslationMemory.objects.get(id=int(tm_id)) for tm_id in request.POST.get('translation_memories', '').split(',') if tm_id]
-    project_files = [project_file for project_file in request.POST['files'].split(',') if KXLIFF.can_process(project_file)]
+    project_title = urllib.parse.unquote(request.POST['title'])
+    project_dir = urllib.parse.unquote(request.POST['directory'])
+    project_source = urllib.parse.unquote(request.POST['source_language'])
+    project_target = urllib.parse.unquote(request.POST['target_language'])
+    project_tms = [TranslationMemory.objects.get(id=int(tm_id)) for tm_id in urllib.parse.unquote(request.POST.get('translation_memories', '')).split(';') if tm_id]
+    project_files = [project_file for project_file in urllib.parse.unquote(request.POST['files']).split(';') if KXLIFF.can_process(project_file)]
 
     if len(project_files) == 0:
         return JsonResponse({'error': 'No compatible files selected!'}, status=500)
@@ -101,10 +102,10 @@ def new_project(request):
 
 @csrf_exempt
 def new_tm(request):
-    tm_title = request.POST['title']
-    tm_path = request.POST['path']
-    tm_source_language = request.POST['source_language']
-    tm_target_language = request.POST['target_language']
+    tm_title = urllib.parse.unquote(request.POST['title'])
+    tm_path = urllib.parse.unquote(request.POST['path'])
+    tm_source_language = urllib.parse.unquote(request.POST['source_language'])
+    tm_target_language = urllib.parse.unquote(request.POST['target_language'])
 
     tm = TranslationMemory()
     tm.title = tm_title
@@ -195,7 +196,8 @@ def project_file(request, project_id, file_id):
             return JsonResponse({'status': 'success'})
 
     elif request.GET.get('task') == 'lookup':
-        source_segment = request.GET['source_segment']
+        source_segment = urllib.parse.unquote(request.GET['source_segment'])
+        print(source_segment)
 
         tm_hits = []
         for project_tm in project.translation_memories.all():
