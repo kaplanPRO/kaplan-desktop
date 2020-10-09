@@ -102,6 +102,9 @@ function lookupSegment(sourceSegment, hitsTable) {
                     })
                 })
 
+                tr.onclick = function() {
+                    activeSegment.getElementsByTagName("td")[1].innerHTML = this.getElementsByTagName("td")[1].innerHTML;
+                }
 
                 hitsTable.append(tr);
             })
