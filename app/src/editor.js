@@ -65,6 +65,8 @@ function lookupSegment(sourceSegment, hitsTable) {
                   + "&source_segment="
                   + encodeURIComponent("<source>" + sourceSegment.innerHTML + "</source>");
 
+    const parser = new DOMParser();
+
     let xhttp = new XMLHttpRequest();
 
     xhttp.onreadystatechange = function() {
@@ -73,8 +75,8 @@ function lookupSegment(sourceSegment, hitsTable) {
             hitsTable.innerHTML = "";
             [...Object.keys(translationUnits)].forEach(function(i) {
                 translationUnit = document.createElement("unit");
-                translationUnit.innerHTML = translationUnits[i].source;
-                translationUnit.innerHTML += translationUnits[i].target;
+                translationUnit.appendChild(parser.parseFromString(translationUnits[i].source, "text/xml").documentElement);
+                translationUnit.appendChild(parser.parseFromString(translationUnits[i].target, "text/xml").documentElement);
 
                 tr = document.createElement("tr");
 
