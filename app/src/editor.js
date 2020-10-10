@@ -19,7 +19,7 @@ let selectedSegments = [];
 function submitSegment(target_cell, segment_state) {
     paragraph_no = target_cell.closest("tr").attr("p-id");
     segment_no = target_cell.closest("tr").attr("id");
-    source_segment = "<source>" + target_cell.closest("tr").find("td.source").html().replace(/<ph>\\n<\/ph>/g, "\n") + "</source>";
+    source_segment = "<source>" + target_cell.closest("tr").find("td.source").html().replace(/<ph contenteditable="false">\\n<\/ph>/g, "\n") + "</source>";
     target_segment = target_cell.html().replace(/&nbsp;/g, " ").replace(/<ph contenteditable="false">\\n<\/ph>/g, "\n");
 
     if (target_segment == "") {
@@ -63,7 +63,7 @@ function lookupSegment(sourceSegment, hitsTable) {
                   + editorView.getAttribute("cur-f-id")
                   + "?task=lookup"
                   + "&source_segment="
-                  + encodeURIComponent("<source>" + sourceSegment.innerHTML + "</source>");
+                  + encodeURIComponent("<source>" + sourceSegment.innerHTML.replace(/<ph contenteditable="false">\\n<\/ph>/g, "\n") + "</source>");
 
     const parser = new DOMParser();
 
