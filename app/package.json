@@ -1,7 +1,7 @@
 {
     "name": "kaplan-desktop",
     "productName": "Kaplan",
-    "version": "0.2.0-rc2",
+    "version": "0.2.0-rc3",
     "description": "An open-source CAT tool.",
     "homepage": "https://kaplan.pro",
     "main": "src/main.js",
@@ -14,8 +14,8 @@
     },
     "keywords": [],
     "author": {
-        "name": "Çağatay Onur Şengör",
-        "email": "contact@csengor.com"
+        "name": "Kaplan",
+        "email": "contact@kaplan.pro"
     },
     "license": "MIT",
     "config": {
