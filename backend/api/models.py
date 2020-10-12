@@ -49,6 +49,7 @@ class TranslationMemory(models.Model):
     path = models.TextField()
     source_language = models.CharField(max_length=20)
     target_language = models.CharField(max_length=20)
+    is_project_specific = models.BooleanField(default=False)
 
     def get_source_language(self):
         return LANGUAGES.get(self.source_language, 'N/A')

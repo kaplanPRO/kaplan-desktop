@@ -284,9 +284,10 @@ def project_view(request, project_id):
 def tm_directory(request):
     if request.GET.get('source_language') and request.GET.get('target_language'):
         tms = TranslationMemory.objects.filter(source_language=request.GET['source_language'],
-                                               target_language=request.GET['target_language'])
+                                               target_language=request.GET['target_language'],
+                                               is_project_specific=False)
     else:
-        tms = TranslationMemory.objects.all()
+        tms = TranslationMemory.objects.filter(is_project_specific=False)
 
     tms_dict = {}
     for tm in tms:
