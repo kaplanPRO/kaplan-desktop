@@ -6,6 +6,7 @@ body, button, div, h4, main, nav, p, table, td, th, tr {
     margin: 0;
     padding: 0;
     transition: 0.4s;
+    user-select: none;
 }
 body#index {
     background: #c5c5c5;
@@ -113,9 +114,6 @@ main#overlay form {
     left: 50%;
     transform: translate(-50%, -50%);
 }
-main#overlay form td {
-    min-width: 25rem;
-}
 button {
     background-color: inherit;
     border: 1px solid #46649e;
@@ -146,6 +144,7 @@ table#hits-table td, table.segments-table td {
     border-left: 1px solid #c5c5c5;
     border-top: 1px solid #c5c5c5;
     padding: 0.5rem;
+    user-select: text;
     width: 48%;
 }
 table td.language {
@@ -160,7 +159,7 @@ ec, g, sc, ph {
     cursor: pointer;
     margin: 0 1px;
     padding: 0 8px;
-    user-select: none;
+    user-select: all;
 }
 sc {
     border-top-left-radius: 4px;
