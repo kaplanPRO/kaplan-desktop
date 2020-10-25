@@ -25,9 +25,28 @@ class Project(models.Model):
     def get_project_metadata(self):
         project_metadata = {
             'title': self.title,
-            'src': self.source_language,
-            'trgt': self.target_language
+            'directory': self.directory,
+            'source_language': self.source_language,
+            'target_language': self.target_language
         }
+
+        project_metadata['files'] = {}
+        for project_file in File.objects.filter(project=self):
+            file_dict = {}
+            if project_file.is_kxliff:
+                file_dict['source'] = os.path.join(self.get_source_dir(), project_file.title)
+                file_dict['originalBF'] = file_dict['source'] + '.kxliff'
+                file_dict['targetBF'] = os.path.join(self.get_target_dir(), project_file.title) + '.kxliff'
+            else:
+                file_dict['originalBF'] = os.path.join(self.get_source_dir(), project_file.title)
+                file_dict['targetBF'] = os.path.join(self.get_target_dir(), project_file.title)
+
+            project_metadata['files'][str(len(project_metadata['files']))] = file_dict
+
+        if self.translation_memories.count() > 0:
+            project_metadata['translation_memories'] = {}
+            for project_tm in self.translation_memories.all():
+                project_metadata['translation_memories'][len(project_metadata['translation_memories'])] = project_tm.path
 
         return project_metadata
 

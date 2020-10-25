@@ -3,7 +3,7 @@ function fireOnReady() {
     window.filesTable = document.getElementById("files-table");
     window.filesView = document.getElementById("files-view");
     window.footer = document.getElementsByTagName("footer")[0];
-    window.overlay = $("main#overlay");
+    window.overlay = document.getElementById("overlay");
     window.projectsTable = document.getElementById("projects-table");
     window.segmentsDiv = document.getElementById("segments-div");
     window.tMTable = document.getElementById("tms-table");
@@ -74,16 +74,16 @@ function fireOnReady() {
                         if (this.getAttribute("is-imported") == "true") {
                             document.getElementById("btn-create-new-project-package").style.display = "none";
                             document.getElementById("btn-create-return-project-package").style.display = "inline-block";
-                            document.getElementById("btn-update-from-krpp").style.display = "none";
+                            document.getElementById("btn-update-from-package").style.display = "none";
                         }
                         else if (this.getAttribute("is-exported") == "true") {
                             document.getElementById("btn-create-return-project-package").style.display = "none";
-                            document.getElementById("btn-update-from-krpp").style.display = "inline-block";
+                            document.getElementById("btn-update-from-package").style.display = "inline-block";
                             document.getElementById("btn-create-new-project-package").style.display = "inline-block";
                         }
                         else {
                             document.getElementById("btn-create-return-project-package").style.display = "none";
-                            document.getElementById("btn-update-from-krpp").style.display = "none";
+                            document.getElementById("btn-update-from-package").style.display = "none";
                             document.getElementById("btn-create-new-project-package").style.display = "inline-block";
                         }
                     }
@@ -232,7 +232,7 @@ function fireOnReady() {
                             ["sc", "ec", "ph", "g"].forEach(function(tagName) {
                                 [...segment_row.getElementsByTagName(tagName)].forEach(function(tag) {
                                     if (tag.parentNode.classList.contains("source")) {
-                                        tag.addEventListener("click", function() { tagClickHandler(this) });    
+                                        tag.addEventListener("click", function() { tagClickHandler(this) });
                                     }
                                     tag.contentEditable = "false";
                                 })
@@ -364,113 +364,151 @@ function fireOnReady() {
         }
     }
 
-    function populate_package_creation_menu(task) {
-      overlay.show();
+    function openPackageMenu(task, projectFiles, pathToKPP=null) {
 
-      $.getJSON(
-          "http://127.0.0.1:8000/project/" + files_view.attr("cur-p-id")
-      ).done(function(data) {
-          overlay.find("form").attr("task", task);
-          overlay.find("table").empty()
-          $.each(data, function(fId, file) {
-              tr = $("<tr>");
-              th = $("<th>");
-              checkbox = $("<input>");
-              checkbox.attr("type", "checkbox");
-              checkbox.attr("filename", file.title);
-              th.append(checkbox);
-              tr.append(th);
-              td = $("<td>");
-              td.text(file.title);
-              tr.append(td);
-              overlay.find("table").append(tr);
-          })
-          tr = $("<tr>");
-          td = $("<td colspan=\"2\">");
-          submit = $("<input type=\"submit\" value=\"Create Package\"/>");
-          td.append(submit);
-          tr.append(td);
-          overlay.find("table").append(tr);
-      })
-    }
-    $("#btn-create-new-project-package").click(function() {
-      populate_package_creation_menu("create-new-project-package");
-    })
-    $("#btn-create-return-project-package").click(function() {
-      populate_package_creation_menu("create-return-project-package");
-    })
-    $("#btn-update-from-krpp").click(function() {
-      pathToKRPP = window.selectKRPP()[0];
+        let packageForm = overlay.getElementsByTagName("form")[0];
+        let packageTable = overlay.getElementsByTagName("table")[0];
 
-      $.post(
-        "http://127.0.0.1:8000/package",
-        {
-          path_to_package: pathToKRPP
+        overlay.style.display = "block";
+
+        packageForm.setAttribute("task", task);
+        if (pathToKPP) {
+            packageForm.setAttribute("project-package", pathToKPP);
         }
-      )
-      .done(function(data) {
-          overlay.show();
-          overlay.find("form").attr("task", "update_from_krpp");
-          overlay.find("table").empty()
-          $.each(data.files_to_unpack, function(i ,filename) {
-              tr = $("<tr>");
-              th = $("<th>");
-              checkbox = $("<input>");
-              checkbox.attr("type", "checkbox");
-              checkbox.attr("filename", filename);
-              th.append(checkbox);
-              tr.append(th);
-              td = $("<td>");
-              td.text(filename);
-              tr.append(td);
-              overlay.find("table").append(tr);
-          })
-          tr = $("<tr>");
-          td = $("<td colspan=\"2\">");
-          submit = $("<input type=\"submit\" value=\"Create Package\"/>");
-          td.append(submit);
-          tr.append(td);
-          overlay.find("table").append(tr);
-      })
-    })
-    $("#btn-create-tm").click(function() {
-        window.createNewTM();
-    })
-    $("#btn-create-project").click(function() {
-        window.newProject();
-    })
-    $("#btn-import-project").click(function() {
-        window.importProject();
-    })
 
-    $("form#form-create-project-package").submit(function() {
-        let filesToPackage = [];
-        $(this).find("th input:checked").each(function(i, checkbox) {
-            filesToPackage.push($(checkbox).attr("filename"));
+        packageTable.innerHTML = "";
+
+        [...Object.keys(projectFiles)].forEach((fileKey) => {
+            tr = document.createElement("tr");
+            th = document.createElement("th");
+            input = document.createElement("input");
+            input.type = "checkbox";
+            input.setAttribute("file-key", fileKey);
+            th.appendChild(input);
+            tr.appendChild(th);
+
+            td = document.createElement("td");
+            td.textContent = projectFiles[fileKey]["targetBF"];
+            tr.appendChild(td);
+            packageTable.appendChild(tr);
         });
 
+        tr = document.createElement("tr");
+        td = document.createElement("td");
+        td.setAttribute("colspan", 2);
+        button = document.createElement("button");
+        button.type = "submit";
+        button.textContent = "Update";
+        td.appendChild(button);
+        tr.append(td);
+        packageTable.append(tr);
+
+    }
+    document.getElementById("btn-create-new-project-package").onclick = function() {
+        pathToKPP = window.setFile([]);
+
+        let xhttp = new XMLHttpRequest();
+
+        let queryURL = "http://127.0.0.1:8000/project/"
+                     + filesView.getAttribute("cur-p-id")
+                     + "?task=get_manifest";
+
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                openPackageMenu("create_new_project_package",
+                                JSON.parse(this.responseText).files,
+                                pathToKPP);
+            }
+        }
+
+        xhttp.open("GET",  queryURL, true);
+        xhttp.send();
+    }
+    document.getElementById("btn-create-return-project-package").onclick = function() {
+        pathToKPP = window.setFile([]);
+
+        let xhttp = new XMLHttpRequest();
+
+        let queryURL = "http://127.0.0.1:8000/project/"
+                     + filesView.getAttribute("cur-p-id")
+                     + "?task=get_manifest";
+
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                openPackageMenu("create_return_project_package",
+                                JSON.parse(this.responseText).files,
+                                pathToKPP);
+            }
+        }
+
+        xhttp.open("GET",  queryURL, true);
+        xhttp.send();
+    }
+    document.getElementById("btn-update-from-package").onclick = function() {
+        let pathToKPP = window.selectKPP()[0];
+
+        let xhttp = new XMLHttpRequest();
+
+        let queryURL = "http://127.0.0.1:8000/package";
+        let parameters = new FormData();
+        parameters.append("project_package", pathToKPP);
+
+        let packageForm = overlay.getElementsByTagName("form")[0];
+        let packageTable = overlay.getElementsByTagName("table")[0];
+        let projectFiles;
+
+        xhttp.onreadystatechange = function() {
+             if (this.readyState == 4 && this.status == 200) {
+                  openPackageMenu("update_from_project_package",
+                                  JSON.parse(this.responseText).files,
+                                  pathToKPP);
+             }
+         }
+
+        xhttp.open("POST", queryURL, true);
+        xhttp.send(parameters);
+    }
+    document.getElementById("btn-create-tm").onclick = function() {
+        window.createNewTM();
+    }
+    document.getElementById("btn-create-project").onclick = function() {
+        window.newProject();
+    }
+    document.getElementById("btn-import-project").onclick = function() {
+        window.importProject();
+    }
+
+    document.forms[0].onsubmit = function(e) {
+        e.preventDefault();
+        let filesToPackage = [];
+
+        [...this.getElementsByTagName("input")].forEach(input => {
+            if (input.checked) {
+                filesToPackage.push(input.getAttribute("file-key"));
+            }
+        })
         if (filesToPackage.length == 0) {
-            $(this).closest("main").hide();
-            return false;
+            overlay.style.display = "none";
         }
 
-        parameters = {
-            files_to_package: filesToPackage.join(";"),
-            task: $(this).attr("task")
+        let queryURL = "http://127.0.0.1:8000/project/"
+                     + filesView.getAttribute("cur-p-id");
+
+        let parameters = new FormData();
+        parameters.append("project_package", this.getAttribute("project-package"));
+        parameters.append("files", filesToPackage.join(";"));
+        parameters.append("task", this.getAttribute("task"));
+
+        let xhttp = new XMLHttpRequest();
+
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                overlay.style.display = "none";
+            }
         }
-
-        if (parameters.task == "update_from_krpp") {
-          parameters.path_to_krpp = pathToKRPP;
-        }
-
-        $.post(
-            "http://127.0.0.1:8000/project/" + files_view.attr("cur-p-id"),
-            parameters
-        )
-
-        $(this).closest("main").hide();
-        return false;
-    })
+        xhttp.open("POST",  queryURL, true);
+        xhttp.send(parameters);
+    }
 
     window.fetchSegments = fetchSegments;
 };

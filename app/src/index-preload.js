@@ -53,28 +53,20 @@ window.importProject = () => {
     importProjectWindow.loadFile(path.join(__dirname, 'import-project.html'));
 }
 
-window.updateFromKRPP = () => {
-    const updateFromKRPPWindow = new BrowserWindow({
-        width: 800,
-        height: 600,
-        modal: true,
-        parent: indexWindow,
-        webPreferences: {
-            enableRemoteModule: true,
-            preload: path.join(__dirname, 'update-from-krpp-preload.js')
-        }
+window.selectKPP = () => {
+    return dialog.showOpenDialogSync({
+        browserWindow: indexWindow,
+        filters: [
+            {name: 'Kaplan Project Packages', extensions: ['kpp']}
+        ]
     })
-
-    updateFromKRPPWindow.loadFile(path.join(__dirname, 'update-from-krpp.html'));
 }
 
-window.selectKRPP = () => {
-  return dialog.showOpenDialogSync({
-      browserWindow: indexWindow,
-      filters: [
-          {name: 'Kaplan Return Project Packages', extensions: ['krpp']}
-      ]
-  })
+window.setFile = (filterList) => {
+    return dialog.showSaveDialogSync({
+        browserWindow: indexWindow,
+        filters: filterList
+    })
 }
 
 window.setSpellCheckerLanguages = (arrayOfLanguages) => {

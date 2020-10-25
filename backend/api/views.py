@@ -5,6 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import File, Project, TranslationMemory
 
 from kaplan.kxliff import KXLIFF # Bilingual file
+from kaplan.project import Project as KaplanProject
 from kaplan.xliff import XLIFF # Translation memory
 from kaplan.utils import create_new_project_package, create_return_project_package, html_to_segment, open_new_project_package, segment_to_html, supported_file_formats
 
@@ -19,34 +20,49 @@ import zipfile
 
 @csrf_exempt
 def import_project(request):
-    return JsonResponse({'status': 'failed',
-                        'message': 'Feature temporarily unavailable.'},
-                        status=403)
     path_to_package = request.POST['path']
     project_dir = request.POST['directory']
 
     if os.path.isfile(project_dir) or (os.path.isdir(project_dir) and len(os.listdir(project_dir))>0):
         return JsonResponse({'error': 'Project directory must be an empty folder!'}, status=500)
 
-    project_metadata = open_new_project_package(path_to_package, project_dir)
+    project_metadata = KaplanProject.extract(path_to_package, project_dir)
 
-    imported_project = Project()
-    imported_project.title = project_metadata['title']
-    imported_project.directory = project_dir
-    imported_project.source_language = project_metadata['src']
-    imported_project.target_language = project_metadata['trgt']
-    imported_project.is_imported = True
-    imported_project.save()
+    new_project = Project()
+    new_project.title = project_metadata['title']
+    new_project.directory = project_dir
+    new_project.source_language = project_metadata['src']
+    new_project.target_language = project_metadata['trg']
+    new_project.is_imported = True
+    new_project.save()
 
-    for filename in project_metadata['files']:
-        imported_file = File()
-        imported_file.title = filename
-        imported_file.project = imported_project
-        imported_file.save()
+    for i in project_metadata['files']:
+        new_file = File()
+        if 'source' in project_metadata['files'][i]:
+            new_file.title = os.path.basename(project_metadata['files'][i]['source'])
+            new_file.is_kxliff = True
+        else:
+            new_file.title = os.path.basename(project_metadata['files'][i]['originalBF'])
+        new_file.project = new_project
+        new_file.save()
 
-    return JsonResponse({imported_project.id: {'title': imported_project.title,
-                                               'source_language': imported_project.get_source_language(),
-                                               'target_language': imported_project.get_target_language()}})
+    if 'tms' in project_metadata:
+        for i in project_metadata['tms']:
+            new_tm = TranslationMemory()
+            new_tm.title = os.path.basename(project_metadata['tms'][i])
+            new_tm.path = os.path.join(project_dir, project_metadata['tms'][i])
+            new_tm.source_language = project_metadata['src']
+            new_tm.target_language = project_metadata['trg']
+            new_tm.is_project_specific = True
+            new_tm.save()
+
+            new_project.translation_memories.add(new_tm)
+
+        new_project.save()
+
+    return JsonResponse({new_project.id: {'title': new_project.title,
+                                          'source_language': new_project.get_source_language(),
+                                          'target_language': new_project.get_target_language()}})
 
 @csrf_exempt
 def new_project(request):
@@ -123,17 +139,11 @@ def new_tm(request):
 
 @csrf_exempt
 def package(request):
-    path_to_package = request.POST['path_to_package']
+    project_package = request.POST['project_package']
 
-    with zipfile.ZipFile(path_to_package) as return_project_package:
-        metadata_xml = etree.parse(BytesIO(return_project_package.open('project.xml').read())).getroot()
+    project_manifest = KaplanProject.get_manifest(project_package)
 
-    files_to_unpack = []
-
-    for file_to_unpack in metadata_xml[-1]:
-        files_to_unpack.append(file_to_unpack.text)
-
-    return JsonResponse({'files_to_unpack': files_to_unpack})
+    return JsonResponse(project_manifest)
 
 def project_directory(request):
     projects_dict = {}
@@ -226,60 +236,41 @@ def project_view(request, project_id):
     project = Project.objects.get(id=project_id)
 
     if request.method == 'POST':
-        return JsonResponse({'status': 'failed',
-                            'message': 'Feature temporarily unavailable.'},
-                            status=403)
-
         if request.POST.get('task') == 'create_new_project_package':
-            files_to_package = request.POST['files_to_package'].split(';')
+            path = request.POST['project_package']
 
-            for i in range(len(files_to_package)):
-                file_to_package = files_to_package[i]
-                files_to_package[i] = (
-                    os.path.join(project.get_source_dir(), file_to_package),
-                    os.path.join(project.get_source_dir(), file_to_package) + '.xml',
-                    os.path.join(project.get_target_dir(), file_to_package) + '.xml'
-                )
+            KaplanProject(project.get_project_metadata()).export(path)
 
-            create_new_project_package(project.get_project_metadata(),
-                                       files_to_package,
-                                       os.path.join(project.directory, 'packages'))
-
-            project.is_exported = true
+            project.is_exported = True
             project.save()
 
-            return JsonResponse({'status': 'success'})
+            return JsonResponse({'message': 'Project package created.'})
         elif request.POST.get('task') == 'create_return_project_package':
-            files_to_package = request.POST['files_to_package'].split(';')
 
-            for i in range(len(files_to_package)):
-                files_to_package[i] = os.path.join(project.get_target_dir(), files_to_package[i]) + '.xml'
+            KaplanProject(project.get_project_metadata()).export(request.POST['project_package'],
+                                                                 request.POST['files'].split(';'),
+                                                                 False)
 
-            create_return_project_package(project.get_project_metadata(),
-                                          files_to_package,
-                                          os.path.join(project.directory, 'packages'))
+            return JsonResponse({'message': 'Project package created.'})
+        elif request.POST.get('task') == 'update_from_project_package':
 
-            return JsonResponse({'status': 'success'})
-        elif request.POST.get('task') == 'update_from_krpp':
-            path_to_krpp = request.POST['path_to_krpp']
-            files_to_unpack = request.POST['files_to_package'].split(';')
+            KaplanProject.extract_target_files(request.POST['project_package'],
+                                               project.directory,
+                                               request.POST['files'].split(';'))
 
-            with zipfile.ZipFile(path_to_krpp) as krpp:
-                for file_to_unpack in files_to_unpack:
-                    BilingualFile(os.path.join(project.get_target_dir(), file_to_unpack))
-                    krpp.extract(os.path.join(os.path.basename(project.get_target_dir()), file_to_unpack),
-                                 project.directory)
-
-            return JsonResponse({'status': 'success'})
+            return JsonResponse({'message': 'Target files updated.'})
     else:
-        files_dict = {}
+        if request.GET.get('task') == 'get_manifest':
+            return JsonResponse(project.get_project_metadata())
+        else:
+            files_dict = {}
 
-        for project_file in File.objects.filter(project=project):
-            filename = project_file.title + '.kxliff' if project_file.is_kxliff else project_file.title
-            files_dict[project_file.id] = {'title':project_file.title,
-                                           'path':os.path.join(project.get_target_dir(), filename)}
+            for project_file in File.objects.filter(project=project):
+                filename = project_file.title + '.kxliff' if project_file.is_kxliff else project_file.title
+                files_dict[project_file.id] = {'title':project_file.title,
+                                               'path':os.path.join(project.get_target_dir(), filename)}
 
-        return JsonResponse(files_dict)
+            return JsonResponse(files_dict)
 
 def tm_directory(request):
     if request.GET.get('source_language') and request.GET.get('target_language'):
