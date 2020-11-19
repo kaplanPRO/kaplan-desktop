@@ -11,15 +11,12 @@ if (require('electron-squirrel-startup')) { // eslint-disable-line global-requir
 else if (fs.existsSync(path.join(app.getAppPath(), 'backend')))
 {
     var backendPath;
-    var pathToIcon;
 
     if (['deb','linux','rpm'].includes(process.platform)) {
         backendPath = path.join(app.getAppPath(), 'backend', 'backend');
-        pathToIcon = path.join(__dirname, 'icon', 'icon-64.png');
     }
     else {
         backendPath = path.join(app.getAppPath(), 'backend', 'backend.exe');
-        pathToIcon = path.join(__dirname, 'icon', 'icon.ico');
     }
     process.env.KAPLAN_DB_PATH = path.join(app.getPath('userData'), 'kaplan.sqlite3');
 
@@ -31,6 +28,15 @@ else if (fs.existsSync(path.join(app.getAppPath(), 'backend')))
                         {detached: true});
 };
 
+var pathToIcon;
+
+if (['deb','linux','rpm'].includes(process.platform)) {
+    pathToIcon = path.join(__dirname, 'icon', 'icon-64.png');
+} else {
+    pathToIcon = path.join(__dirname, 'icon', 'icon.ico');
+}
+
+
 const createWindow = () => {
     // Create the browser window.
     const mainWindow = new BrowserWindow({
@@ -39,7 +45,7 @@ const createWindow = () => {
         icon: pathToIcon,
         webPreferences: {
             enableRemoteModule: true,
-            preload: path.join(__dirname, 'index_preload.js')
+            preload: path.join(__dirname, 'index-preload.js')
         },
     });
 

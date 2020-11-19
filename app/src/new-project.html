@@ -4,30 +4,26 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta http-equiv="Content-Security-Policy" content="script-src 'self' https://127.0.0.1">
-        <title>New Translation Memory</title>
+        <title>New Project</title>
         <link rel="stylesheet" href="index.css">
-        <script type="text/javascript" src="jquery-3.5.1.min.js"></script>
-        <script type="text/javascript" src="new_tm.js"></script>
-    </head>
+        <script type="text/javascript" src="new-project.js"></script>
+        </head>
     <body>
         <main>
             <form>
                 <table>
                     <tr>
-                        <th><label>Title</label></th>
-                        <td><input id="input_title" required/></td>
+                        <th><label for="input-title">Project Title:</label></th>
+                        <td><input id="input-title" name="title" maxlength="60" required/></td>
                     </tr>
                     <tr>
-                        <th><label>Path</label></th>
-                        <td>
-                            <input id="input_path" required/>
-                            <input id="btn_tm_path" type="button" value="Choose"/>
-                        </td>
+                        <th><label for="input-dir">Project Directory:</label></th>
+                        <td><input id="input-dir" name="dir" required/><input id="btn-choose-dir" type="button" value="Choose"/></td>
                     </tr>
                     <tr>
-                        <th><label for="select_source">Source Language:</label></th>
+                        <th><label for="select-source">Source Language:</label></th>
                         <td>
-                            <select id="select_source" name="source_languages" required>
+                            <select id="select-source" name="source-languages" required>
                                 <option value="-----" disabled selected>-----</option>
                                 <option value="ab">Abkhazian</option>
                                 <option value="aa">Afar</option>
@@ -217,9 +213,9 @@
                         </td>
                     </tr>
                     <tr>
-                        <th><label for="select_target">Target Language:</label></th>
+                        <th><label for="select-target">Target Language:</label></th>
                         <td>
-                            <select id="select_target" name="target_languages" required>
+                            <select id="select-target" name="target-languages" required>
                                 <option value="-----" disabled selected>-----</option>
                                 <option value="ab">Abkhazian</option>
                                 <option value="aa">Afar</option>
@@ -406,6 +402,21 @@
                                 <option value="za">Zhuang; Chuang</option>
                                 <option value="zu">Zulu</option>
                             </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label for="select-tms">Translation Memory:</label></th>
+                        <td>
+                            <select id="select-tms" name="translation-memories" multiple>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th colspan="2">Files:<input id="btn-choose-files" type="button" value="Choose"/></th>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <ul id="list-files"></ul>
                         </td>
                     </tr>
                     <tr>

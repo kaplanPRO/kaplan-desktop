@@ -1,7 +1,7 @@
 {
     "name": "kaplan-desktop",
     "productName": "Kaplan",
-    "version": "0.1.1",
+    "version": "0.2.0",
     "description": "An open-source CAT tool.",
     "homepage": "https://kaplan.pro",
     "main": "src/main.js",
@@ -14,8 +14,8 @@
     },
     "keywords": [],
     "author": {
-        "name": "Çağatay Onur Şengör",
-        "email": "contact@csengor.com"
+        "name": "Kaplan",
+        "email": "contact@kaplan.pro"
     },
     "license": "MIT",
     "config": {
@@ -38,7 +38,7 @@
                     "name": "@electron-forge/maker-deb",
                     "config": {
                         "options": {
-                          "icon": "src/icon/icon-256.png"
+                            "icon": "src/icon/icon-256.png"
                         }
                     }
                 },
@@ -46,7 +46,7 @@
                     "name": "@electron-forge/maker-rpm",
                     "config": {
                         "options": {
-                          "icon": "src/icon/icon-256.png"
+                            "icon": "src/icon/icon-256.png"
                         }
                     }
                 }
@@ -57,11 +57,11 @@
         "electron-squirrel-startup": "^1.0.0"
     },
     "devDependencies": {
-        "@electron-forge/cli": "6.0.0-beta.51",
-        "@electron-forge/maker-deb": "6.0.0-beta.51",
-        "@electron-forge/maker-rpm": "6.0.0-beta.51",
-        "@electron-forge/maker-squirrel": "6.0.0-beta.51",
-        "@electron-forge/maker-zip": "6.0.0-beta.51",
-        "electron": "9.0.0"
+        "@electron-forge/cli": "6.0.0-beta.53",
+        "@electron-forge/maker-deb": "6.0.0-beta.53",
+        "@electron-forge/maker-rpm": "6.0.0-beta.53",
+        "@electron-forge/maker-squirrel": "6.0.0-beta.53",
+        "@electron-forge/maker-zip": "6.0.0-beta.53",
+        "electron": "^10.1.5"
     }
 }

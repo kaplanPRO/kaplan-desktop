@@ -1,22 +1,23 @@
-$(document).ready(function() {
-    const editor_view = $("#editor_view");
-    const files_table = $("#files_table");
-    const files_view = $("#files_view");
-    const overlay = $("main#overlay");
-    const projects_table = $("#projects_table");
-    const segments_table = $("#segments_table");
-    const segment_hits_table = $("#hits_table");
-    const tms_table = $("#tms_table");
+function fireOnReady() {
+    window.editorView = document.getElementById("editor-view");
+    window.filesTable = document.getElementById("files-table");
+    window.filesView = document.getElementById("files-view");
+    window.footer = document.getElementsByTagName("footer")[0];
+    window.mergeButton = document.getElementById("btn-segment-merge");
+    window.overlay = document.getElementById("overlay");
+    window.projectsTable = document.getElementById("projects-table");
+    window.segmentsDiv = document.getElementById("segments-div");
+    window.tMTable = document.getElementById("tms-table");
 
-    let active_view = $("main#projects_view");
-    let active_button = $("button#btn_projects_view");
+    const hitsTable = document.getElementById("hits-table");
 
-    var tr;
-    var title_td;
-    var src_lng_td;
-    var trg_lng_td;
+    window.activeSegment = null;
 
-    $("body.loading").removeAttr("class");
+    let activeButton = document.getElementById("btn-projects-view");
+    let activeHeader = document.getElementById("projects-header");
+    let activeView = document.getElementById("projects-view");
+
+    document.getElementsByTagName("body")[0].removeAttribute("class");
 
     setTimeout(() => {
         fetchProjects();
@@ -25,308 +26,503 @@ $(document).ready(function() {
 
     // Fetches a list of the projects
     function fetchProjects() {
-        $.getJSON(
-            "http://127.0.0.1:8000/",
-            function(data) {
-            projects_table.empty();
-            $.each(data, function(p_id, project) {
-                tr = $("<tr>");
-                tr.attr("project_id", p_id);
-                tr.attr("is_imported", project.is_imported);
-                tr.attr("is_exported", project.is_exported);
-                title_td = $("<td class='project_title'>");
-                title_td.text(project.title);
-                tr.append(title_td);
-                src_lng_td = $("<td class='source language'>");
-                src_lng_td.attr("lang_code", project.source_language_code);
-                src_lng_td.text(project.source_language);
-                tr.append(src_lng_td);
-                trg_lng_td = $("<td class='target language'>");
-                trg_lng_td.attr("lang_code", project.target_language_code);
-                trg_lng_td.text(project.target_language);
-                tr.append(trg_lng_td);
-                tr.dblclick(function() {
-                    lang_pair = [$(this).find("td.source").attr("lang_code"),
-                                 $(this).find("td.target").attr("lang_code")];
-                    window.setSpellCheckerLanguages(lang_pair);
-                    fetchProject($(this).attr("project_id"));
-                    if ($(this).attr("is_imported") == "true") {
-                        $("#btn_create_new_project_package").hide();
-                        $("#btn_create_return_project_package").show();
-                        $("#btn_update_from_krpp").hide();
-                    }
-                    else if ($(this).attr("is_exported") == "true") {
-                        $("#btn_create_return_project_package").hide();
-                        $("#btn_update_from_krpp").show();
-                        $("#btn_create_new_project_package").show();
-                    }
-                    else {
-                        $("#btn_create_return_project_package").hide();
-                        $("#btn_update_from_krpp").hide();
-                        $("#btn_create_new_project_package").show();
-                    }
-                });
+        let projects;
+        let projectsKeys;
+        let xhttp = new XMLHttpRequest();
 
-                projects_table.prepend(tr);
-            });
-            projects_table.prepend($("<tr><th class=\"name\"><h4>Project Name</h4></th><th><h4>Source Language</h4></th><th><h4>Target Language</h4></th></tr>"));
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                projects = JSON.parse(this.responseText);
+                projectsKeys = Object.keys(projects);
+
+                projectsTable.innerHTML = "";
+
+                for (i = 0; i < projectsKeys.length; i++) {
+                    projectId = projectsKeys[i];
+                    project = projects[projectId];
+                    tr = document.createElement("tr");
+                    tr.setAttribute("project-id", projectsKeys[i]);
+                    tr.setAttribute("is-imported", project.is_imported);
+                    tr.setAttribute("is-exported", project.is_exported);
+
+                    td = document.createElement("td");
+                    td.className = "project-title";
+                    td.innerHTML = project.title;
+                    tr.append(td);
+
+                    td = document.createElement("td");
+                    td.className = "source language";
+                    td.setAttribute("lang-code", project.source_language_code);
+                    td.innerHTML = project.source_language;
+                    tr.append(td);
+
+                    td = document.createElement("td");
+                    td.className = "target language";
+                    td.setAttribute("lang-code", project.target_language_code)
+                    td.innerHTML = project.target_language;
+                    tr.append(td);
+
+                    tr.ondblclick = function() {
+                        window.projectTitle = this.getElementsByTagName("td")[0].innerHTML;
+                        window.fileTitle = undefined;
+                        setFooter();
+
+                        langPair = [this.children[1].getAttribute("lang-code"), this.children[2].getAttribute("lang-code")];
+                        window.setSpellCheckerLanguages(langPair);
+
+                        fetchProject(this.getAttribute("project-id"));
+
+                        if (this.getAttribute("is-imported") == "true") {
+                            document.getElementById("btn-create-new-project-package").style.display = "none";
+                            document.getElementById("btn-create-return-project-package").style.display = "inline-block";
+                            document.getElementById("btn-update-from-package").style.display = "none";
+                        }
+                        else if (this.getAttribute("is-exported") == "true") {
+                            document.getElementById("btn-create-return-project-package").style.display = "none";
+                            document.getElementById("btn-update-from-package").style.display = "inline-block";
+                            document.getElementById("btn-create-new-project-package").style.display = "inline-block";
+                        }
+                        else {
+                            document.getElementById("btn-create-return-project-package").style.display = "none";
+                            document.getElementById("btn-update-from-package").style.display = "none";
+                            document.getElementById("btn-create-new-project-package").style.display = "inline-block";
+                        }
+                    }
+
+                    projectsTable.prepend(tr);
+                }
+                tr = document.createElement("tr");
+                th = document.createElement("th");
+                th.className = "name";
+                th.innerHTML = "Project Name";
+                tr.append(th);
+                th = document.createElement("th");
+                th.innerHTML = "Source Language";
+                tr.append(th);
+                th = document.createElement("th");
+                th.innerHTML = "Target Language";
+                tr.append(th)
+                projectsTable.prepend(tr);
+
+                console.log("Projects fetched.")
             }
-        )
-        .done(() => {
-            console.log("Projects fetched.")
-        })
-        .fail(() => {
-            console.log("Projects not fetched. Trying again in 2 seconds.")
-            setTimeout(() => {
-            fetchProjects();
-            }, 2000)
-        })
+            else if (this.readyState == 4 && this.status != 200) {
+                console.log("Projects not fetched. Trying again in 2 seconds.")
+                setTimeout(() => {
+                fetchProjects();
+                }, 2000)
+            }
+        }
+
+        xhttp.open("GET", "http://127.0.0.1:8000/");
+        xhttp.send();
     }
 
     // Fetches a list of the files in a project
-    function fetchProject(project_id) {
-        $.getJSON(
-            "http://127.0.0.1:8000/project/" + project_id
-        )
-        .done(function(data) {
-            files_table.empty();
-            files_table.append($("<tr><th class=\"name\"><h4>File Name</h4></th></tr>"));
-            $.each(data, function(f_id, file) {
-                tr = $("<tr>");
-                tr.attr("file_id", f_id);
-                tr.dblclick(function() {fetchSegments(project_id, f_id)});
-                tr.contextmenu(function(e) {window.openFileContextMenu(e, this)});
-                title_td = $("<td>");
-                title_td.text(file.title);
-                tr.append(title_td);
-                empty_td = $("<td>");
-                tr.append(empty_td);
-                files_table.append(tr);
-            })
-            $("main#files_view").attr("cur_p_id", project_id);
-            toggleView("main#files_view", $("button#btn_files_view"));
-            $("button#btn_files_view").prop("disabled", false);
-        })
+    function fetchProject(projectId) {
+        let files;
+        let filesKeys;
+        let xhttp = new XMLHttpRequest();
+
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                files = JSON.parse(this.responseText);
+                filesKeys = Object.keys(files);
+
+                filesTable.innerHTML = "";
+
+                tr = document.createElement("tr");
+                th = document.createElement("th");
+                th.className = "name";
+                th.innerHTML = "File Name";
+                tr.append(th);
+
+                filesTable.append(tr);
+
+                for (i = 0; i < filesKeys.length; i++) {
+                    fId = filesKeys[i];
+                    tr = document.createElement("tr");
+                    tr.setAttribute("file-id", fId);
+                    tr.setAttribute("filePath", files[fId].path);
+
+                    td = document.createElement("td");
+                    td.innerHTML = files[fId].title;
+                    tr.append(td);
+
+                    tr.ondblclick = function() {
+                        window.fileTitle = this.getElementsByTagName("td")[0].innerHTML;
+                        setFooter();
+
+                        fetchSegments(projectId, this.getAttribute("file-id"));
+                    }
+                    tr.oncontextmenu = function(e) {
+                        openFileContextMenu(e, this.getAttribute("file-id"), this.getAttribute("filePath"));
+                    }
+
+                    filesTable.append(tr);
+                }
+                filesView.setAttribute("cur-p-id", projectId);
+                toggleView("files-view", "block", "files-header", "btn-files-view");
+                document.getElementById("btn-files-view").disabled = false;
+            }
+        }
+
+        xhttp.open("GET", "http://127.0.0.1:8000/project/" + projectId);
+        xhttp.send();
     }
 
     // Fetches the segments in a file
-    function fetchSegments(project_id, file_id) {
-        $.getJSON(
-            "http://127.0.0.1:8000/project/" + project_id + "/file/" + file_id
-        )
-        .done(function(data) {
-            segments_table.empty();
-            $.each(data, function(s_id, segment) {
-                tr = $("<tr>");
-                tr.attr("id", s_id);
-                tr.attr("p_id", segment.paragraph);
-                if (segment.status) {
-                    tr.addClass(segment.status);
+    function fetchSegments(projectId, fileId) {
+        window.mergeButton.disabled = true;
+        window.selectedTU = null;
+        window.selectedSegments = [];
+
+        let parser = new DOMParser();
+        let xhttp = new XMLHttpRequest();
+
+        let pI;
+        let segment_row;
+        let source_td;
+        let tags;
+        let target_td;
+        let translation_unit_table;
+        let translation_units;
+
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                segmentsDiv.innerHTML = "";
+                translation_units = parser.parseFromString(this.responseText, "text/xml").documentElement.children;
+                for (i = 0; i < translation_units.length; i++) {
+                    pId = translation_units[i].getAttribute("id");
+                    segments = translation_units[i].getElementsByTagName("segment")
+                    if (segments.length > 0) {
+                        translation_unit_table = document.createElement("table");
+                        translation_unit_table.classList.add("segments-table");
+                        for (s_i = 0; s_i < segments.length; s_i++) {
+                            segment_row = document.createElement("tr");
+                            segment_row.id = segments[s_i].id
+                            segment_row.setAttribute("p-id", pId)
+                            if (segments[s_i].getAttribute("state") != null) {
+                              segment_row.classList.add(segments[s_i].getAttribute("state"));
+                            }
+                            s_i_th = document.createElement("th");
+                            s_i_th.innerHTML = segments[s_i].id;
+                            s_i_th.onclick = function() {
+                                selectSegmentForMerge(this);
+                            }
+                            segment_row.appendChild(s_i_th);
+
+                            source_td = document.createElement("td");
+                            source_td.classList.add("source");
+                            source_td.innerHTML = segments[s_i].getElementsByTagName("source")[0].innerHTML
+                                                  .replace(/\\n/g, "<kaplan:placeholder>")
+                                                  .replace(/\n/g, "<ph>\\n</ph>")
+                                                  .replace(/<kaplan:placeholder>/g, "\\n");
+
+                            segment_row.appendChild(source_td);
+
+                            target_td = document.createElement("td");
+                            target_td.classList.add("target");
+                            target_td.contentEditable = "true";
+                            target_td.innerHTML = segments[s_i].getElementsByTagName("target")[0].innerHTML
+                                                  .replace(/\\n/g, "<kaplan:placeholder>")
+                                                  .replace(/\n/g, "<ph>\\n</ph>")
+                                                  .replace(/<kaplan:placeholder>/g, "\\n");
+                            target_td.addEventListener("keydown", function(e) { targetKeydownHandler(e, this) });
+                            target_td.addEventListener("keyup", function() { [...document.getElementsByTagName("br")].forEach(function(br) { br.remove() }) });
+                            target_td.addEventListener("focus", function () {
+                                window.activeSegment = this.parentNode;
+                                lookupSegment(this.parentNode.children[1], hitsTable);
+                            });
+                            target_td.addEventListener("focusout", function () { submitSegment(this, "draft") });
+                            segment_row.appendChild(target_td);
+
+                            ["sc", "ec", "ph", "g"].forEach(function(tagName) {
+                                [...segment_row.getElementsByTagName(tagName)].forEach(function(tag) {
+                                    if (tag.parentNode.classList.contains("source")) {
+                                        tag.addEventListener("click", function() { tagClickHandler(this) });
+                                    }
+                                    tag.contentEditable = "false";
+                                })
+                            })
+
+                            translation_unit_table.appendChild(segment_row);
+                        }
+                        segmentsDiv.appendChild(translation_unit_table);
+
+                        if (i < translation_units.length - 1) {
+                            segmentsDiv.appendChild(document.createElement("hr"));
+                        }
+                    }
                 }
-                s_id_th = $("<th>");
-                s_id_th.text(s_id);
-                s_id_th.click(function() { segmentSelect($(this).closest("tr")) });
-                tr.append(s_id_th);
-                source_td = $("<td class='source'>");
-                source_td.html(segment.source);
-                $(source_td).find("tag").click(function() { tagClickHandler(this) });
-                tr.append(source_td);
-                target_td = $("<td class='target'>");
-                target_td.html(segment.target);
-                target_td.attr("contenteditable", true);
-                target_td.keydown(function(e) { targetKeydownHandler(e, $(this)) });
-                target_td.keyup(function() { $(this).find("br").remove() });
-                target_td.focus(function () { segmentLookup($(this).closest("tr").find("td.source"), segment_hits_table) });
-                target_td.focusout(function () { submitSegment($(this), "draft") });
-                tr.append(target_td);
-                segments_table.append(tr);
-            })
-            $("main#editor_view").attr("cur_f_id", file_id);
-            toggleView("main#editor_view", $("button#btn_editor_view"));
-            $("button#btn_editor_view").prop("disabled", false);
-        })
+                editorView.setAttribute("cur-f-id", fileId);
+                toggleView("editor-view", "grid", "editor-header", "btn-editor-view");
+                document.getElementById("btn-editor-view").disabled = false;
+            }
+        }
+        xhttp.open("GET", "http://127.0.0.1:8000/project/" + projectId + "/file/" + fileId);
+        xhttp.send();
     }
 
     // Fetches a list of the translation memories
     function fetchTMs() {
-        $.getJSON(
-            "http://127.0.0.1:8000/tms",
-            function(data) {
-            tms_table.empty();
-            tms_table.append($("<tr><th class=\"name\"><h4>Translation Memory</h4></th><th><h4>Source Language</h4></th><th><h4>Target Language</h4></th></tr>"));
-            $.each(data, function(tm_title, tm) {
-                tr = $("<tr>");
-                tr.attr("id", tm.id);
-                title_td = $("<td>");
-                title_td.text(tm.title);
-                tr.append(title_td);
-                src_lng_td = $("<td>");
-                src_lng_td.text(tm.source_language);
-                src_lng_td.addClass("language");
-                tr.append(src_lng_td);
-                trg_lng_td = $("<td>");
-                trg_lng_td.addClass("language");
-                trg_lng_td.text(tm.target_language);
-                tr.append(trg_lng_td);
-                tms_table.append(tr);
-            })
+        let xhttp = new XMLHttpRequest();
+
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                tMs = JSON.parse(this.responseText);
+                tMKeys = Object.keys(tMs);
+
+                tMTable.innerHTML = "";
+
+                tr = document.createElement("tr");
+                tr.innerHTML = "<th class=\"name\"><h4>Translation Memory</h4></th><th><h4>Source Language</h4></th><th><h4>Target Language</h4></th>"
+                tMTable.appendChild(tr);
+
+                for (i = 0; i < tMKeys.length; i++) {
+                    translationMemory = tMs[tMKeys[i]];
+                    tr = document.createElement("tr");
+                    tr.setAttribute("id", translationMemory.id);
+                    tr.setAttribute("path", translationMemory.path);
+                    tr.oncontextmenu = function(e) {
+                        openTMContextMenu(e, this.getAttribute("path"));
+                    }
+
+                    td = document.createElement("td");
+                    td.innerHTML = translationMemory.title;
+                    tr.appendChild(td);
+
+                    td = document.createElement("td")
+                    td.innerHTML= translationMemory.source_language;
+                    tr.appendChild(td);
+
+                    td = document.createElement("td")
+                    td.innerHTML= translationMemory.target_language;
+                    tr.appendChild(td);
+
+                    tMTable.appendChild(tr);
+
+                }
+                console.log("TMs fetched.");
             }
-        )
-        .done(() => {
-            console.log("TMs fetched.")
-        })
-        .fail(() => {
-            console.log("TMs not fetched. Trying again in 2 seconds.")
-            setTimeout(() => {
-            fetchTMs();
-            }, 2000)
-        })
+            else if (this.readyState == 4 && this.status != 200) {
+                console.log("TMs not fetched. Trying again in 2 seconds.")
+                setTimeout(() => {
+                    fetchTMs();
+                }, 2000)
+            }
+        }
+
+        xhttp.open("GET", "http://127.0.0.1:8000/tms");
+        xhttp.send();
     }
 
     // Navigation
-    $("button#btn_projects_view").click(function() {
-        toggleView("main#projects_view", $(this));
-    })
-    $("button#btn_files_view").click(function() {
-        toggleView("main#files_view", $(this));
-    })
-    $("button#btn_editor_view").click(function() {
-        toggleView("main#editor_view", $(this));
-    })
-    $("button#btn_tm_view").click(function() {
-        toggleView("main#tm_view", $(this));
-    })
-
-    function toggleView(to_view_id, button) {
-        active_view.fadeOut(0);
-        active_button.removeClass("active");
-        active_view = $(to_view_id);
-        active_view.fadeIn(400);
-        active_button = button;
-        button.addClass("active");
+    document.getElementById("btn-projects-view").onclick = function() {
+        toggleView("projects-view", "block", "projects-header", "btn-projects-view");
+    }
+    document.getElementById("btn-files-view").onclick = function() {
+        toggleView("files-view", "block", "files-header", "btn-files-view");
+    }
+    document.getElementById("btn-editor-view").onclick = function() {
+        toggleView("editor-view", "grid", "editor-header", "btn-editor-view");
+    }
+    document.getElementById("btn-tm-view").onclick = function() {
+        toggleView("tm-view", "block", "tm-header", "btn-tm-view");
     }
 
-    $("button#toggle_sidebar").click(function() {
-        $("div#sidebar span").toggle()
-        if ($(this).text() == "<") {
-            $("div#sidebar").css("width", "4rem");
-            $("body#index main").css("margin-left", "4rem");
-            $(this).text(">");
+    function setFooter() {
+        let footerString;
+
+        if (window.projectTitle == undefined) {
+          return false;
+        }
+
+        footerString = window.projectTitle;
+
+        if (window.fileTitle != undefined) {
+            footerString +=  " | " + window.fileTitle;
+        }
+
+        footer.innerHTML = footerString
+    }
+
+    function toggleView(viewId, viewDisplay, headerId, buttonId) {
+        activeView.style.display = "none";
+        activeHeader.style.display = "none";
+        activeButton.classList.remove("active");
+        activeView = document.getElementById(viewId);
+        activeView.style.display = viewDisplay;
+        activeHeader = document.getElementById(headerId);
+        activeHeader.style.display = "block";
+        activeButton = document.getElementById(buttonId);
+        activeButton.classList.add("active");
+    }
+
+    document.getElementById("toggle-sidebar").onclick = function() {
+        const sidebar = document.getElementById("sidebar");
+
+        if (sidebar.classList.contains("minimized")) {
+            sidebar.classList.remove("minimized");
+            this.innerHTML = "<";
         }
         else {
-            $("div#sidebar").css("width", "7rem");
-            $("body#index main").css("margin-left", "7rem");
-            $(this).text("<");
+            sidebar.classList.add("minimized");
+            this.innerHTML = ">";
         }
-    })
-
-    function populate_package_creation_menu(task) {
-      overlay.show();
-
-      $.getJSON(
-          "http://127.0.0.1:8000/project/" + files_view.attr("cur_p_id")
-      ).done(function(data) {
-          overlay.find("form").attr("task", task);
-          overlay.find("table").empty()
-          $.each(data, function(f_id, file) {
-              tr = $("<tr>");
-              th = $("<th>");
-              checkbox = $("<input>");
-              checkbox.attr("type", "checkbox");
-              checkbox.attr("filename", file.title);
-              th.append(checkbox);
-              tr.append(th);
-              td = $("<td>");
-              td.text(file.title);
-              tr.append(td);
-              overlay.find("table").append(tr);
-          })
-          tr = $("<tr>");
-          td = $("<td colspan=\"2\">");
-          submit = $("<input type=\"submit\" value=\"Create Package\"/>");
-          td.append(submit);
-          tr.append(td);
-          overlay.find("table").append(tr);
-      })
     }
-    $("#btn_create_new_project_package").click(function() {
-      populate_package_creation_menu("create_new_project_package");
-    })
-    $("#btn_create_return_project_package").click(function() {
-      populate_package_creation_menu("create_return_project_package");
-    })
-    $("#btn_update_from_krpp").click(function() {
-      pathToKRPP = window.selectKRPP()[0];
 
-      $.post(
-        "http://127.0.0.1:8000/package",
-        {
-          path_to_package: pathToKRPP
+    function openPackageMenu(task, projectFiles, pathToKPP=null) {
+
+        let packageForm = overlay.getElementsByTagName("form")[0];
+        let packageTable = overlay.getElementsByTagName("table")[0];
+
+        overlay.style.display = "block";
+
+        packageForm.setAttribute("task", task);
+        if (pathToKPP) {
+            packageForm.setAttribute("project-package", pathToKPP);
         }
-      )
-      .done(function(data) {
-          overlay.show();
-          overlay.find("form").attr("task", "update_from_krpp");
-          overlay.find("table").empty()
-          $.each(data.files_to_unpack, function(i ,filename) {
-              tr = $("<tr>");
-              th = $("<th>");
-              checkbox = $("<input>");
-              checkbox.attr("type", "checkbox");
-              checkbox.attr("filename", filename);
-              th.append(checkbox);
-              tr.append(th);
-              td = $("<td>");
-              td.text(filename);
-              tr.append(td);
-              overlay.find("table").append(tr);
-          })
-          tr = $("<tr>");
-          td = $("<td colspan=\"2\">");
-          submit = $("<input type=\"submit\" value=\"Create Package\"/>");
-          td.append(submit);
-          tr.append(td);
-          overlay.find("table").append(tr);
-      })
-    })
-    $("#btn_create_tm").click(function() {
-        window.createNewTM();
-    })
-    $("#btn_create_project").click(function() {
-        window.newProject();
-    })
-    $("#btn_import_project").click(function() {
-        window.importProject();
-    })
 
-    $("form#form_create_project_package").submit(function() {
-        filesToPackage = [];
-        $(this).find("th input:checked").each(function(i, checkbox) {
-            filesToPackage.push($(checkbox).attr("filename"));
+        packageTable.innerHTML = "";
+
+        [...Object.keys(projectFiles)].forEach((fileKey) => {
+            tr = document.createElement("tr");
+            th = document.createElement("th");
+            input = document.createElement("input");
+            input.type = "checkbox";
+            input.setAttribute("file-key", fileKey);
+            th.appendChild(input);
+            tr.appendChild(th);
+
+            td = document.createElement("td");
+            td.textContent = projectFiles[fileKey]["targetBF"];
+            tr.appendChild(td);
+            packageTable.appendChild(tr);
         });
 
+        tr = document.createElement("tr");
+        td = document.createElement("td");
+        td.setAttribute("colspan", 2);
+        button = document.createElement("button");
+        button.type = "submit";
+        button.textContent = "Update";
+        td.appendChild(button);
+        tr.appendChild(td);
+        packageTable.appendChild(tr);
+
+    }
+    document.getElementById("btn-create-new-project-package").onclick = function() {
+        pathToKPP = window.setFile([]);
+
+        let xhttp = new XMLHttpRequest();
+
+        let queryURL = "http://127.0.0.1:8000/project/"
+                     + filesView.getAttribute("cur-p-id")
+                     + "?task=get_manifest";
+
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                openPackageMenu("create_new_project_package",
+                                JSON.parse(this.responseText).files,
+                                pathToKPP);
+            }
+        }
+
+        xhttp.open("GET",  queryURL, true);
+        xhttp.send();
+    }
+    document.getElementById("btn-create-return-project-package").onclick = function() {
+        pathToKPP = window.setFile([]);
+
+        let xhttp = new XMLHttpRequest();
+
+        let queryURL = "http://127.0.0.1:8000/project/"
+                     + filesView.getAttribute("cur-p-id")
+                     + "?task=get_manifest";
+
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                openPackageMenu("create_return_project_package",
+                                JSON.parse(this.responseText).files,
+                                pathToKPP);
+            }
+        }
+
+        xhttp.open("GET",  queryURL, true);
+        xhttp.send();
+    }
+    document.getElementById("btn-update-from-package").onclick = function() {
+        let pathToKPP = window.selectKPP()[0];
+
+        let xhttp = new XMLHttpRequest();
+
+        let queryURL = "http://127.0.0.1:8000/package";
+        let parameters = new FormData();
+        parameters.append("project_package", pathToKPP);
+
+        let packageForm = overlay.getElementsByTagName("form")[0];
+        let packageTable = overlay.getElementsByTagName("table")[0];
+        let projectFiles;
+
+        xhttp.onreadystatechange = function() {
+             if (this.readyState == 4 && this.status == 200) {
+                  openPackageMenu("update_from_project_package",
+                                  JSON.parse(this.responseText).files,
+                                  pathToKPP);
+             }
+         }
+
+        xhttp.open("POST", queryURL, true);
+        xhttp.send(parameters);
+    }
+    document.getElementById("btn-create-tm").onclick = function() {
+        window.createNewTM();
+    }
+    document.getElementById("btn-create-project").onclick = function() {
+        window.newProject();
+    }
+    document.getElementById("btn-import-project").onclick = function() {
+        window.importProject();
+    }
+
+    document.forms[0].onsubmit = function(e) {
+        e.preventDefault();
+        let filesToPackage = [];
+
+        [...this.getElementsByTagName("input")].forEach(input => {
+            if (input.checked) {
+                filesToPackage.push(input.getAttribute("file-key"));
+            }
+        })
         if (filesToPackage.length == 0) {
-            $(this).closest("main").hide();
-            return false;
+            overlay.style.display = "none";
         }
 
-        parameters = {
-            files_to_package: filesToPackage.join(";"),
-            task: $(this).attr("task")
+        let queryURL = "http://127.0.0.1:8000/project/"
+                     + filesView.getAttribute("cur-p-id");
+
+        let parameters = new FormData();
+        parameters.append("project_package", this.getAttribute("project-package"));
+        parameters.append("files", filesToPackage.join(";"));
+        parameters.append("task", this.getAttribute("task"));
+
+        let xhttp = new XMLHttpRequest();
+
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                overlay.style.display = "none";
+            }
         }
-
-        if (parameters.task == "update_from_krpp") {
-          parameters.path_to_krpp = pathToKRPP;
-        }
-
-        $.post(
-            "http://127.0.0.1:8000/project/" + files_view.attr("cur_p_id"),
-            parameters
-        )
-
-        $(this).closest("main").hide();
-        return false;
-    })
+        xhttp.open("POST",  queryURL, true);
+        xhttp.send(parameters);
+    }
 
     window.fetchSegments = fetchSegments;
-});
+};
+
+if (document.readyState === "complete") {
+    fireOnReady();
+} else {
+    document.addEventListener("DOMContentLoaded", fireOnReady);
+}
