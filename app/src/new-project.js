@@ -47,15 +47,15 @@ function fireOnReady() {
             translationMemories.push(tm.value);
         })
 
-        parameters = "title=" + encodeURIComponent(this["title"].value)
-                     + "&directory=" + encodeURIComponent(this["dir"].value)
-                     + "&source_language=" + encodeURIComponent(selectSource.value)
-                     + "&target_language=" + encodeURIComponent(selectTarget.value);
+        let formData = new FormData();
+        formData.append("title", this["title"].value);
+        formData.append("directory", this["dir"].value);
+        formData.append("source_language", selectSource.value);
+        formData.append("target_language", selectTarget.value);
         if (translationMemories.length > 0) {
-           parameters += "&translation_memories="
-                      + encodeURIComponent(translationMemories.join(";"));
+           formData.append("translation_memories", translationMemories.join(";"));
         }
-        parameters += "&files=" + encodeURIComponent(files.join(';'));
+        formData.append("files", files.join(';'));
 
         let xhttp = new XMLHttpRequest();
 
@@ -67,8 +67,7 @@ function fireOnReady() {
         }
 
         xhttp.open("POST", "http://127.0.0.1:8000/project/new", true);
-        xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded; charset=utf-8");
-        xhttp.send(parameters);
+        xhttp.send(formData);
     };
 
     function fetchRelevantTMs() {

@@ -6,10 +6,11 @@ function fireOnReady() {
     document.forms[0].onsubmit = function(e) {
         e.preventDefault();
 
-        let parameters = "title=" + encodeURIComponent(this["title"].value)
-                         + "&path=" + encodeURIComponent(this["path"].value)
-                         + "&source_language=" + encodeURIComponent(this["select-source"].value)
-                         + "&target_language=" + encodeURIComponent(this["select-target"].value);
+        let formData = new FormData();
+        formData.append("title", this["title"].value);
+        formData.append("path", this["path"].value);
+        formData.append("source_language", this["select-source"].value);
+        formData.append("target_language", this["select-target"].value);
 
         if (this["select-source"].value == "-----" || this["select-target"].value == "-----") {
             console.error("Source and/or target language not selected!");
@@ -26,8 +27,7 @@ function fireOnReady() {
         }
 
         xhttp.open("POST", "http://127.0.0.1:8000/tm/new", true);
-        xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded; charset=utf-8");
-        xhttp.send(parameters);
+        xhttp.send(formData);
     }
 }
 
