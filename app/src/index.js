@@ -3,6 +3,7 @@ function fireOnReady() {
     window.filesTable = document.getElementById("files-table");
     window.filesView = document.getElementById("files-view");
     window.footer = document.getElementsByTagName("footer")[0];
+    window.mergeButton = document.getElementById("btn-segment-merge");
     window.overlay = document.getElementById("overlay");
     window.projectsTable = document.getElementById("projects-table");
     window.segmentsDiv = document.getElementById("segments-div");
@@ -160,9 +161,9 @@ function fireOnReady() {
 
                     filesTable.append(tr);
                 }
-                $("main#files-view").attr("cur-p-id", projectId);
+                filesView.setAttribute("cur-p-id", projectId);
                 toggleView("files-view", "block", "files-header", "btn-files-view");
-                $("button#btn-files-view").prop("disabled", false);
+                document.getElementById("btn-files-view").disabled = false;
             }
         }
 
@@ -172,6 +173,10 @@ function fireOnReady() {
 
     // Fetches the segments in a file
     function fetchSegments(projectId, fileId) {
+        window.mergeButton.disabled = true;
+        window.selectedTU = null;
+        window.selectedSegments = [];
+
         let parser = new DOMParser();
         let xhttp = new XMLHttpRequest();
 
@@ -202,6 +207,9 @@ function fireOnReady() {
                             }
                             s_i_th = document.createElement("th");
                             s_i_th.innerHTML = segments[s_i].id;
+                            s_i_th.onclick = function() {
+                                selectSegmentForMerge(this);
+                            }
                             segment_row.appendChild(s_i_th);
 
                             source_td = document.createElement("td");
@@ -220,13 +228,13 @@ function fireOnReady() {
                                                   .replace(/\\n/g, "<kaplan:placeholder>")
                                                   .replace(/\n/g, "<ph>\\n</ph>")
                                                   .replace(/<kaplan:placeholder>/g, "\\n");
-                            target_td.addEventListener("keydown", function(e) { targetKeydownHandler(e, $(this)) });
+                            target_td.addEventListener("keydown", function(e) { targetKeydownHandler(e, this) });
                             target_td.addEventListener("keyup", function() { [...document.getElementsByTagName("br")].forEach(function(br) { br.remove() }) });
                             target_td.addEventListener("focus", function () {
                                 window.activeSegment = this.parentNode;
                                 lookupSegment(this.parentNode.children[1], hitsTable);
                             });
-                            target_td.addEventListener("focusout", function () { submitSegment($(this), "draft") });
+                            target_td.addEventListener("focusout", function () { submitSegment(this, "draft") });
                             segment_row.appendChild(target_td);
 
                             ["sc", "ec", "ph", "g"].forEach(function(tagName) {
@@ -247,9 +255,9 @@ function fireOnReady() {
                         }
                     }
                 }
-                $("main#editor-view").attr("cur-f-id", fileId);
+                editorView.setAttribute("cur-f-id", fileId);
                 toggleView("editor-view", "grid", "editor-header", "btn-editor-view");
-                $("button#btn-editor-view").prop("disabled", false);
+                document.getElementById("btn-editor-view").disabled = false;
             }
         }
         xhttp.open("GET", "http://127.0.0.1:8000/project/" + projectId + "/file/" + fileId);
@@ -400,8 +408,8 @@ function fireOnReady() {
         button.type = "submit";
         button.textContent = "Update";
         td.appendChild(button);
-        tr.append(td);
-        packageTable.append(tr);
+        tr.appendChild(td);
+        packageTable.appendChild(tr);
 
     }
     document.getElementById("btn-create-new-project-package").onclick = function() {

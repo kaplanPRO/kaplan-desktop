@@ -1,26 +1,65 @@
-function fireOnReady () {
-    $("button#btn-segment-merge").click(function () {
-        $.post(
-            "http://127.0.0.1:8000/project/" + $(files_view).attr("cur-p-id") + "/file/" + $(editor_view).attr("cur-f-id"),
-            {
-                segment_list: selectedSegments.join(';'),
-                task: "merge_segments"
+function fireOnReady() {
+    document.getElementById("btn-segment-merge").onclick = function() {
+        let xhttp = new XMLHttpRequest();
+        let queryURL = "http://127.0.0.1:8000/project/"
+                     + filesView.getAttribute("cur-p-id")
+                     + "/file/"
+                     + editorView.getAttribute("cur-f-id");
+        let formData = new FormData();
+        formData.append("task", "merge_segments");
+        formData.append("segment_list", selectedSegments.join(';'));
+
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                window.fetchSegments(filesView.getAttribute("cur-p-id"), editorView.getAttribute("cur-f-id"));
             }
-        ).done(function() {
-            selectedSegments = [];
-            $("button#btn-segment-merge").prop("disabled", true).fadeOut(400);
-            window.fetchSegments($(files_view).attr("cur-p-id"), $(editor_view).attr("cur-f-id"));
-        })
-    });
+        }
+
+        xhttp.open("POST", queryURL, true);
+        xhttp.send(formData);
+    }
 }
 
-let selectedSegments = [];
+window.selectedTU = null;
+window.selectedSegments = [];
+
+function selectSegmentForMerge(segmentHeader) {
+    let segmentRow = segmentHeader.parentNode;
+    if (selectedTU === null) {
+        selectedTU = segmentRow.getAttribute("p-id");
+        segmentRow.classList.add("selected");
+        selectedSegments.push(segmentHeader.textContent);
+    } else {
+        if (selectedTU !== segmentRow.getAttribute("p-id")) {
+            alert("Segments are not of the same translation unit.");
+            console.error("Segments are not of the same translation unit.");
+        } else {
+            if (segmentRow.classList.contains("selected")) {
+                selectedSegments.pop(segmentHeader.textContent);
+                segmentRow.classList.remove("selected");
+            } else {
+                if (!segmentHeader.textContent.includes(selectedSegments)) {
+                    selectedSegments.push(segmentHeader.textContent);
+                }
+                segmentRow.classList.add("selected");
+            }
+        }
+    }
+    if (selectedSegments.length > 1) {
+        mergeButton.disabled = false;
+    } else {
+        if (selectedSegments.length === 0) {
+            selectedTU = null;
+        }
+        mergeButton.disabled = true;
+    }
+}
 
 function submitSegment(target_cell, segment_state) {
-    paragraph_no = target_cell.closest("tr").attr("p-id");
-    segment_no = target_cell.closest("tr").attr("id");
-    source_segment = "<source>" + target_cell.closest("tr").find("td.source").html().replace(/<ph contenteditable="false">\\n<\/ph>/g, "\n") + "</source>";
-    target_segment = target_cell.html().replace(/&nbsp;/g, " ").replace(/<ph contenteditable="false">\\n<\/ph>/g, "\n");
+    paragraph_no = target_cell.parentNode.getAttribute("p-id");
+    segment_no = target_cell.parentNode.getAttribute("id");
+    source_segment = "<source>" + target_cell.parentNode.getElementsByClassName("source")[0].innerHTML.replace(/<ph contenteditable="false">\\n<\/ph>/g, "\n") + "</source>";
+    target_segment = target_cell.innerHTML.replace(/&nbsp;/g, " ").replace(/<ph contenteditable="false">\\n<\/ph>/g, "\n");
 
     if (target_segment == "") {
         segment_state = "blank";
@@ -29,32 +68,32 @@ function submitSegment(target_cell, segment_state) {
       target_segment = "<target>" + target_segment + "</target>";
     }
 
-    if (segment_state == "draft" && !target_cell.closest("tr").hasClass("draft")) {
+    if (segment_state == "draft" && !target_cell.parentNode.classList.contains("draft")) {
         return false;
     }
 
-    $.post(
-        "http://127.0.0.1:8000/project/" + $(filesView).attr("cur-p-id") + "/file/" + $(editorView).attr("cur-f-id"),
-        {
-            segment_state: segment_state,
-            source_segment: source_segment,
-            target_segment: target_segment,
-            paragraph_no: paragraph_no,
-            segment_no: segment_no,
-            author_id: "local",
-        }
-        )
-        .done(function(data) {
-            console.log("Segment #" + segment_no + " submitted succesfully!");
-            target_cell.closest("tr").removeAttr("class").addClass(segment_state);
+    let xhttp = new XMLHttpRequest();
+    let queryURL = "http://127.0.0.1:8000/project/"
+                 + filesView.getAttribute("cur-p-id")
+                 + "/file/"
+                 + editorView.getAttribute("cur-f-id");
+    let segmentForm = new FormData();
+    segmentForm.append("segment_state", segment_state);
+    segmentForm.append("source_segment", source_segment);
+    segmentForm.append("target_segment", target_segment);
+    segmentForm.append("paragraph_no", paragraph_no);
+    segmentForm.append("segment_no", segment_no);
+    segmentForm.append("author_id", "local");
 
-            if (segment_state == "translated") {
-                target_cell.closest("tr").next().find("td.target").focus();
-            }
-        })
-        .fail(function(data) {
-            console.log(data);
-    })
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            console.log("Segment #" + segment_no + " submitted succesfully!");
+            target_cell.parentNode.className = segment_state;
+        }
+    }
+
+    xhttp.open("POST", queryURL, true);
+    xhttp.send(segmentForm);
 }
 function lookupSegment(sourceSegment, hitsTable) {
     let fileURL = "http://127.0.0.1:8000/project/"
@@ -141,32 +180,32 @@ function segmentSelect(segmentRow) {
     }
 }
 function tagClickHandler(tag) {
-    $(tag).clone().appendTo($(tag).closest("tr").find("td.target"));
-}
-function targetChangeHandler(e, target_cell) {
-    target_cell.removeAttr("class").addClass("draft");
+    tag.parentNode.parentNode.getElementsByClassName("target")[0].
+    innerHTML += tag.outerHTML;
+    tag.parentNode.parentNode.classList.remove("translated");
+    tag.parentNode.parentNode.classList.add("draft");
 }
 function targetKeydownHandler(e, target_cell) {
     if (e.key == "Enter") {
         e.preventDefault();
         if (e.ctrlKey) {
-            target_cell.closest("tr").removeClass("draft");
+            target_cell.parentNode.classList.remove("draft");
             submitSegment(target_cell, "translated");
         }
     }
     else if (e.ctrlKey) {
         if (e.key == "Insert") {
-            target_cell.html(target_cell.closest("tr").find("td.source").html());
+            target_cell.innerHTML = target_cell.parentNode.getElementsByClassName("source")[0].innerHTML;
         }
     }
     else if ( e.shiftKey || e.key == "Tab") {}
     else {
-        target_cell.closest("tr").removeClass("translated").addClass("draft");
+        target_cell.parentNode.classList.remove("translated");
+        target_cell.parentNode.classList.add("draft");
     }
 };
-
 if (document.readyState === "complete") {
     fireOnReady();
 } else {
     document.addEventListener("DOMContentLoaded", fireOnReady);
-}
+};

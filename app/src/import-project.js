@@ -1,28 +1,33 @@
-$(document).ready(function() {
-    $("#btn-choose-dir").click(() => {
+function fireOnReady() {
+    document.getElementById("btn-choose-dir").onclick = () => {
         window.selectDirectory();
-    });
-    $("#btn-choose-path").click(() => {
+    };
+    document.getElementById("btn-choose-path").onclick = () => {
         window.selectPath();
-    });
+    };
 
-    $("form").submit(() => {
-        $.post(
-            "http://127.0.0.1:8000/project/import",
-            {
-            path: $("input#input-path").val(),
-            directory: $("input#input-dir").val(),
+    document.forms[0].onsubmit = function(e) {
+        e.preventDefault();
+
+        let xhttp = new XMLHttpRequest();
+        const queryURL = "http://127.0.0.1:8000/project/import";
+        let formData = new FormData();
+        formData.append("path", document.getElementById("input-path").value);
+        formData.append("directory", document.getElementById("input-dir").value);
+
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                window.indexRefresh();
+                window.close();
             }
-        )
-        .done(function() {
-            window.indexRefresh();
-            window.close();
-        })
-        .fail(function(data) {
-            alert(data.responseJSON.error);
-        })
+        }
 
-        return false;
-    });
-
-})
+        xhttp.open("POST", queryURL, true);
+        xhttp.send(formData);
+    };
+}
+if (document.readyState === "complete") {
+    fireOnReady();
+} else {
+    document.addEventListener("DOMContentLoaded", fireOnReady);
+}
