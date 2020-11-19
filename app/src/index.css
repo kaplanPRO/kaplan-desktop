@@ -32,9 +32,6 @@ button:disabled {
     color: slategrey;
     opacity: 0.2;
 }
-button#btn-segment-merge {
-    display: none;
-}
 footer {
     background-color: #f5f5f5;
     border-top: 1px solid #cccccc;
