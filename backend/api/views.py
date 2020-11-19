@@ -176,9 +176,10 @@ def project_file(request, project_id, file_id):
 
         elif request.POST.get('task') == 'merge_segments':
 
-            return JsonResponse({'status': 'failed',
-                                'message': 'Feature temporarily unavailable.'},
-                                status=403)
+            kxliff.merge_segments(request.POST['segment_list'].split(';'))
+            kxliff.save(project.get_target_dir())
+
+            return JsonResponse({'status': 'success'})
 
         else:
             segment_state = request.POST['segment_state']
