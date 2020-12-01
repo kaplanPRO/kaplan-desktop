@@ -1,6 +1,6 @@
 const { ipcRenderer } = require('electron');
 const { dialog } = require('electron').remote;
-const path = require('path');
+const fs = require('fs');
 
 window.indexRefresh = () => {
     ipcRenderer.sendTo(1, 'kaplan-index', 'main#projects-view');
@@ -8,7 +8,20 @@ window.indexRefresh = () => {
 
 window.selectDirectory = () => {
     dialog.showOpenDialog({ properties: ['createDirectory', 'openDirectory'] }).then((data) => {
-        document.getElementById('input-dir').value = data.filePaths[0];
+        projectDirectory = data.filePaths[0];
+        fs.readdir(projectDirectory, function(err, files) {
+            if (err) {
+               console.error(err);
+            } else {
+               if (!files.length) {
+                   document.getElementById('input-dir').value = data.filePaths[0];
+               } else {
+                  errorMessage = 'Project directory must be an empty folder!';
+                  console.error(errorMessage);
+                  alert(errorMessage);
+               }
+            }
+        });
     });
 };
 
