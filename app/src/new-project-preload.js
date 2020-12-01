@@ -1,6 +1,7 @@
 const { ipcRenderer } = require('electron');
 const { dialog } = require('electron').remote;
 const fs = require('fs');
+const path = require('path');
 
 window.indexRefresh = () => {
     ipcRenderer.sendTo(1, 'kaplan-index', 'main#projects-view');
