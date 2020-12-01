@@ -191,6 +191,21 @@ function targetKeydownHandler(e, target_cell) {
         if (e.ctrlKey) {
             target_cell.parentNode.classList.remove("draft");
             submitSegment(target_cell, "translated");
+            jumpToNextSegment = false;
+            targetList = [...document.getElementsByClassName("target")].slice(1);
+            for (i = 0; i < targetList.length; i++) {
+                target = targetList[i];
+                if (!jumpToNextSegment) {
+                    if (target === target_cell) {
+                        jumpToNextSegment = true;
+                    }
+                } else {
+                    if (!target.parentNode.classList.contains("translated")) {
+                        target.focus();
+                        break;
+                    }
+                }
+            }
         }
     }
     else if (e.ctrlKey) {
