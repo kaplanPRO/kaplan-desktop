@@ -19,6 +19,10 @@ function fireOnReady() {
             if (this.readyState == 4 && this.status == 200) {
                 window.indexRefresh();
                 window.close();
+            } else if (this.readyState == 4 && this.status == 500) {
+                errorMessage = JSON.parse(this.responseText).error;
+                console.error(errorMessage);
+                alert(errorMessage);
             }
         }
 
