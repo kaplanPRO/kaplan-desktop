@@ -79,7 +79,7 @@ def new_project(request):
     if not os.path.exists(project_dir):
         os.makedirs(project_dir)
     elif len(os.listdir(project_dir)) > 0:
-        return JsonResponse({'error': 'Dir not empty!'}, status=500)
+        return JsonResponse({'error': 'Project directory must be an empty folder!'}, status=500)
 
     project = Project()
     project.title = project_title
