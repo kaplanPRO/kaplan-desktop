@@ -17,6 +17,7 @@
                 <button id="btn-files-view" disabled>F<span>iles</span></button>
                 <button id="btn-editor-view" disabled>E<span>ditor</span></button>
                 <button id="btn-tm-view">TM</button>
+                <button id="btn-tb-view">TB</button>
             </nav>
             <button id="toggle-sidebar"><</button>
         </div>
@@ -51,7 +52,10 @@
         </header>
         <main id="editor-view">
             <div id="hits-div">
-                <table id="hits-table"></table>
+                <button id="btn-tm-hits" class="active">TM</button>
+                <button id="btn-tb-hits">TB</button>
+                <table id="tm-hits"></table>
+                <table id="tb-hits"></table>
             </div>
             <div id="segments-div"></div>
         </main>
@@ -59,11 +63,41 @@
             <button id="btn-create-tm">Create TM</button>
         </header>
         <main id="tm-view">
-            <table id="tms-table">
-                <tr>
-                    <th colspan="3">Loading...</th>
-                </tr>
-            </table>
+            <div>
+                <table id="tms-table">
+                    <tr>
+                        <th colspan="3">Loading...</th>
+                    </tr>
+                </table>
+            </div>
+            <div>
+                <hr>
+                <table id="tm-table">
+                    <tr>
+                        <th colspan="2">Double-click a TM to see its contents.</td>
+                    </tr>
+                </table>
+            </div>
+        </main>
+        <header id="tb-header">
+            <button id="btn-create-tb">Create TB</button>
+        </header>
+        <main id="tb-view">
+          <div>
+              <table id="tbs-table">
+                  <tr>
+                      <th colspan="3">Loading...</th>
+                  </tr>
+              </table>
+          </div>
+          <div>
+              <hr>
+              <table id="tb-table">
+                  <tr>
+                      <th colspan="2">Double-click a TB to see its contents.</td>
+                  </tr>
+              </table>
+          </div>
         </main>
         <main id="overlay">
             <form id="project-package">

@@ -4,26 +4,29 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta http-equiv="Content-Security-Policy" content="script-src 'self' https://127.0.0.1">
-        <title>New Project</title>
+        <title>New Termbase</title>
         <link rel="stylesheet" href="index.css">
-        <script type="text/javascript" src="new-project.js"></script>
-        </head>
+        <script type="text/javascript" src="new-kdb.js"></script>
+    </head>
     <body>
         <main>
             <form>
                 <table>
                     <tr>
-                        <th><label for="input-title">Project Title:</label></th>
-                        <td><input id="input-title" name="title" maxlength="60" required/></td>
+                        <th><label>Title</label></th>
+                        <td><input id="input-title" name="title" required/></td>
                     </tr>
                     <tr>
-                        <th><label for="input-dir">Project Directory:</label></th>
-                        <td><input id="input-dir" name="dir" required/><input id="btn-choose-dir" type="button" value="Choose"/></td>
+                        <th><label>Path</label></th>
+                        <td>
+                            <input id="input-path" name="path" required/>
+                            <input id="btn-tm-path" type="button" value="Choose"/>
+                        </td>
                     </tr>
                     <tr>
                         <th><label for="select-source">Source Language:</label></th>
                         <td>
-                            <select id="select-source" name="source-languages" required>
+                            <select id="select-source" name="select-source" required>
                                 <option value="-----" disabled selected>-----</option>
                                 <option value="ab">Abkhazian</option>
                                 <option value="aa">Afar</option>
@@ -215,7 +218,7 @@
                     <tr>
                         <th><label for="select-target">Target Language:</label></th>
                         <td>
-                            <select id="select-target" name="target-languages" required>
+                            <select id="select-target" name="select-target" required>
                                 <option value="-----" disabled selected>-----</option>
                                 <option value="ab">Abkhazian</option>
                                 <option value="aa">Afar</option>
@@ -404,27 +407,8 @@
                             </select>
                         </td>
                     </tr>
-                    <tr>
-                        <th><label for="select-tms">Translation Memory:</label></th>
-                        <td>
-                            <select id="select-tms" name="translation-memories" multiple>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th><label for="select-tbs">Termbase:</label></th>
-                        <td>
-                            <select id="select-tbs" name="termbases" multiple>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th colspan="2">Files:<input id="btn-choose-files" type="button" value="Choose"/></th>
-                    </tr>
-                    <tr>
-                        <td colspan="2">
-                            <ul id="list-files"></ul>
-                        </td>
+                    <tr class="hidden">
+                        <th colspan="2"><input id="kdb-role" name="kdb-role" value="tb"/></th>
                     </tr>
                     <tr>
                         <th colspan="2"><input type="submit" value="Create"/></th>

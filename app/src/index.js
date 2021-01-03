@@ -7,11 +7,17 @@ function fireOnReady() {
     window.overlay = document.getElementById("overlay");
     window.projectsTable = document.getElementById("projects-table");
     window.segmentsDiv = document.getElementById("segments-div");
+    window.tBTable = document.getElementById("tbs-table");
+    window.tBEntries = document.getElementById("tb-table");
     window.tMTable = document.getElementById("tms-table");
-
-    const hitsTable = document.getElementById("hits-table");
+    window.tMEntries = document.getElementById("tm-table");
 
     window.activeSegment = null;
+
+    let activeProject = null;
+    let activeFile = null;
+    let activeTM = null;
+    let activeTB = null;
 
     let activeButton = document.getElementById("btn-projects-view");
     let activeHeader = document.getElementById("projects-header");
@@ -21,9 +27,67 @@ function fireOnReady() {
 
     setTimeout(() => {
         fetchProjects();
+        fetchTBs();
         fetchTMs();
     }, 1000);
 
+    // Fetches the entries in a kdb file
+    function fetchEntries(kdb_role, kdb_id) {
+        let entries;
+        let entry;
+        let entryKeys;
+
+        if (kdb_role === "tm") {
+            kDBEntries = tMEntries;
+        } else {
+            kDBEntries = tBEntries;
+        }
+
+        let queryURL = "http://127.0.0.1:8000/kdb/" + kdb_id;
+        let xhttp = new XMLHttpRequest();
+
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                entries = JSON.parse(this.responseText);
+                entryKeys = Object.keys(entries);
+
+                kDBEntries.innerHTML = null;
+
+                tr = document.createElement("tr");
+
+                th = document.createElement("th");
+                th.textContent = "Source";
+                tr.appendChild(th);
+
+                th = document.createElement("th");
+                th.textContent = "Target";
+                tr.appendChild(th);
+
+                kDBEntries.appendChild(tr);
+
+                for (i = 0; i < entryKeys.length; i++) {
+                    entry = entries[entryKeys[i]];
+
+                    tr = document.createElement("tr");
+
+                    td = document.createElement("td");
+                    td.textContent = entry.source;
+                    tr.appendChild(td);
+
+                    td = document.createElement("td");
+                    td.textContent = entry.target;
+                    td.classList.add("target");
+                    tr.appendChild(td);
+
+                    kDBEntries.appendChild(tr);
+                }
+            }
+        }
+
+        xhttp.open("GET", queryURL);
+        xhttp.send();
+
+    }
     // Fetches a list of the projects
     function fetchProjects() {
         let projects;
@@ -71,6 +135,12 @@ function fireOnReady() {
                         window.setSpellCheckerLanguages(langPair);
 
                         fetchProject(this.getAttribute("project-id"));
+
+                        if (activeProject != null) {
+                            activeProject.classList.remove("active");
+                        }
+                        this.classList.add("active");
+                        activeProject = this;
 
                         if (this.getAttribute("is-imported") == "true") {
                             document.getElementById("btn-create-new-project-package").style.display = "none";
@@ -143,7 +213,8 @@ function fireOnReady() {
                     fId = filesKeys[i];
                     tr = document.createElement("tr");
                     tr.setAttribute("file-id", fId);
-                    tr.setAttribute("filePath", files[fId].path);
+                    tr.setAttribute("file-path", files[fId].path);
+                    tr.setAttribute("can-generate-target-file", files[fId].can_generate_target_file);
 
                     td = document.createElement("td");
                     td.innerHTML = files[fId].title;
@@ -154,9 +225,18 @@ function fireOnReady() {
                         setFooter();
 
                         fetchSegments(projectId, this.getAttribute("file-id"));
+
+                        if (activeFile != null) {
+                            activeFile.classList.remove("active");
+                        }
+                        this.classList.add("active");
+                        activeFile = this;
                     }
                     tr.oncontextmenu = function(e) {
-                        openFileContextMenu(e, this.getAttribute("file-id"), this.getAttribute("filePath"));
+                        openFileContextMenu(e,
+                                            this.getAttribute("file-id"),
+                                            this.getAttribute("file-path"),
+                                            this.getAttribute("can-generate-target-file"));
                     }
 
                     filesTable.append(tr);
@@ -232,7 +312,7 @@ function fireOnReady() {
                             target_td.addEventListener("keyup", function() { [...document.getElementsByTagName("br")].forEach(function(br) { br.remove() }) });
                             target_td.addEventListener("focus", function () {
                                 window.activeSegment = this.parentNode;
-                                lookupSegment(this.parentNode.children[1], hitsTable);
+                                lookupSegment(this.parentNode.children[1]);
                             });
                             target_td.addEventListener("focusout", function () { submitSegment(this, "draft") });
                             segment_row.appendChild(target_td);
@@ -264,56 +344,80 @@ function fireOnReady() {
         xhttp.send();
     }
 
+    // Fetches a list of the termbases
+    function fetchTBs() {
+        fetchKDBs("tb", "Termbase", tBTable)
+    }
     // Fetches a list of the translation memories
     function fetchTMs() {
+        fetchKDBs("tm", "Translation Memory", tMTable);
+    }
+    function fetchKDBs(role, tableHeader, kDBtable) {
         let xhttp = new XMLHttpRequest();
 
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
-                tMs = JSON.parse(this.responseText);
-                tMKeys = Object.keys(tMs);
+                kDBs = JSON.parse(this.responseText);
+                kDBKeys = Object.keys(kDBs);
 
-                tMTable.innerHTML = "";
+                kDBtable.innerHTML = "";
 
                 tr = document.createElement("tr");
-                tr.innerHTML = "<th class=\"name\"><h4>Translation Memory</h4></th><th><h4>Source Language</h4></th><th><h4>Target Language</h4></th>"
-                tMTable.appendChild(tr);
+                tr.innerHTML = "<th class=\"name\"><h4>" + tableHeader + "</h4></th><th><h4>Source Language</h4></th><th><h4>Target Language</h4></th>"
+                kDBtable.appendChild(tr);
 
-                for (i = 0; i < tMKeys.length; i++) {
-                    translationMemory = tMs[tMKeys[i]];
+                for (i = 0; i < kDBKeys.length; i++) {
+                    kDB = kDBs[kDBKeys[i]];
                     tr = document.createElement("tr");
-                    tr.setAttribute("id", translationMemory.id);
-                    tr.setAttribute("path", translationMemory.path);
+                    tr.setAttribute("id", kDB.id);
+                    tr.setAttribute("path", kDB.path);
                     tr.oncontextmenu = function(e) {
-                        openTMContextMenu(e, this.getAttribute("path"));
+                        openKDBContextMenu(e, this.getAttribute("path"), this.getAttribute("id"));
+                    }
+                    tr.ondblclick = function() {
+                        if (role == "tm"){
+                            if (activeTM != null) {
+                                activeTM.classList.remove("active");
+                            }
+                            this.classList.add("active");
+                            activeTM = this;
+                            fetchEntries(role, this.getAttribute("id"));
+                        } else {
+                            if (activeTB != null) {
+                                activeTB.classList.remove("active");
+                            }
+                            this.classList.add("active");
+                            activeTB = this;
+                            fetchEntries(role, this.getAttribute("id"));
+                        }
                     }
 
                     td = document.createElement("td");
-                    td.innerHTML = translationMemory.title;
+                    td.innerHTML = kDB.title;
                     tr.appendChild(td);
 
                     td = document.createElement("td")
-                    td.innerHTML= translationMemory.source_language;
+                    td.innerHTML= kDB.source_language;
                     tr.appendChild(td);
 
                     td = document.createElement("td")
-                    td.innerHTML= translationMemory.target_language;
+                    td.innerHTML= kDB.target_language;
                     tr.appendChild(td);
 
-                    tMTable.appendChild(tr);
+                    kDBtable.appendChild(tr);
 
                 }
-                console.log("TMs fetched.");
+                console.log(role.toUpperCase() + "s fetched.");
             }
             else if (this.readyState == 4 && this.status != 200) {
-                console.log("TMs not fetched. Trying again in 2 seconds.")
+                console.log(role.toUpperCase() + "s not fetched. Trying again in 2 seconds.")
                 setTimeout(() => {
-                    fetchTMs();
+                    fetchKDBs(role, tableHeader);
                 }, 2000)
             }
         }
 
-        xhttp.open("GET", "http://127.0.0.1:8000/tms");
+        xhttp.open("GET", "http://127.0.0.1:8000/kdb?role=" + role);
         xhttp.send();
     }
 
@@ -328,7 +432,10 @@ function fireOnReady() {
         toggleView("editor-view", "grid", "editor-header", "btn-editor-view");
     }
     document.getElementById("btn-tm-view").onclick = function() {
-        toggleView("tm-view", "block", "tm-header", "btn-tm-view");
+        toggleView("tm-view", "grid", "tm-header", "btn-tm-view");
+    }
+    document.getElementById("btn-tb-view").onclick = function() {
+        toggleView("tb-view", "grid", "tb-header", "btn-tb-view");
     }
 
     function setFooter() {
@@ -377,6 +484,9 @@ function fireOnReady() {
         let packageForm = overlay.getElementsByTagName("form")[0];
         let packageTable = overlay.getElementsByTagName("table")[0];
 
+        let buttonText = task.split("_")[0]
+        buttonText = buttonText[0].toUpperCase() + buttonText.slice(1)
+
         overlay.style.display = "block";
 
         packageForm.setAttribute("task", task);
@@ -396,7 +506,11 @@ function fireOnReady() {
             tr.appendChild(th);
 
             td = document.createElement("td");
-            td.textContent = projectFiles[fileKey]["targetBF"];
+            if ("name" in projectFiles[fileKey]) {
+                td.textContent = projectFiles[fileKey].name;
+            } else {
+                td.textContent = projectFiles[fileKey].targetBF;
+            }
             tr.appendChild(td);
             packageTable.appendChild(tr);
         });
@@ -406,7 +520,7 @@ function fireOnReady() {
         td.setAttribute("colspan", 2);
         button = document.createElement("button");
         button.type = "submit";
-        button.textContent = "Update";
+        button.textContent = buttonText;
         td.appendChild(button);
         tr.appendChild(td);
         packageTable.appendChild(tr);
@@ -453,7 +567,10 @@ function fireOnReady() {
         xhttp.send();
     }
     document.getElementById("btn-update-from-package").onclick = function() {
-        let pathToKPP = window.selectKPP()[0];
+        const filterList = [
+            {name: 'Kaplan Project Packages', extensions: ['kpp']}
+        ]
+        let pathToKPP = window.selectFile(filterList)[0];
 
         let xhttp = new XMLHttpRequest();
 
@@ -476,8 +593,11 @@ function fireOnReady() {
         xhttp.open("POST", queryURL, true);
         xhttp.send(parameters);
     }
+    document.getElementById("btn-create-tb").onclick = function() {
+        window.createNewKDB("tb");
+    }
     document.getElementById("btn-create-tm").onclick = function() {
-        window.createNewTM();
+        window.createNewKDB("tm");
     }
     document.getElementById("btn-create-project").onclick = function() {
         window.newProject();

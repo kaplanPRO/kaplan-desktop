@@ -2,12 +2,12 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import File, Project, TranslationMemory
+from .models import File, Project, KaplanDatabase
 
+import kaplan
+from kaplan.kdb import KDB # Translation memory
 from kaplan.kxliff import KXLIFF # Bilingual file
 from kaplan.project import Project as KaplanProject
-from kaplan.xliff import XLIFF # Translation memory
-from kaplan.utils import create_new_project_package, create_return_project_package, html_to_segment, open_new_project_package, segment_to_html, supported_file_formats
 
 from lxml import etree
 
@@ -48,15 +48,29 @@ def import_project(request):
 
     if 'tms' in project_metadata:
         for i in project_metadata['tms']:
-            new_tm = TranslationMemory()
-            new_tm.title = os.path.basename(project_metadata['tms'][i])
-            new_tm.path = os.path.join(project_dir, project_metadata['tms'][i])
-            new_tm.source_language = project_metadata['src']
-            new_tm.target_language = project_metadata['trg']
-            new_tm.is_project_specific = True
-            new_tm.save()
+            new_kdb = KaplanDatabase()
+            new_kdb.title = os.path.basename(project_metadata['tms'][i])
+            new_kdb.path = os.path.join(project_dir, project_metadata['tms'][i])
+            new_kdb.source_language = project_metadata['src']
+            new_kdb.target_language = project_metadata['trg']
+            new_kdb.is_project_specific = True
+            new_kdb.role = 'tm'
+            new_kdb.save()
 
-            new_project.translation_memories.add(new_tm)
+            new_project.language_resources.add(new_kdb)
+
+    if 'tbs' in project_metadata:
+        for i in project_metadata['tbs']:
+            new_kdb = KaplanDatabase()
+            new_kdb.title = os.path.basename(project_metadata['tbs'][i])
+            new_kdb.path = os.path.join(project_dir, project_metadata['tbs'][i])
+            new_kdb.source_language = project_metadata['src']
+            new_kdb.target_language = project_metadata['trg']
+            new_kdb.is_project_specific = True
+            new_kdb.role = 'tb'
+            new_kdb.save()
+
+            new_project.language_resources.add(new_kdb)
 
         new_project.save()
 
@@ -70,8 +84,8 @@ def new_project(request):
     project_dir = request.POST['directory']
     project_source = request.POST['source_language']
     project_target = request.POST['target_language']
-    project_tms = [TranslationMemory.objects.get(id=int(tm_id)) for tm_id in request.POST.get('translation_memories', '').split(';') if tm_id]
-    project_files = [project_file for project_file in request.POST['files'].split(';') if KXLIFF.can_process(project_file)]
+    project_lrs = [KaplanDatabase.objects.get(id=int(kdb_id)) for kdb_id in request.POST.get('language_resources', '').split(';') if kdb_id]
+    project_files = [project_file for project_file in request.POST['files'].split(';') if kaplan.can_process(project_file)]
 
     if len(project_files) == 0:
         return JsonResponse({'error': 'No compatible files selected!'}, status=500)
@@ -87,8 +101,8 @@ def new_project(request):
     project.source_language = project_source
     project.target_language = project_target
     project.save()
-    for project_tm in project_tms:
-        project.translation_memories.add(project_tm)
+    for project_lr in project_lrs:
+        project.language_resources.add(project_lr)
     project.save()
 
     source_dir = os.path.join(project_dir, project.source_language)
@@ -101,7 +115,7 @@ def new_project(request):
         new_file = File()
         new_file.title = file_title
         new_file.project = project
-        new_file.is_kxliff = not file_title.lower().endswith(('.xliff', '.sdlxliff'))
+        new_file.is_kxliff = not file_title.lower().endswith(('.xliff', '.sdlxliff', '.kxliff'))
         new_file.save()
 
         with open(project_file, 'rb') as infile:
@@ -109,31 +123,36 @@ def new_project(request):
                 for line in infile:
                     outfile.write(line)
 
-        kxliff = KXLIFF.new(os.path.join(source_dir, file_title), project_source, project_target)
-        kxliff.save(source_dir)
-        kxliff.save(target_dir)
+        try:
+            kxliff = KXLIFF.new(os.path.join(source_dir, file_title), project_source, project_target)
+            kxliff.save(source_dir)
+            kxliff.save(target_dir)
+        except:
+            _xliff = kaplan.open_bilingualfile(os.path.join(source_dir, file_title))
+            _xliff.save(target_dir)
 
     return JsonResponse({'status': 'success'})
 
 @csrf_exempt
-def new_tm(request):
-    tm_title = request.POST['title']
-    tm_path = request.POST['path']
-    tm_source_language = request.POST['source_language']
-    tm_target_language = request.POST['target_language']
+def new_kdb(request):
+    kdb_title = request.POST['title']
+    kdb_path = request.POST['path']
+    kdb_source_language = request.POST['source_language']
+    kdb_target_language = request.POST['target_language']
+    kdb_role = request.POST['role']
 
-    tm = TranslationMemory()
-    tm.title = tm_title
-    tm.path = tm_path if tm_path.lower().endswith('.xliff') else tm_path + '.xliff'
-    tm.source_language = tm_source_language
-    tm.target_language = tm_target_language
+    new_kdb = KaplanDatabase()
+    new_kdb.title = kdb_title
+    new_kdb.path = kdb_path if kdb_path.lower().endswith('.kdb') else kdb_path + '.kdb'
+    new_kdb.source_language = kdb_source_language
+    new_kdb.target_language = kdb_target_language
+    new_kdb.role = kdb_role
 
-    xliff = XLIFF.new(tm.path,
-                      tm.source_language,
-                      tm.target_language)
-    xliff.save(os.path.dirname(tm.path))
+    kdb = KDB.new(new_kdb.path,
+                  new_kdb.source_language,
+                  new_kdb.target_language)
 
-    tm.save()
+    new_kdb.save()
 
     return JsonResponse({'status': 'success'})
 
@@ -166,18 +185,19 @@ def project_file(request, project_id, file_id):
     project_file = project_file.get(id=file_id)
 
     filename = project_file.title + '.kxliff' if project_file.is_kxliff else project_file.title
-    kxliff = KXLIFF(os.path.join(project.get_target_dir(), filename))
+    bf = kaplan.open_bilingualfile(os.path.join(project.get_target_dir(), filename))
 
     if request.method == 'POST':
         if request.POST.get('task') == 'generate_target_translation':
-            kxliff.generate_target_translation(project.get_target_dir())
+            bf.generate_target_translation(project.get_target_dir(),
+                                           os.path.join(project.get_source_dir(), project_file.title))
 
             return JsonResponse({'status': 'success'})
 
         elif request.POST.get('task') == 'merge_segments':
 
-            kxliff.merge_segments(request.POST['segment_list'].split(';'))
-            kxliff.save(project.get_target_dir())
+            bf.merge_segments(request.POST['segment_list'].split(';'))
+            bf.save(project.get_target_dir())
 
             return JsonResponse({'status': 'success'})
 
@@ -187,21 +207,22 @@ def project_file(request, project_id, file_id):
             target_segment = request.POST['target_segment']
             author_id = request.POST['author_id']
 
-            kxliff.update_segment(segment_state,
-                                 target_segment,
-                                 request.POST['paragraph_no'],
-                                 request.POST['segment_no'])
-            kxliff.save(project.get_target_dir())
+            bf.update_segment(target_segment,
+                              request.POST['paragraph_no'],
+                              request.POST['segment_no'],
+                              segment_state,
+                              author_id)
+            bf.save(project.get_target_dir())
 
             if segment_state == 'translated':
-                for project_tm in project.translation_memories.all():
-                    xliff = XLIFF(project_tm.path,
-                                  project.source_language,
-                                  project.target_language)
+                for project_tm in project.language_resources.all().filter(role='tm'):
+                    kdb = KDB(project_tm.path,
+                              project.source_language,
+                              project.target_language)
 
-                    xliff.submit_segment(source_segment,
-                                         target_segment)
-                    xliff.save(os.path.dirname(project_tm.path))
+                    kdb.submit_segment(source_segment,
+                                       target_segment,
+                                       author_id)
 
             return JsonResponse({'status': 'success'})
 
@@ -209,28 +230,38 @@ def project_file(request, project_id, file_id):
         source_segment = request.GET['source_segment']
 
         tm_hits = []
-        for project_tm in project.translation_memories.all():
-            project_tm = XLIFF(project_tm.path,
-                         project.source_language,
-                         project.target_language)
+        for project_tm in project.language_resources.all().filter(role='tm'):
+            project_tm = KDB(project_tm.path,
+                             project.source_language,
+                             project.target_language)
 
             for tm_result in project_tm.lookup_segment(source_segment):
                 tm_result = {'ratio': int(tm_result[0]*100),
-                             'source': etree.tostring(tm_result[1][0], encoding='UTF-8').decode(),
-                             'target': etree.tostring(tm_result[1][1], encoding='UTF-8').decode()}
+                             'source': etree.tostring(tm_result[1], encoding='UTF-8').decode(),
+                             'target': etree.tostring(tm_result[2], encoding='UTF-8').decode()}
 
                 if tm_result not in tm_hits:
                     tm_hits.append(tm_result)
 
-        tm_hits.sort(reverse=True)
-        tm_hits_dict = {}
-        for tm_hit in tm_hits:
-            tm_hits_dict[len(tm_hits)] = tm_hit
 
-        return JsonResponse(tm_hits_dict)
+        tb_hits = []
+        for project_tb in project.language_resources.all().filter(role='tb'):
+            project_tb = KDB(project_tb.path,
+                             project.source_language,
+                             project.target_language)
+
+            for tb_result in project_tb.lookup_terms(etree.fromstring(source_segment)):
+                tb_result = {'ratio': int(tb_result[0]*100),
+                             'source': tb_result[1],
+                             'target': tb_result[2]}
+
+                if tb_result not in tb_hits:
+                    tb_hits.append(tb_result)
+
+        return JsonResponse({'tm':tm_hits, 'tb':tb_hits})
 
     else:
-        return HttpResponse(etree.tostring(kxliff.translation_units, encoding="UTF-8"))
+        return HttpResponse(etree.tostring(bf.translation_units, encoding="UTF-8"))
 
 @csrf_exempt
 def project_view(request, project_id):
@@ -239,8 +270,11 @@ def project_view(request, project_id):
     if request.method == 'POST':
         if request.POST.get('task') == 'create_new_project_package':
             path = request.POST['project_package']
+            files = request.POST.get('files', '').split(';')
+            if files == ['']:
+                raise ValueError('No files selected.')
 
-            KaplanProject(project.get_project_metadata()).export(path)
+            KaplanProject(project.get_project_metadata()).export(path, files)
 
             project.is_exported = True
             project.save()
@@ -269,27 +303,73 @@ def project_view(request, project_id):
             for project_file in File.objects.filter(project=project):
                 filename = project_file.title + '.kxliff' if project_file.is_kxliff else project_file.title
                 files_dict[project_file.id] = {'title':project_file.title,
-                                               'path':os.path.join(project.get_target_dir(), filename)}
+                                               'path':os.path.join(project.get_target_dir(), filename),
+                                               'can_generate_target_file':project_file.is_kxliff}
 
             return JsonResponse(files_dict)
 
-def tm_directory(request):
+def kdb_directory(request):
+    kdbs = KaplanDatabase.objects.filter(is_project_specific=False)
     if request.GET.get('source_language') and request.GET.get('target_language'):
-        tms = TranslationMemory.objects.filter(source_language=request.GET['source_language'],
+        kdbs = kdbs.filter(source_language=request.GET['source_language'],
                                                target_language=request.GET['target_language'],
                                                is_project_specific=False)
-    else:
-        tms = TranslationMemory.objects.filter(is_project_specific=False)
+    if request.GET.get('role'):
+        kdbs = kdbs.filter(role=request.GET['role'])
 
-    tms_dict = {}
-    for tm in tms:
-        tm_dict = {
-            'id': tm.id,
-            'title': html.escape(tm.title),
-            'source_language': tm.get_source_language(),
-            'target_language': tm.get_target_language(),
-            'path': tm.path,
+    kdbs_dict = {}
+    for kdb in kdbs:
+        kdb_dict = {
+            'id': kdb.id,
+            'title': kdb.title,
+            'source_language': kdb.get_source_language(),
+            'target_language': kdb.get_target_language(),
+            'path': kdb.path,
         }
-        tms_dict[tm.id] = tm_dict
+        kdbs_dict[kdb.id] = kdb_dict
 
-    return JsonResponse(tms_dict)
+    return JsonResponse(kdbs_dict)
+
+@csrf_exempt
+def kdb_view(request, kdb_id):
+    if request.GET.get('role'):
+        kdb = KaplanDatabase.objects.filter(role=request.GET['role']).get(id=kdb_id)
+    else:
+        kdb = KaplanDatabase.objects.get(id=kdb_id)
+
+    kdb = KDB(kdb.path)
+
+    if request.method == 'POST':
+        if request.POST.get('task') == 'import':
+            file_path = request.POST['path']
+            file_type = request.POST['file_type']
+
+            if file_type == 'csv':
+                kdb.import_csv(file_path)
+
+                return JsonResponse({'status': 'success'})
+
+            elif file_type == 'xliff':
+                kdb.import_xliff(file_path)
+
+                return JsonResponse({'status': 'success'})
+
+            else:
+                raise TypeError('File type not supported for import.')
+
+    else:
+        if request.GET.get('task') == 'export':
+            kdb.export_xliff(request.GET['path'])
+
+            return JsonResponse({'status': 'success'})
+        else:
+            kdb_entries = {}
+            kdb_entry_i = 0
+            for kdb_entry in kdb.conn.execute('''SELECT * FROM main''').fetchall():
+                kdb_entries[kdb_entry_i] = {
+                    'source': kdb_entry[0],
+                    'target': kdb_entry[1],
+                }
+                kdb_entry_i += 1
+
+            return JsonResponse(kdb_entries)

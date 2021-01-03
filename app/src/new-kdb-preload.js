@@ -1,5 +1,7 @@
-const { ipcRenderer } = require('electron');
-const { dialog } = require('electron').remote;
+const { ipcRenderer, remote } = require('electron');
+const { dialog, getCurrentWindow, getGlobal, webContents } = remote;
+
+const newKDBWindow = getCurrentWindow();
 
 window.indexRefresh = () => {
     ipcRenderer.sendTo(1, 'kaplan-index', 'main#tm-view');

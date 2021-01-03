@@ -9,6 +9,7 @@ urlpatterns = [
     path('project/<int:project_id>/file/<int:file_id>', views.project_file, name='project_file'),
     path('project/new', views.new_project, name='new_project'),
     path('project/import', views.import_project, name='import_project'),
-    path('tms', views.tm_directory, name='tm_directory'),
-    path('tm/new', views.new_tm, name='new_tm'),
+    path('kdb', views.kdb_directory, name='kdb_directory'),
+    path('kdb/new', views.new_kdb, name='new_kdb'),
+    path('kdb/<int:kdb_id>', views.kdb_view, name='kdb_view')
 ]
