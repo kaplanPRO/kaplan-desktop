@@ -18,7 +18,24 @@ function fireOnReady() {
         xhttp.open("POST", queryURL, true);
         xhttp.send(formData);
     }
+    document.getElementById("btn-tm-hits").onclick = function() {
+        this.classList.add("active")
+        document.getElementById("tm-hits").style.display = "table";
+        document.getElementById("btn-tb-hits").classList.remove("active");
+        document.getElementById("tb-hits").style.display = "none";
+    }
+    document.getElementById("btn-tb-hits").onclick = function() {
+        this.classList.add("active")
+        document.getElementById("tb-hits").style.display = "table";
+        document.getElementById("btn-tm-hits").classList.remove("active");
+        document.getElementById("tm-hits").style.display = "none";
+    }
 }
+
+//<button id="btn-tm-hits" class="active">TM Hits</button>
+//<button id="btn-tb-hits">TB Hits</button>
+//<table id="tm-hits"></table>
+//<table id="tb-hits"></table>
 
 window.selectedTU = null;
 window.selectedSegments = [];
@@ -95,7 +112,10 @@ function submitSegment(target_cell, segment_state) {
     xhttp.open("POST", queryURL, true);
     xhttp.send(segmentForm);
 }
-function lookupSegment(sourceSegment, hitsTable) {
+function lookupSegment(sourceSegment) {
+    const tMHitsTable = document.getElementById("tm-hits");
+    const tBHitsTable = document.getElementById("tb-hits");
+
     let fileURL = "http://127.0.0.1:8000/project/"
                   + filesView.getAttribute("cur-p-id")
                   + "/file/"
@@ -110,8 +130,9 @@ function lookupSegment(sourceSegment, hitsTable) {
 
     xhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
-            translationUnits = JSON.parse(this.responseText);
-            hitsTable.innerHTML = "";
+            allHits = JSON.parse(this.responseText);
+            translationUnits = allHits.tm;
+            tMHitsTable.innerHTML = "";
             [...Object.keys(translationUnits)].forEach(function(i) {
                 translationUnit = document.createElement("unit");
                 translationUnit.appendChild(parser.parseFromString(translationUnits[i].source, "text/xml").documentElement);
@@ -146,8 +167,27 @@ function lookupSegment(sourceSegment, hitsTable) {
                 tr.onclick = function() {
                     activeSegment.getElementsByTagName("td")[1].innerHTML = this.getElementsByTagName("td")[1].innerHTML;
                 }
+                tMHitsTable.append(tr);
+            })
 
-                hitsTable.append(tr);
+            tBEntries = allHits.tb;
+            tBHitsTable.innerHTML = "";
+            [...Object.keys(tBEntries)].forEach(function(i) {
+                tr = document.createElement("tr");
+
+                th = document.createElement("th");
+                th.textContent = tBEntries[i].ratio + "%";
+                tr.appendChild(th);
+
+                td = document.createElement("td");
+                td.textContent = tBEntries[i].source;
+                tr.appendChild(td);
+
+                td = document.createElement("td");
+                td.textContent = tBEntries[i].target;
+                tr.appendChild(td);
+
+                tBHitsTable.appendChild(tr);
             })
         }
     }

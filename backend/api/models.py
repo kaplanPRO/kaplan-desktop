@@ -18,7 +18,7 @@ class Project(models.Model):
     directory = models.TextField()
     source_language = models.CharField(max_length=20)
     target_language = models.CharField(max_length=20)
-    translation_memories = models.ManyToManyField('TranslationMemory', blank=True)
+    language_resources = models.ManyToManyField('KaplanDatabase', blank=True)
     is_exported = models.BooleanField(default=False)
     is_imported = models.BooleanField(default=False)
 
@@ -33,6 +33,7 @@ class Project(models.Model):
         project_metadata['files'] = {}
         for project_file in File.objects.filter(project=self):
             file_dict = {}
+            file_dict['name'] = project_file.title
             if project_file.is_kxliff:
                 file_dict['source'] = os.path.join(self.get_source_dir(), project_file.title)
                 file_dict['originalBF'] = file_dict['source'] + '.kxliff'
@@ -43,10 +44,21 @@ class Project(models.Model):
 
             project_metadata['files'][str(len(project_metadata['files']))] = file_dict
 
-        if self.translation_memories.count() > 0:
-            project_metadata['translation_memories'] = {}
-            for project_tm in self.translation_memories.all():
-                project_metadata['translation_memories'][len(project_metadata['translation_memories'])] = project_tm.path
+        if self.language_resources.count() > 0:
+            translation_memories = {}
+            termbases = {}
+            for project_tm in self.language_resources.all():
+                print(project_tm.path)
+                if project_tm.role == 'tm':
+                    translation_memories[len(translation_memories)] = project_tm.path
+                elif project_tm.role == 'tb':
+                    termbases[len(termbases)] = project_tm.path
+
+            if translation_memories != {}:
+                project_metadata['translation_memories'] = translation_memories
+
+            if termbases != {}:
+                project_metadata['termbases'] = termbases
 
         return project_metadata
 
@@ -63,12 +75,13 @@ class Project(models.Model):
         return LANGUAGES.get(self.target_language, 'N/A')
 
 
-class TranslationMemory(models.Model):
+class KaplanDatabase(models.Model):
     title = models.CharField(max_length=60)
     path = models.TextField()
     source_language = models.CharField(max_length=20)
     target_language = models.CharField(max_length=20)
     is_project_specific = models.BooleanField(default=False)
+    role = models.CharField(max_length=2, choices=(('tm', 'Translation Memory'), ('tb', 'Termbase')))
 
     def get_source_language(self):
         return LANGUAGES.get(self.source_language, 'N/A')

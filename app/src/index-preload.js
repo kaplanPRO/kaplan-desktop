@@ -1,26 +1,26 @@
 const { ipcRenderer, remote, shell } = require('electron');
-const { BrowserWindow, dialog, getCurrentWindow, Menu, MenuItem } = remote;
+const { BrowserWindow, dialog, getCurrentWindow, Menu, MenuItem, getGlobal } = remote;
 const path = require('path');
 
-const indexWindow = remote.getCurrentWindow();
+const indexWindow = getCurrentWindow();
 
 ipcRenderer.on('kaplan-index', (event, arg) => {
     location.reload();
 })
 
-window.createNewTM = () => {
-    const newTMWindow = new BrowserWindow({
+window.createNewKDB = (role) => {
+    const newKDBWindow = new BrowserWindow({
         width: 800,
         height: 600,
         modal: true,
         parent: indexWindow,
         webPreferences: {
             enableRemoteModule: true,
-            preload: path.join(__dirname, 'new-tm-preload.js')
+            preload: path.join(__dirname, 'new-kdb-preload.js')
         }
     })
 
-    newTMWindow.loadFile(path.join(__dirname, 'new-tm.html'));
+    newKDBWindow.loadFile(path.join(__dirname, 'new-' + role + '.html'));
 }
 
 window.newProject = () => {
@@ -53,12 +53,10 @@ window.importProject = () => {
     importProjectWindow.loadFile(path.join(__dirname, 'import-project.html'));
 }
 
-window.selectKPP = () => {
+window.selectFile = (filterList) => {
     return dialog.showOpenDialogSync({
         browserWindow: indexWindow,
-        filters: [
-            {name: 'Kaplan Project Packages', extensions: ['kpp']}
-        ]
+        filters: filterList
     })
 }
 
@@ -82,21 +80,70 @@ window.setSpellCheckerLanguages = (arrayOfLanguages) => {
     indexWindow.webContents.session.setSpellCheckerLanguages(finalArrayOfLanguages);
 }
 
-window.openFileContextMenu = (e, fileId, filePath) => {
+window.openFileContextMenu = (e, fileId, filePath, canGenerateTargetFile) => {
     e.preventDefault();
 
     const fileMenu = new Menu();
-    fileMenu.append(new MenuItem({ label: 'Generate target translation', click() { getTargetTranslation(fileId) } }));
-    fileMenu.append(new MenuItem({ label: 'Show in file explorer', click() { shell.showItemInFolder(filePath) } }))
+    if (canGenerateTargetFile === 'true') {
+        fileMenu.append(new MenuItem({ label: 'Generate target translation', click() { getTargetTranslation(fileId) } }));
+    }
+    fileMenu.append(new MenuItem({ label: 'Show in file explorer', click() { shell.showItemInFolder(filePath) } }));
 
     fileMenu.popup({ window: indexWindow });
 }
 
-window.openTMContextMenu = (e, tMPath) => {
+window.openKDBContextMenu = (e, kDBPath, kDBId) => {
     e.preventDefault();
 
-    const tMMenu = new Menu();
-    tMMenu.append(new MenuItem({ label: 'Show in file explorer', click() { shell.showItemInFolder(tMPath) } }))
+    const kDBMenu = new Menu();
 
-    tMMenu.popup({ window: indexWindow });
+    kDBMenu.append(new MenuItem({ label: 'Export to .xliff', click() {
+        let pathToXLIFF = setFile([{name: 'XML Localisation File Format', extensions: ['xliff']}]);
+        let queryURL = 'http://127.0.0.1:8000/kdb/' + kDBId
+                       + '?task=export&file_type=xliff'
+                       + '&path=' + encodeURI(pathToXLIFF);
+
+        let xhttp = new XMLHttpRequest();
+
+        xhttp.open('GET', queryURL);
+        xhttp.send();
+    } }));
+
+    kDBMenu.append(new MenuItem({ type: 'separator' }));
+
+    kDBMenu.append(new MenuItem({ label: 'Import from .csv', click() {
+        let pathToCSV = selectFile([{name: 'Comma-separated values files', extensions: ['csv']}])[0];
+        let queryURL = 'http://127.0.0.1:8000/kdb/' + kDBId;
+
+        let formData = new FormData();
+        formData.append('task', 'import');
+        formData.append('file_type', 'csv')
+        formData.append('path', pathToCSV);
+
+        let xhttp = new XMLHttpRequest();
+
+        xhttp.open('POST', queryURL);
+        xhttp.send(formData);
+    } }));
+
+    kDBMenu.append(new MenuItem({ label: 'Import from .xliff', click() {
+        let pathToXLIFF = selectFile([{name: 'XML Localisation File Format', extensions: ['kxliff', 'sdlxliff', 'xliff']}])[0];
+        let queryURL = 'http://127.0.0.1:8000/kdb/' + kDBId;
+
+        let formData = new FormData();
+        formData.append('task', 'import');
+        formData.append('file_type', 'xliff')
+        formData.append('path', pathToXLIFF);
+
+        let xhttp = new XMLHttpRequest();
+
+        xhttp.open('POST', queryURL);
+        xhttp.send(formData);
+    } }));
+
+    kDBMenu.append(new MenuItem({ type: 'separator' }));
+
+    kDBMenu.append(new MenuItem({ label: 'Show in file explorer', click() { shell.showItemInFolder(kDBPath) } }));
+
+    kDBMenu.popup({ window: indexWindow });
 }

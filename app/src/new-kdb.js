@@ -11,6 +11,7 @@ function fireOnReady() {
         formData.append("path", this["path"].value);
         formData.append("source_language", this["select-source"].value);
         formData.append("target_language", this["select-target"].value);
+        formData.append("role", this["kdb-role"].value)
 
         if (this["select-source"].value == "-----" || this["select-target"].value == "-----") {
             console.error("Source and/or target language not selected!");
@@ -26,7 +27,7 @@ function fireOnReady() {
             }
         }
 
-        xhttp.open("POST", "http://127.0.0.1:8000/tm/new", true);
+        xhttp.open("POST", "http://127.0.0.1:8000/kdb/new", true);
         xhttp.send(formData);
     }
 }

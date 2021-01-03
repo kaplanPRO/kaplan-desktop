@@ -2,6 +2,7 @@ function fireOnReady() {
     const selectSource = document.getElementById("select-source");
     const selectTarget = document.getElementById("select-target");
     const selectTMs = document.getElementById("select-tms");
+    const selectTBs = document.getElementById("select-tbs");
 
     document.getElementById("btn-choose-dir").onclick = function() {
         window.selectDirectory();
@@ -12,10 +13,12 @@ function fireOnReady() {
     };
 
     selectSource.onchange = function() {
+        fetchRelevantTBs();
         fetchRelevantTMs();
     };
 
     selectTarget.onchange = function() {
+        fetchRelevantTBs();
         fetchRelevantTMs();
     };
 
@@ -24,7 +27,7 @@ function fireOnReady() {
 
         let files = [];
         let parameters;
-        let translationMemories = [];
+        let languageResources = [];
 
         [...document.getElementsByTagName("ul")[0].getElementsByTagName("li")].forEach(function(li) {
             files.push(li.getAttribute("path"));
@@ -43,16 +46,20 @@ function fireOnReady() {
         }
 
         [...document.getElementById("select-tms").selectedOptions].forEach(function(tm) {
-            translationMemories.push(tm.value);
-        })
+            languageResources.push(tm.value);
+        });
+
+        [...document.getElementById("select-tbs").selectedOptions].forEach(function(tb) {
+            languageResources.push(tb.value);
+        });
 
         let formData = new FormData();
         formData.append("title", this["title"].value);
         formData.append("directory", this["dir"].value);
         formData.append("source_language", selectSource.value);
         formData.append("target_language", selectTarget.value);
-        if (translationMemories.length > 0) {
-           formData.append("translation_memories", translationMemories.join(";"));
+        if (languageResources.length > 0) {
+           formData.append("language_resources", languageResources.join(";"));
         }
         formData.append("files", files.join(';'));
 
@@ -74,6 +81,13 @@ function fireOnReady() {
     };
 
     function fetchRelevantTMs() {
+        fetchRelevantKDBs("tm", selectTMs);
+    }
+    function fetchRelevantTBs() {
+        fetchRelevantKDBs("tb", selectTBs);
+    }
+
+    function fetchRelevantKDBs(role, selectElement) {
         let translationMemories;
         let translationMemory;
 
@@ -82,16 +96,16 @@ function fireOnReady() {
 
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
-                selectTMs.innerHTML = "";
-                translationMemories = JSON.parse(this.responseText);
-                Object.keys(translationMemories).forEach(function(tMId) {
-                    translationMemory = translationMemories[tMId];
-                    selectTMs.appendChild(new Option(translationMemory.title, translationMemory.id))
+                selectElement.innerHTML = "";
+                kDBs = JSON.parse(this.responseText);
+                Object.keys(kDBs).forEach(function(kDBId) {
+                    kDB = kDBs[kDBId];
+                    selectElement.appendChild(new Option(kDB.title, kDB.id))
                 })
             }
         }
 
-        xhttp.open("GET", "http://127.0.0.1:8000/tms?" + queryParameters, true);
+        xhttp.open("GET", "http://127.0.0.1:8000/kdb?role=" + role + "&" + queryParameters, true);
         xhttp.send();
     }
 }
