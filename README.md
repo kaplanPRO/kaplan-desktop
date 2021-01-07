@@ -2,4 +2,7 @@
 
 Free and open-source CAT tool for linguists
 
-[![Download Kaplan Desktop](https://a.fsdn.com/con/app/sf-download-button)](https://sourceforge.net/projects/kaplan-desktop/files/latest/download)
+Links:
+1. [Kaplan Homepage](https://kaplan.pro)
+1. [Kaplan Desktop@Microsoft Store](https://www.microsoft.com/en-us/p/kaplan-desktop/9nb1v5xzbmx2)
+1. [Kaplan Desktop@Sourceforge](https://sourceforge.net/projects/kaplan-desktop)
