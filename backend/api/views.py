@@ -261,7 +261,7 @@ def project_file(request, project_id, file_id):
         return JsonResponse({'tm':tm_hits, 'tb':tb_hits})
 
     else:
-        return HttpResponse(etree.tostring(bf.translation_units, encoding="UTF-8"))
+        return HttpResponse(etree.tostring(bf.get_translation_units(), encoding="UTF-8"))
 
 @csrf_exempt
 def project_view(request, project_id):
