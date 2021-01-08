@@ -209,7 +209,7 @@ def project_file(request, project_id, file_id):
 
             bf.update_segment(target_segment,
                               request.POST['paragraph_no'],
-                              request.POST['segment_no'],
+                              request.POST.get('segment_no'),
                               segment_state,
                               author_id)
             bf.save(project.get_target_dir())
