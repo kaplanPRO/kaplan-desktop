@@ -317,7 +317,7 @@ function fireOnReady() {
                             target_td.addEventListener("focusout", function () { submitSegment(this, "draft") });
                             segment_row.appendChild(target_td);
 
-                            ["sc", "ec", "ph", "g"].forEach(function(tagName) {
+                            ["sc", "ec", "ph", "g", "x"].forEach(function(tagName) {
                                 [...segment_row.getElementsByTagName(tagName)].forEach(function(tag) {
                                     if (tag.parentNode.classList.contains("source")) {
                                         tag.addEventListener("click", function() { tagClickHandler(this) });

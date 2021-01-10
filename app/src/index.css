@@ -177,7 +177,7 @@ table td.language {
 table th.name {
     width: 40%;
 }
-ec, g, sc, ph {
+ec, g, sc, ph, x {
     background-color: orangered;
     color: #FFF;
     cursor: pointer;
@@ -195,7 +195,7 @@ ec {
     border-bottom-right-radius: 4px;
     padding: 0 8px 0 4px;
 }
-ph, g {
+ph, g, x {
     border-radius: 4px;
 }
 tr.draft th {
