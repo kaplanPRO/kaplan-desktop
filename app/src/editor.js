@@ -32,11 +32,6 @@ function fireOnReady() {
     }
 }
 
-//<button id="btn-tm-hits" class="active">TM Hits</button>
-//<button id="btn-tb-hits">TB Hits</button>
-//<table id="tm-hits"></table>
-//<table id="tb-hits"></table>
-
 window.selectedTU = null;
 window.selectedSegments = [];
 
