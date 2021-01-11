@@ -74,6 +74,12 @@ div#sidebar nav {
 div#sidebar.minimized span {
     display: none;
 }
+form tr td {
+    padding: 0.5em;
+}
+form th {
+    text-align: right;
+}
 h4 {
     font-size: 16px;
 }
@@ -87,6 +93,9 @@ header {
 }
 header#projects-header {
     display: block;
+}
+input {
+    padding: 0.25em;
 }
 main#editor-view, main#files-view, main#projects-view, main#tb-view, main#tm-view, main#overlay {
     background-color: #f5f5f5;

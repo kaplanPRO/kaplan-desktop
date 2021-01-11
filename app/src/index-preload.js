@@ -1,12 +1,34 @@
 const { ipcRenderer, remote, shell } = require('electron');
-const { BrowserWindow, dialog, getCurrentWindow, Menu, MenuItem, getGlobal } = remote;
+const { app, BrowserWindow, dialog, getCurrentWindow, Menu, MenuItem, getGlobal } = remote;
+const fs = require('fs');
+const os = require('os');
 const path = require('path');
 
 const indexWindow = getCurrentWindow();
+const pathToSettings = path.join(app.getPath('userData'), 'settings.json');
 
 ipcRenderer.on('kaplan-index', (event, arg) => {
     location.reload();
 })
+ipcRenderer.on('kaplan-fetch-user', (event, arg) => {
+    fetchUser();
+})
+
+window.username = os.hostname();
+fetchUser();
+
+function fetchUser() {
+    fs.readFile(pathToSettings, (err, data) => {
+        if (err) {
+            console.error(err);
+        } else {
+            const settingsJSON = JSON.parse(data);
+            if (settingsJSON.curUser) {
+              window.username = settingsJSON.curUser.username;
+            }
+        }
+    })
+}
 
 window.createNewKDB = (role) => {
     const newKDBWindow = new BrowserWindow({

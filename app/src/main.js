@@ -1,5 +1,5 @@
 const electron = require('electron');
-const { app, BrowserWindow, Menu, shell } = electron;
+const { app, BrowserWindow, getCurrentWindow, Menu, shell } = electron;
 const fs = require('fs');
 const path = require('path');
 const { exec, spawn, spawnSync } = require('child_process');
@@ -87,6 +87,22 @@ const template = [
             { role: 'reload' },
             { role: 'toggledevtools' }
         ]
+    },
+    {
+        label: 'Settings',
+        click: () => {
+                const settingsWindow = new BrowserWindow({
+                    minWidth: 800,
+                    minHeight: 600,
+                    icon: pathToIcon,
+                    webPreferences: {
+                        enableRemoteModule: true,
+                        preload: path.join(__dirname, 'settings-preload.js')
+                    },
+                })
+
+                settingsWindow.loadFile(path.join(__dirname, 'settings.html'));
+            }
     },
     {
         label: 'Help',

@@ -97,7 +97,7 @@ function submitSegment(target_cell, segment_state) {
     if (segment_no != 'N/A') {
         segmentForm.append("segment_no", segment_no);
     }
-    segmentForm.append("author_id", "local");
+    segmentForm.append("author_id", window.username);
 
     xhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {

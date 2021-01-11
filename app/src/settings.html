@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Settings</title>
+    <link rel="stylesheet" href="index.css">
+  </head>
+  <body class="loading">
+    <div id="tab-user-profile">
+      <form id="form-user-profile">
+        <table>
+          <tr>
+            <th><label for="username">Username:</label></th>
+            <td><input type="text" name="username" required></td>
+          </tr>
+          <tr>
+            <th><label for="email">Email:</label></th>
+            <td><input type="email" name="email"></td>
+          </tr>
+          <tr>
+            <th></th>
+            <td><button type="submit">Save</button></th>
+          </tr>
+        </table>
+      </form>
+    </div>
+    <script type="text/javascript">
+      if (document.readyState === "complete") {
+          document.body.classList.remove('loading');
+      } else {
+          document.addEventListener("DOMContentLoaded", document.body.classList.remove('loading'));
+      }
+    </script>
+  </body>
+</html>
