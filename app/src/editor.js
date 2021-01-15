@@ -136,6 +136,7 @@ function lookupSegment(sourceSegment) {
                 translationUnit.appendChild(parser.parseFromString(translationUnits[i].target, "text/xml").documentElement);
 
                 tr = document.createElement("tr");
+                tr.setAttribute("title", "Source: " + translationUnits[i].origin)
 
                 th = document.createElement("th");
                 th.textContent = translationUnits[i].ratio + "%";
@@ -171,6 +172,7 @@ function lookupSegment(sourceSegment) {
             tBHitsTable.innerHTML = "";
             [...Object.keys(tBEntries)].forEach(function(i) {
                 tr = document.createElement("tr");
+                tr.setAttribute("title", "Source: " + tBEntries[i].origin)
 
                 th = document.createElement("th");
                 th.textContent = tBEntries[i].ratio + "%";

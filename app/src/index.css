@@ -74,6 +74,9 @@ div#sidebar nav {
 div#sidebar.minimized span {
     display: none;
 }
+div#tab-mysql {
+    display: none;
+}
 form tr td {
     padding: 0.5em;
 }
@@ -91,19 +94,19 @@ header {
     grid-column: 1/3;
     grid-row: 1;
 }
-header#projects-header {
+header#projects-header, header#settings {
     display: block;
 }
 input {
     padding: 0.25em;
 }
-main#editor-view, main#files-view, main#projects-view, main#tb-view, main#tm-view, main#overlay {
+main#editor-view, main#files-view, main#mysql-view, main#projects-view, main#tb-view, main#tm-view, main#overlay {
     background-color: #f5f5f5;
     grid-column: 2;
     grid-row: 2;
     overflow: hidden;
 }
-main#editor-view, main#files-view, main#tb-view, main#tm-view, main#overlay {
+main#editor-view, main#files-view, main#mysql-view, main#tb-view, main#tm-view, main#overlay {
     display: none;
 }
 main#editor-view, main#tb-view, main#tm-view {

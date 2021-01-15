@@ -23,7 +23,7 @@ function fireOnReady() {
     let activeHeader = document.getElementById("projects-header");
     let activeView = document.getElementById("projects-view");
 
-    document.getElementsByTagName("body")[0].removeAttribute("class");
+    document.body.removeAttribute("class");
 
     setTimeout(() => {
         fetchProjects();
@@ -436,6 +436,9 @@ function fireOnReady() {
     }
     document.getElementById("btn-tb-view").onclick = function() {
         toggleView("tb-view", "grid", "tb-header", "btn-tb-view");
+    }
+    document.getElementById("btn-mysql-view").onclick = function() {
+        toggleView("mysql-view", "block", "mysql-header", "btn-mysql-view");
     }
 
     function setFooter() {

@@ -1,6 +1,7 @@
 const { ipcRenderer, remote, shell } = require('electron');
 const { app, BrowserWindow, dialog, getCurrentWindow, Menu, MenuItem, getGlobal } = remote;
 const fs = require('fs');
+const mysql = require('mysql');
 const os = require('os');
 const path = require('path');
 
@@ -10,24 +11,19 @@ const pathToSettings = path.join(app.getPath('userData'), 'settings.json');
 ipcRenderer.on('kaplan-index', (event, arg) => {
     location.reload();
 })
-ipcRenderer.on('kaplan-fetch-user', (event, arg) => {
-    fetchUser();
+ipcRenderer.on('kaplan-fetch-settings', (event, arg) => {
+    fetchSettings();
 })
 
-window.username = os.hostname();
-fetchUser();
+fetchSettings();
 
-function fetchUser() {
-    fs.readFile(pathToSettings, (err, data) => {
-        if (err) {
-            console.error(err);
-        } else {
-            const settingsJSON = JSON.parse(data);
-            if (settingsJSON.curUser) {
-              window.username = settingsJSON.curUser.username;
-            }
-        }
-    })
+function fetchSettings() {
+    window.settingsJSON = JSON.parse(fs.readFileSync(pathToSettings));
+    if (settingsJSON.curUser && settingsJSON.curUser.username) {
+        window.username = settingsJSON.curUser.username
+    } else {
+        window.username = os.hostname();
+    }
 }
 
 window.createNewKDB = (role) => {
@@ -168,4 +164,74 @@ window.openKDBContextMenu = (e, kDBPath, kDBId) => {
     kDBMenu.append(new MenuItem({ label: 'Show in file explorer', click() { shell.showItemInFolder(kDBPath) } }));
 
     kDBMenu.popup({ window: indexWindow });
+}
+
+function fireOnReady() {
+    const mYSQLTable = document.getElementById('mysql-table')
+
+    let connection = mysql.createConnection(settingsJSON.mysql);
+
+    connection.connect(function(error) {
+        if (error) {
+            console.error(error);
+            alert(error);
+        } else {
+            document.getElementById('btn-mysql-view').disabled = false;
+            mYSQLTable.innerHTML = null;
+            tr = document.createElement('tr');
+            tr.innerHTML = '<th class="name">Cloud TM</th><th>Source Language</th><th>Target Language</th>'
+            mYSQLTable.appendChild(tr);
+
+            connection.query('SELECT * FROM kaplan_tables', function (error, result, fields) {
+                if (error) {
+                    console.error(error)
+                    alert(error)
+                } else if (result.length === 0) {
+                    tr = document.createElement('tr');
+                    tr.innerHTML = '<td colspan="3">No tables found</td>'
+                    mYSQLTable.appendChild(tr);
+                } else {
+                    result.map(function(row) {
+                        tr = document.createElement('tr');
+                        tr.setAttribute('cloud-tm-id', row.id);
+
+                        td = document.createElement('td');
+                        td.textContent = row.name;
+                        tr.appendChild(td);
+
+                        td = document.createElement('td');
+                        td.textContent = row.source;
+                        tr.appendChild(td);
+
+                        td = document.createElement('td');
+                        td.textContent = row.target;
+                        tr.appendChild(td);
+
+                        mYSQLTable.appendChild(tr);
+                    })
+                }
+            })
+        }
+    });
+
+    document.getElementById('btn-create-cloud-tm').onclick = () => {
+        const newCloudTMWindow = new BrowserWindow({
+            width: 800,
+            height: 600,
+            modal: true,
+            parent: indexWindow,
+            webPreferences: {
+                enableRemoteModule: true,
+                preload: path.join(__dirname, 'new-cloud-tm-preload.js')
+            }
+        })
+
+        newCloudTMWindow.loadFile(path.join(__dirname, 'new-cloud-tm.html'));
+    }
+}
+
+if (document.readyState === "complete") {
+    fireOnReady();
+} else {
+    document.addEventListener("DOMContentLoaded", fireOnReady);
 }

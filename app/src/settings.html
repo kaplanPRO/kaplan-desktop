@@ -3,10 +3,16 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' https://127.0.0.1">
     <title>Settings</title>
     <link rel="stylesheet" href="index.css">
+    <script type="text/javascript" src="dom-content-loaded.js"></script>
   </head>
   <body class="loading">
+    <header id="settings">
+      <button id="btn-user-profile" class="active">User profile</button>
+      <button id="btn-mysql">MySQL (experimental)</button>
+    </header>
     <div id="tab-user-profile">
       <form id="form-user-profile">
         <table>
@@ -25,12 +31,31 @@
         </table>
       </form>
     </div>
-    <script type="text/javascript">
-      if (document.readyState === "complete") {
-          document.body.classList.remove('loading');
-      } else {
-          document.addEventListener("DOMContentLoaded", document.body.classList.remove('loading'));
-      }
-    </script>
+    <div id="tab-mysql">
+      <form id="form-mysql">
+        <table>
+          <tr>
+            <th><label for="host">Host:</label></th>
+            <td><input type="text" name="host" required></td>
+          </tr>
+          <tr>
+            <th><label for="database">Database:</label></th>
+            <td><input type="text" name="database" required></td>
+          </tr>
+          <tr>
+            <th><label for="user">User:</label></th>
+            <td><input type="text" name="user" required></td>
+          </tr>
+          <tr>
+            <th><label for="password">Password:</label></th>
+            <td><input type="password" name="password" required></td>
+          </tr>
+          <tr>
+            <th></th>
+            <td><button type="submit">Connect</button></th>
+          </tr>
+        </table>
+      </form>
+    </div>
   </body>
 </html>
