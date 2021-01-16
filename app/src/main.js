@@ -28,12 +28,8 @@ else if (fs.existsSync(path.join(app.getAppPath(), 'backend')))
     } else {
         settingsJSON = {}
     }
-    process.env.KAPLAN_SETTINGS = JSON.stringify(settingsJSON);
 
     if (!('version' in settingsJSON) || settingsJSON.version !== app.getVersion()) {
-        spawnSync(pathToBackend,
-                  ['makemigrations api'])
-
         spawnSync(pathToBackend,
                   ['migrate'])
 
@@ -41,11 +37,11 @@ else if (fs.existsSync(path.join(app.getAppPath(), 'backend')))
         fs.writeFileSync(pathToSettings, JSON.stringify(settingsJSON))
     }
 
+    process.env.KAPLAN_SETTINGS = JSON.stringify(settingsJSON);
+
     const child = spawn(pathToBackend,
                         ['runserver'],
                         {detached: true});
-} else {
-    const pathToSettings = path.join(app.getPath('userData'), 'settings.json');
 }
 
 let pathToIcon;
@@ -101,8 +97,9 @@ app.on('activate', () => {
 });
 
 ipcMain.on('update-settings', (event, arg) => {
-    let newSettings = JSON.parse(arg)
-    let settings = JSON.parse(pathToSettings);
+    const pathToSettings = path.join(app.getPath('userData'), 'settings.json');
+    const newSettings = JSON.parse(arg)
+    let settings = JSON.parse(fs.readFileSync(pathToSettings));
 
     Object.keys(newSettings).map(function(key) {
         settings[key] = newSettings[key];
