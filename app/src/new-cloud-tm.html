@@ -4,24 +4,17 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta http-equiv="Content-Security-Policy" content="script-src 'self' https://127.0.0.1">
-        <title>New Translation Memory</title>
+        <title>New Cloud Translation Memory</title>
         <link rel="stylesheet" href="index.css">
-        <script type="text/javascript" src="new-kdb.js"></script>
+        <script type="text/javascript" src="dom-content-loaded.js"></script>
     </head>
-    <body>
+    <body class="loading">
         <main>
             <form>
                 <table>
                     <tr>
                         <th><label>Title</label></th>
                         <td><input id="input-title" name="title" required/></td>
-                    </tr>
-                    <tr>
-                        <th><label>Path</label></th>
-                        <td>
-                            <input id="input-path" name="path" required/>
-                            <input id="btn-tm-path" type="button" value="Choose"/>
-                        </td>
                     </tr>
                     <tr>
                         <th><label for="select-source">Source Language:</label></th>
@@ -406,9 +399,6 @@
                                 <option value="zu">Zulu</option>
                             </select>
                         </td>
-                    </tr>
-                    <tr class="hidden">
-                        <th colspan="2"><input id="kdb-role" name="kdb-role" value="tm"/></th>
                     </tr>
                     <tr>
                         <th></th>

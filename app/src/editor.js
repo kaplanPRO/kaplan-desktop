@@ -32,11 +32,6 @@ function fireOnReady() {
     }
 }
 
-//<button id="btn-tm-hits" class="active">TM Hits</button>
-//<button id="btn-tb-hits">TB Hits</button>
-//<table id="tm-hits"></table>
-//<table id="tb-hits"></table>
-
 window.selectedTU = null;
 window.selectedSegments = [];
 
@@ -99,8 +94,10 @@ function submitSegment(target_cell, segment_state) {
     segmentForm.append("source_segment", source_segment);
     segmentForm.append("target_segment", target_segment);
     segmentForm.append("paragraph_no", paragraph_no);
-    segmentForm.append("segment_no", segment_no);
-    segmentForm.append("author_id", "local");
+    if (segment_no != 'N/A') {
+        segmentForm.append("segment_no", segment_no);
+    }
+    segmentForm.append("author_id", window.username);
 
     xhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
@@ -139,6 +136,7 @@ function lookupSegment(sourceSegment) {
                 translationUnit.appendChild(parser.parseFromString(translationUnits[i].target, "text/xml").documentElement);
 
                 tr = document.createElement("tr");
+                tr.setAttribute("title", "Source: " + translationUnits[i].origin)
 
                 th = document.createElement("th");
                 th.textContent = translationUnits[i].ratio + "%";
@@ -174,6 +172,7 @@ function lookupSegment(sourceSegment) {
             tBHitsTable.innerHTML = "";
             [...Object.keys(tBEntries)].forEach(function(i) {
                 tr = document.createElement("tr");
+                tr.setAttribute("title", "Source: " + tBEntries[i].origin)
 
                 th = document.createElement("th");
                 th.textContent = tBEntries[i].ratio + "%";

@@ -23,7 +23,7 @@ function fireOnReady() {
     let activeHeader = document.getElementById("projects-header");
     let activeView = document.getElementById("projects-view");
 
-    document.getElementsByTagName("body")[0].removeAttribute("class");
+    document.body.removeAttribute("class");
 
     setTimeout(() => {
         fetchProjects();
@@ -317,7 +317,7 @@ function fireOnReady() {
                             target_td.addEventListener("focusout", function () { submitSegment(this, "draft") });
                             segment_row.appendChild(target_td);
 
-                            ["sc", "ec", "ph", "g"].forEach(function(tagName) {
+                            ["sc", "ec", "ph", "g", "x"].forEach(function(tagName) {
                                 [...segment_row.getElementsByTagName(tagName)].forEach(function(tag) {
                                     if (tag.parentNode.classList.contains("source")) {
                                         tag.addEventListener("click", function() { tagClickHandler(this) });
@@ -436,6 +436,9 @@ function fireOnReady() {
     }
     document.getElementById("btn-tb-view").onclick = function() {
         toggleView("tb-view", "grid", "tb-header", "btn-tb-view");
+    }
+    document.getElementById("btn-mysql-view").onclick = function() {
+        toggleView("mysql-view", "block", "mysql-header", "btn-mysql-view");
     }
 
     function setFooter() {

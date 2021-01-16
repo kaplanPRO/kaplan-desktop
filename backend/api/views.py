@@ -1,9 +1,11 @@
+# Django Imports
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 
 from .models import File, Project, KaplanDatabase
 
+# Installed libraries
 import kaplan
 from kaplan.kdb import KDB # Translation memory
 from kaplan.kxliff import KXLIFF # Bilingual file
@@ -11,8 +13,13 @@ from kaplan.project import Project as KaplanProject
 
 from lxml import etree
 
+import mysql.connector
+
+# Standard Python libraries
+import difflib
 import html
 from io import BytesIO
+import json
 import os
 import zipfile
 
@@ -85,6 +92,7 @@ def new_project(request):
     project_source = request.POST['source_language']
     project_target = request.POST['target_language']
     project_lrs = [KaplanDatabase.objects.get(id=int(kdb_id)) for kdb_id in request.POST.get('language_resources', '').split(';') if kdb_id]
+    project_clrs = request.POST.get('cloud_language_resources', '{}')
     project_files = [project_file for project_file in request.POST['files'].split(';') if kaplan.can_process(project_file)]
 
     if len(project_files) == 0:
@@ -103,6 +111,7 @@ def new_project(request):
     project.save()
     for project_lr in project_lrs:
         project.language_resources.add(project_lr)
+    project.miscellaneous = project_clrs
     project.save()
 
     source_dir = os.path.join(project_dir, project.source_language)
@@ -181,6 +190,10 @@ def project_directory(request):
 @csrf_exempt
 def project_file(request, project_id, file_id):
     project = Project.objects.get(id=project_id)
+    project_misc = json.loads(project.miscellaneous)
+    project_mysql = {}
+    if 'mysql' in project_misc:
+        project_mysql = project_misc['mysql']
     project_file = File.objects.filter(project=project)
     project_file = project_file.get(id=file_id)
 
@@ -209,20 +222,54 @@ def project_file(request, project_id, file_id):
 
             bf.update_segment(target_segment,
                               request.POST['paragraph_no'],
-                              request.POST['segment_no'],
+                              request.POST.get('segment_no'),
                               segment_state,
                               author_id)
             bf.save(project.get_target_dir())
 
             if segment_state == 'translated':
+                source_entry, tags = KDB.segment_to_entry(etree.fromstring(source_segment), {})
+                target_entry, _ = KDB.segment_to_entry(etree.fromstring(target_segment), tags)
                 for project_tm in project.language_resources.all().filter(role='tm'):
                     kdb = KDB(project_tm.path,
                               project.source_language,
                               project.target_language)
 
-                    kdb.submit_segment(source_segment,
-                                       target_segment,
-                                       author_id)
+                    kdb.submit_entry(source_entry,
+                                     target_entry,
+                                     author_id)
+                if project_mysql != {}:
+                    cloud_db = mysql.connector.connect(user=project_mysql['user'],
+                                                       password=project_mysql['password'],
+                                                       database=project_mysql['database'],
+                                                       host=project_mysql['host'])
+
+                    cur = cloud_db.cursor()
+
+                    cur.execute('''SELECT * FROM `kaplan_entries`
+                                WHERE `src_lang` = '{0}'
+                                    AND `source` = '{1}'
+                                    AND `trg_lang` = '{2}'
+                                    AND `table_i` = {3};'''.format(project.source_language,
+                                                                   source_entry.replace("'", "\'"),
+                                                                   project.target_language,
+                                                                   project_mysql['table']))
+
+                    rows = cur.fetchall()
+
+                    if len(rows) > 0:
+                        for row in rows:
+                            cur.execute('''UPDATE `kaplan_entries` SET `target` = '{0}'
+                                        WHERE `kaplan_entries`.`id` = {1}'''.format(target_entry.replace("'", "\'"),
+                                                                                    row[-1]))
+
+                    else:
+                        cur.execute('''INSERT INTO `kaplan_entries` (`src_lang`, `source`, `trg_lang`, `target`, `table_i`, `id`)
+                                     VALUES ('{0}', '{1}', '{2}', '{3}', '{4}', NULL);'''.format(project.source_language,
+                                                                                                source_entry.replace("'", "\'"),
+                                                                                                project.target_language,
+                                                                                                target_entry.replace("'", "\'"),
+                                                                                                project_mysql['table']))
 
             return JsonResponse({'status': 'success'})
 
@@ -236,14 +283,53 @@ def project_file(request, project_id, file_id):
                              project.target_language)
 
             for tm_result in project_tm.lookup_segment(source_segment):
-                tm_result = {'ratio': int(tm_result[0]*100),
-                             'source': etree.tostring(tm_result[1], encoding='UTF-8').decode(),
-                             'target': etree.tostring(tm_result[2], encoding='UTF-8').decode()}
+                tm_result = (int(tm_result[0]*100),
+                             etree.tostring(tm_result[1], encoding='UTF-8').decode(),
+                             etree.tostring(tm_result[2], encoding='UTF-8').decode(),
+                             'Local TM')
 
                 if tm_result not in tm_hits:
                     tm_hits.append(tm_result)
 
+        if project_mysql != {}:
+            cloud_db = mysql.connector.connect(user=project_mysql['user'],
+                                               password=project_mysql['password'],
+                                               database=project_mysql['database'],
+                                               host=project_mysql['host'])
 
+            cur = cloud_db.cursor()
+
+            cur.execute('''SELECT `source`, `target`
+                        FROM `kaplan_entries`
+                        WHERE `src_lang` = '{0}'
+                            AND `trg_lang` = '{1}'
+                            AND `table_i` = {2};'''.format(project.source_language,
+                                                           project.target_language,
+                                                           project_mysql['table']))
+
+            source_entry, tags = KDB.segment_to_entry(etree.fromstring(source_segment), {})
+
+            sm = difflib.SequenceMatcher()
+            sm.set_seq1(source_entry)
+
+            for row in cur.fetchall():
+                sm.set_seq2(row[0])
+                if sm.ratio() >= 0.5:
+                    tm_result = (int(sm.ratio()*100),
+                                 '<source>' + row[0] + '</source>',
+                                 '<target>' + row[1] + '</target>',
+                                 'TM Server')
+
+                    if tm_result not in tm_hits:
+                        tm_hits.append(tm_result)
+
+        tm_hits.sort(reverse=True)
+
+        for i in range(len(tm_hits)):
+            tm_hits[i] = {'ratio': tm_hits[i][0],
+                          'source': tm_hits[i][1],
+                          'target': tm_hits[i][2],
+                          'origin': tm_hits[i][3]}
         tb_hits = []
         for project_tb in project.language_resources.all().filter(role='tb'):
             project_tb = KDB(project_tb.path,
@@ -253,7 +339,8 @@ def project_file(request, project_id, file_id):
             for tb_result in project_tb.lookup_terms(etree.fromstring(source_segment)):
                 tb_result = {'ratio': int(tb_result[0]*100),
                              'source': tb_result[1],
-                             'target': tb_result[2]}
+                             'target': tb_result[2],
+                             'origin': 'Local TB'}
 
                 if tb_result not in tb_hits:
                     tb_hits.append(tb_result)
@@ -261,7 +348,7 @@ def project_file(request, project_id, file_id):
         return JsonResponse({'tm':tm_hits, 'tb':tb_hits})
 
     else:
-        return HttpResponse(etree.tostring(bf.translation_units, encoding="UTF-8"))
+        return HttpResponse(etree.tostring(bf.get_translation_units(), encoding="UTF-8"))
 
 @csrf_exempt
 def project_view(request, project_id):

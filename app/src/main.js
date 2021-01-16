@@ -1,5 +1,5 @@
 const electron = require('electron');
-const { app, BrowserWindow, Menu, shell } = electron;
+const { app, BrowserWindow, getCurrentWindow, ipcMain, Menu, shell } = electron;
 const fs = require('fs');
 const path = require('path');
 const { exec, spawn, spawnSync } = require('child_process');
@@ -10,25 +10,41 @@ if (require('electron-squirrel-startup')) { // eslint-disable-line global-requir
 }
 else if (fs.existsSync(path.join(app.getAppPath(), 'backend')))
 {
-    var backendPath;
+    let pathToBackend;
 
     if (['deb','linux','rpm'].includes(process.platform)) {
-        backendPath = path.join(app.getAppPath(), 'backend', 'backend');
+        pathToBackend = path.join(app.getAppPath(), 'backend', 'backend');
     }
     else {
-        backendPath = path.join(app.getAppPath(), 'backend', 'backend.exe');
+        pathToBackend = path.join(app.getAppPath(), 'backend', 'backend.exe');
     }
     process.env.KAPLAN_DB_PATH = path.join(app.getPath('userData'), 'kaplan.sqlite3');
 
-    spawnSync(backendPath,
-              ['migrate'])
+    const pathToSettings = path.join(app.getPath('userData'), 'settings.json');
+    let settingsJSON;
 
-    const child = spawn(backendPath,
+    if (fs.existsSync(pathToSettings)) {
+        settingsJSON = JSON.parse(fs.readFileSync(pathToSettings));
+    } else {
+        settingsJSON = {}
+    }
+
+    if (!('version' in settingsJSON) || settingsJSON.version !== app.getVersion()) {
+        spawnSync(pathToBackend,
+                  ['migrate'])
+
+        settingsJSON.version = app.getVersion();
+        fs.writeFileSync(pathToSettings, JSON.stringify(settingsJSON))
+    }
+
+    process.env.KAPLAN_SETTINGS = JSON.stringify(settingsJSON);
+
+    const child = spawn(pathToBackend,
                         ['runserver'],
                         {detached: true});
-};
+}
 
-var pathToIcon;
+let pathToIcon;
 
 if (['deb','linux','rpm'].includes(process.platform)) {
     pathToIcon = path.join(__dirname, 'icon', 'icon-64.png');
@@ -80,6 +96,21 @@ app.on('activate', () => {
     }
 });
 
+ipcMain.on('update-settings', (event, arg) => {
+    const pathToSettings = path.join(app.getPath('userData'), 'settings.json');
+    const newSettings = JSON.parse(arg)
+    let settings = JSON.parse(fs.readFileSync(pathToSettings));
+
+    Object.keys(newSettings).map(function(key) {
+        settings[key] = newSettings[key];
+    })
+
+    fs.writeFileSync(pathToSettings, JSON.stringify(settings))
+    process.env.KAPLAN_SETTINGS = JSON.stringify(settings)
+
+    event.returnValue = 'Settings updated.';
+})
+
 const template = [
     {
         label: 'View',
@@ -87,6 +118,22 @@ const template = [
             { role: 'reload' },
             { role: 'toggledevtools' }
         ]
+    },
+    {
+        label: 'Settings',
+        click: () => {
+                const settingsWindow = new BrowserWindow({
+                    minWidth: 800,
+                    minHeight: 600,
+                    icon: pathToIcon,
+                    webPreferences: {
+                        enableRemoteModule: true,
+                        preload: path.join(__dirname, 'settings-preload.js')
+                    },
+                })
+
+                settingsWindow.loadFile(path.join(__dirname, 'settings.html'));
+            }
     },
     {
         label: 'Help',
