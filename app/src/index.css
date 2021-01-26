@@ -30,6 +30,14 @@ button.active, button:active, tr.active {
     color: #FFFFFF;
     font-weight: bold;
 }
+button.cancel {
+    border: 1px solid red;
+    color: red;
+}
+button.cancel:active {
+    background-color: red;
+    color: #FFFFFF;
+}
 button:disabled {
     background-color: #96b6c6;
     border: 1px dotted #96b6c6;

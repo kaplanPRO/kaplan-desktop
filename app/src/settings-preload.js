@@ -91,7 +91,12 @@ function fireOnReady() {
         })
       }
     })
+  }
 
+  document.getElementById('btn-disconnect').onclick = () => {
+    console.log(ipcRenderer.sendSync('disconnect-mysql', 'delete-mysql-settings'))
+    ipcRenderer.sendTo(1, 'kaplan-index', 'mysql-updated');
+    location.reload();
   }
 }
 
