@@ -528,10 +528,22 @@ function fireOnReady() {
         tr.appendChild(td);
         packageTable.appendChild(tr);
 
+        tr = document.createElement("tr");
+        td = document.createElement("td");
+        td.setAttribute("colspan", 2);
+        button = document.createElement("button");
+        button.type = "button";
+        button.textContent = "Cancel";
+        button.classList.add("cancel");
+        button.onclick = () => {
+          overlay.style.display = "none";
+          document.forms[0].removeAttribute("project-package");
+        }
+        td.appendChild(button);
+        tr.appendChild(td);
+        packageTable.appendChild(tr);
     }
     document.getElementById("btn-create-new-project-package").onclick = function() {
-        pathToKPP = window.setFile([]);
-
         let xhttp = new XMLHttpRequest();
 
         let queryURL = "http://127.0.0.1:8000/project/"
@@ -541,8 +553,7 @@ function fireOnReady() {
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 openPackageMenu("create_new_project_package",
-                                JSON.parse(this.responseText).files,
-                                pathToKPP);
+                                JSON.parse(this.responseText).files);
             }
         }
 
@@ -550,8 +561,6 @@ function fireOnReady() {
         xhttp.send();
     }
     document.getElementById("btn-create-return-project-package").onclick = function() {
-        pathToKPP = window.setFile([]);
-
         let xhttp = new XMLHttpRequest();
 
         let queryURL = "http://127.0.0.1:8000/project/"
@@ -561,8 +570,7 @@ function fireOnReady() {
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 openPackageMenu("create_return_project_package",
-                                JSON.parse(this.responseText).files,
-                                pathToKPP);
+                                JSON.parse(this.responseText).files);
             }
         }
 
@@ -620,13 +628,22 @@ function fireOnReady() {
         })
         if (filesToPackage.length == 0) {
             overlay.style.display = "none";
+            this.removeAttribute("project-package");
+            return false;
         }
 
         let queryURL = "http://127.0.0.1:8000/project/"
                      + filesView.getAttribute("cur-p-id");
 
         let parameters = new FormData();
-        parameters.append("project_package", this.getAttribute("project-package"));
+        if (this.getAttribute("project-package")) {
+          parameters.append("project_package", this.getAttribute("project-package"));
+        } else {
+          const filterList = [
+              {name: 'Kaplan Project Packages', extensions: ['kpp']}
+          ]
+          parameters.append("project_package", window.setFile(filterList));
+        }
         parameters.append("files", filesToPackage.join(";"));
         parameters.append("task", this.getAttribute("task"));
 
@@ -635,6 +652,7 @@ function fireOnReady() {
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 overlay.style.display = "none";
+                document.forms[0].removeAttribute("project-package");
             }
         }
         xhttp.open("POST",  queryURL, true);

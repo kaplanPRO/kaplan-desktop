@@ -111,6 +111,18 @@ ipcMain.on('update-settings', (event, arg) => {
     event.returnValue = 'Settings updated.';
 })
 
+ipcMain.on('disconnect-mysql', (event, arg) => {
+    const pathToSettings = path.join(app.getPath('userData'), 'settings.json');
+    let settings = JSON.parse(fs.readFileSync(pathToSettings));
+
+    delete(settings.mysql)
+
+    fs.writeFileSync(pathToSettings, JSON.stringify(settings))
+    process.env.KAPLAN_SETTINGS = JSON.stringify(settings)
+
+    event.returnValue = 'MySQL settings deleted.';
+})
+
 const template = [
     {
         label: 'View',
