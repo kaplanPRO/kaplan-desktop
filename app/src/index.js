@@ -528,6 +528,20 @@ function fireOnReady() {
         tr.appendChild(td);
         packageTable.appendChild(tr);
 
+        tr = document.createElement("tr");
+        td = document.createElement("td");
+        td.setAttribute("colspan", 2);
+        button = document.createElement("button");
+        button.type = "button";
+        button.textContent = "Cancel";
+        button.classList.add("cancel");
+        button.onclick = () => {
+          overlay.style.display = "none";
+          document.forms[0].removeAttribute("project-package");
+        }
+        td.appendChild(button);
+        tr.appendChild(td);
+        packageTable.appendChild(tr);
     }
     document.getElementById("btn-create-new-project-package").onclick = function() {
         let xhttp = new XMLHttpRequest();
