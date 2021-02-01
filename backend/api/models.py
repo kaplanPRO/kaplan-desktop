@@ -49,7 +49,6 @@ class Project(models.Model):
             translation_memories = {}
             termbases = {}
             for project_tm in self.language_resources.all():
-                print(project_tm.path)
                 if project_tm.role == 'tm':
                     translation_memories[len(translation_memories)] = project_tm.path
                 elif project_tm.role == 'tb':
