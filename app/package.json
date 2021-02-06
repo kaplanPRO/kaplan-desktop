@@ -1,7 +1,7 @@
 {
     "name": "kaplan-desktop",
     "productName": "Kaplan Desktop",
-    "version": "0.3.2",
+    "version": "0.3.3",
     "description": "An open-source CAT tool.",
     "homepage": "https://kaplan.pro",
     "main": "src/main.js",
