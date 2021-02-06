@@ -72,8 +72,8 @@ function fireOnReady() {
               alert(error);
             } else {
               selectCTMs.innerHTML = null;
+              selectCTMs.appendChild(new Option('-----'));
               if (result.length > 0) {
-                selectCTMs.appendChild(new Option('----'));
                 result.map(function(row) {
                   selectCTMs.appendChild(new Option(row.name, row.id));
                 })
@@ -162,7 +162,7 @@ function fireOnReady() {
       [...selectTBs.selectedOptions].forEach(function(tb) {
           languageResources.push(tb.value);
       });
-      if (selectCTMs.value !== '----') {
+      if (selectCTMs.value !== '-----') {
           cloudLanguageResources = JSON.parse(fs.readFileSync(path.join(app.getPath('userData'), 'settings.json'))).mysql;
           cloudLanguageResources.table = selectCTMs.value;
       }
