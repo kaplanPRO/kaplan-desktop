@@ -104,7 +104,10 @@ window.openFileContextMenu = (e, fileId, filePath, canGenerateTargetFile) => {
     const fileMenu = new Menu();
     if (canGenerateTargetFile === 'true') {
         fileMenu.append(new MenuItem({ label: 'Generate target translation', click() { getTargetTranslation(fileId) } }));
+    } else {
+        fileMenu.append(new MenuItem({ label: 'Generate target translation', enabled: false }));
     }
+    fileMenu.append(new MenuItem({ type: 'separator' }));
     fileMenu.append(new MenuItem({ label: 'Show in file explorer', click() { shell.showItemInFolder(filePath) } }));
 
     fileMenu.popup({ window: indexWindow });
