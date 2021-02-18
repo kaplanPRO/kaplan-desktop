@@ -51,6 +51,10 @@ footer {
     grid-row: 3;
     padding: 0.25em;
 }
+div.note span {
+  float: right;
+  cursor: pointer;
+}
 div#hits-div {
     display: grid;
     grid-template: auto 1fr / 1fr 1fr;
@@ -174,12 +178,14 @@ table#tb-hits th, table#tm-hits th, table.segments-table th {
     user-select: none;
     width: 4%;
 }
-table#tb-hits td, table#tm-hits td, table.segments-table td {
+table#tb-hits td, table#tm-hits td, table.segments-table td.source, table.segments-table td.target {
     border-bottom: 1px solid #c5c5c5;
     border-left: 1px solid #c5c5c5;
     border-top: 1px solid #c5c5c5;
     padding: 0.5rem;
     user-select: text;
+}
+table#tb-hits td, table#tm-hits td {
     width: 48%;
 }
 table#tb-table td, table#tm-table td {
@@ -188,8 +194,31 @@ table#tb-table td, table#tm-table td {
     padding: 0.5rem;
     width: 50%;
 }
-table#tb-table td.target, table#tm-table td.target {
+table.segments-table td.source, table.segments-table td.target {
+    width: 35%;
+}
+table.segments-table td.notes {
     border-left: 1px solid #c5c5c5;
+    padding: 0.5rem;
+}
+table.segments-table td.notes p {
+    font-size: 0.75rem;
+    user-select: text;
+}
+table.segments-table td.notes div.note {
+    border: 1px solid #c5c5c5;
+    margin-bottom: 0.5rem;
+    padding: 0.25rem;
+}
+table.segments-table tr td.notes button {
+    display: none;
+}
+table.segments-table tr:focus-within td.notes button:not(.hidden), table.segments-table tr td.notes form button {
+    display: block;
+}
+table.segments-table tr td.notes form label {
+    display: block;
+    font-weight: bold;
 }
 table td.language {
     text-align: center;

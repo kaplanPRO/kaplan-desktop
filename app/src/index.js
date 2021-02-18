@@ -224,7 +224,9 @@ function fireOnReady() {
                         window.fileTitle = this.getElementsByTagName("td")[0].innerHTML;
                         setFooter();
 
-                        fetchSegments(projectId, this.getAttribute("file-id"));
+                        fetchSegments(projectId,
+                                      this.getAttribute("file-id"),
+                                      this.getAttribute("can-generate-target-file"));
 
                         if (activeFile != null) {
                             activeFile.classList.remove("active");
@@ -252,7 +254,7 @@ function fireOnReady() {
     }
 
     // Fetches the segments in a file
-    function fetchSegments(projectId, fileId) {
+    function fetchSegments(projectId, fileId, supportsComments) {
         window.mergeButton.disabled = true;
         window.selectedTU = null;
         window.selectedSegments = [];
@@ -325,6 +327,49 @@ function fireOnReady() {
                                     tag.contentEditable = "false";
                                 })
                             })
+                            if (supportsComments === "true") {
+                                notesTD = document.createElement("td");
+                                notesTD.classList.add("notes");
+                                segmentNotes = segments[s_i].getElementsByTagName("notes")
+                                if (segmentNotes.length > 0 && segmentNotes[0].childNodes.length > 0) {
+                                    segmentNotes[0].childNodes.forEach(function(segmentNote) {
+                                        noteDiv = document.createElement("div");
+                                        noteDiv.classList.add("note");
+                                        noteDiv.id = segmentNote.id;
+                                        noteDiv.setAttribute("segment", segmentNote.getAttribute("segment"));
+
+                                        closeSpan = document.createElement("span");
+                                        closeSpan.textContent = "X";
+                                        closeSpan.onclick = function() {
+                                            resolveComment(this);
+                                        }
+                                        noteDiv.appendChild(closeSpan);
+
+                                        authorP = document.createElement("p");
+                                        authorP.textContent = "Author: " + segmentNote.getAttribute("added_by");
+                                        noteDiv.appendChild(authorP);
+
+                                        timeP = document.createElement("p");
+                                        timeP.textContent = "Time: " + segmentNote.getAttribute("added_at");
+                                        noteDiv.appendChild(timeP);
+
+                                        noteDiv.appendChild(document.createElement("hr"));
+
+                                        noteP = document.createElement("p");
+                                        noteP.textContent = segmentNote.textContent;
+                                        noteDiv.appendChild(noteP);
+
+                                        notesTD.appendChild(noteDiv);
+                                    })
+                                }
+                                noteButton = document.createElement("button");
+                                noteButton.textContent = "+";
+                                noteButton.setAttribute("tabindex", "-1");
+                                noteButton.onclick = function() { openCommentForm(this) };
+                                notesTD.appendChild(noteButton);
+
+                                segment_row.appendChild(notesTD);
+                            }
 
                             translation_unit_table.appendChild(segment_row);
                         }

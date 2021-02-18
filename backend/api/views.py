@@ -201,7 +201,15 @@ def project_file(request, project_id, file_id):
     bf = kaplan.open_bilingualfile(os.path.join(project.get_target_dir(), filename))
 
     if request.method == 'POST':
-        if request.POST.get('task') == 'generate_target_translation':
+        if request.POST.get('task') == 'add_comment':
+            bf.add_comment(request.POST['segment'],
+                           request.POST['comment'],
+                           request.POST['author'])
+            bf.save(project.get_target_dir())
+
+            return JsonResponse({'status': 'success'})
+
+        elif request.POST.get('task') == 'generate_target_translation':
             bf.generate_target_translation(project.get_target_dir(),
                                            os.path.join(project.get_source_dir(), project_file.title))
 
@@ -210,6 +218,14 @@ def project_file(request, project_id, file_id):
         elif request.POST.get('task') == 'merge_segments':
 
             bf.merge_segments(request.POST['segment_list'].split(';'))
+            bf.save(project.get_target_dir())
+
+            return JsonResponse({'status': 'success'})
+
+        elif request.POST.get('task') == 'resolve_comment':
+            bf.resolve_comment(request.POST['segment'],
+                               request.POST['comment'],
+                               request.POST['author'])
             bf.save(project.get_target_dir())
 
             return JsonResponse({'status': 'success'})
