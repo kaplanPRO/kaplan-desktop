@@ -171,7 +171,7 @@ function resolveComment(closeSpan) {
 function submitSegment(target_cell, segment_state) {
     paragraph_no = target_cell.parentNode.getAttribute("p-id");
     segment_no = target_cell.parentNode.getAttribute("id");
-    source_segment = "<source>" + target_cell.parentNode.getElementsByClassName("source")[0].innerHTML.replace(/<ph contenteditable="false">\\n<\/ph>/g, "\n") + "</source>";
+    source_segment = "<source>" + target_cell.parentNode.getElementsByClassName("source")[0].innerHTML.replace(/&nbsp;/g, " ").replace(/<ph contenteditable="false">\\n<\/ph>/g, "\n") + "</source>";
     target_segment = target_cell.innerHTML.replace(/&nbsp;/g, " ").replace(/<ph contenteditable="false">\\n<\/ph>/g, "\n");
 
     if (target_segment == "") {
@@ -220,7 +220,7 @@ function lookupSegment(sourceSegment) {
                   + editorView.getAttribute("cur-f-id")
                   + "?task=lookup"
                   + "&source_segment="
-                  + encodeURIComponent("<source>" + sourceSegment.innerHTML.replace(/<ph contenteditable="false">\\n<\/ph>/g, "\n") + "</source>");
+                  + encodeURIComponent("<source>" + sourceSegment.innerHTML.replace(/&nbsp;/g, " ").replace(/<ph contenteditable="false">\\n<\/ph>/g, "\n") + "</source>");
 
     const parser = new DOMParser();
 
