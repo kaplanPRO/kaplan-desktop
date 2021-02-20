@@ -102,6 +102,9 @@ window.openFileContextMenu = (e, fileId, filePath, canGenerateTargetFile) => {
     e.preventDefault();
 
     const fileMenu = new Menu();
+    fileMenu.append(new MenuItem({ label: 'Open in translation mode', click() { fetchSegments(filesView.getAttribute('cur-p-id'), fileId, canGenerateTargetFile, "translation") } }));
+    fileMenu.append(new MenuItem({ label: 'Open in review mode', click() { fetchSegments(filesView.getAttribute('cur-p-id'), fileId, canGenerateTargetFile, "review") } }));
+    fileMenu.append(new MenuItem({ type: 'separator' }));
     if (canGenerateTargetFile === 'true') {
         fileMenu.append(new MenuItem({ label: 'Generate target translation', click() { getTargetTranslation(fileId) } }));
     } else {

@@ -254,7 +254,7 @@ function fireOnReady() {
     }
 
     // Fetches the segments in a file
-    function fetchSegments(projectId, fileId, supportsComments) {
+    function fetchSegments(projectId, fileId, supportsComments, mode="translation") {
         window.mergeButton.disabled = true;
         window.selectedTU = null;
         window.selectedSegments = [];
@@ -381,6 +381,9 @@ function fireOnReady() {
                     }
                 }
                 editorView.setAttribute("cur-f-id", fileId);
+                editorView.setAttribute("mode", mode);
+                document.getElementById("editor-header").className = mode;
+                window.editorMode = mode;
                 toggleView("editor-view", "grid", "editor-header", "btn-editor-view");
                 document.getElementById("btn-editor-view").disabled = false;
             }

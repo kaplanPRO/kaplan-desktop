@@ -191,6 +191,7 @@ function submitSegment(target_cell, segment_state) {
                  + "/file/"
                  + editorView.getAttribute("cur-f-id");
     let segmentForm = new FormData();
+    segmentForm.append("editor_mode", editorMode);
     segmentForm.append("segment_state", segment_state);
     segmentForm.append("source_segment", source_segment);
     segmentForm.append("target_segment", target_segment);

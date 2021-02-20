@@ -231,10 +231,17 @@ def project_file(request, project_id, file_id):
             return JsonResponse({'status': 'success'})
 
         else:
+            editor_mode = request.POST['editor_mode']
             segment_state = request.POST['segment_state']
             source_segment = request.POST['source_segment']
             target_segment = request.POST['target_segment']
             author_id = request.POST['author_id']
+
+            if editor_mode == 'review' and segment_state == 'translated':
+                if float(bf.xliff_version) > 2.0:
+                    segment_state = 'reviewed'
+                else:
+                    segment_state = 'signed-off'                
 
             bf.update_segment(target_segment,
                               request.POST['paragraph_no'],
