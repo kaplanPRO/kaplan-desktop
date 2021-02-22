@@ -52,8 +52,11 @@ footer {
     padding: 0.25em;
 }
 div.note span {
-  float: right;
-  cursor: pointer;
+    float: right;
+    cursor: pointer;
+}
+div.y-scroll {
+    overflow-y: scroll;
 }
 div#hits-div {
     display: grid;
@@ -62,6 +65,13 @@ div#hits-div {
 }
 div#hits-div button {
     padding: 0;
+}
+div#project-report-div {
+    grid-column: 3;
+}
+div#project-reports {
+    display: grid;
+    grid-template-columns: minmax(min-content, max-content) auto minmax(min-content, max-content);
 }
 div#segments-div {
     overflow-y: scroll;
@@ -130,6 +140,9 @@ main#editor-view, main#files-view, main#mysql-view, main#tb-view, main#tm-view, 
 main#editor-view, main#tb-view, main#tm-view {
     grid-template-rows: 1fr 4fr;
 }
+main#files-view {
+    grid-template-rows: 50% 50%;
+}
 main#overlay {
     background-color: rgb(256,256,256,0.5);
     height: 100vh;
@@ -167,6 +180,19 @@ table {
     border-collapse: collapse;
     width: 100%;
 }
+table td, table th {
+    padding: 0.5rem;
+}
+table#project-report * {
+    padding: 0.5rem;
+}
+table#project-report td {
+    border-top: 1px solid #c5c5c5;
+    text-align: right;
+}
+table#project-report td:not(.name), table#project-report th:not(.name) {
+    border-left: 1px solid #c5c5c5
+}
 table#tb-hits {
     display: none;
 }
@@ -188,7 +214,6 @@ table#tb-hits td, table#tm-hits td, table.segments-table td.source, table.segmen
     border-bottom: 1px solid #c5c5c5;
     border-left: 1px solid #c5c5c5;
     border-top: 1px solid #c5c5c5;
-    padding: 0.5rem;
     user-select: text;
 }
 table#tb-hits td, table#tm-hits td {

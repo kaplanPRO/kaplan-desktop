@@ -3,7 +3,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import File, Project, KaplanDatabase
+from .models import File, KaplanDatabase, Project, ProjectReport
 
 # Installed libraries
 import kaplan
@@ -16,6 +16,7 @@ from lxml import etree
 import mysql.connector
 
 # Standard Python libraries
+import datetime
 import difflib
 import html
 from io import BytesIO
@@ -241,7 +242,7 @@ def project_file(request, project_id, file_id):
                 if float(bf.xliff_version) > 2.0:
                     segment_state = 'reviewed'
                 else:
-                    segment_state = 'signed-off'                
+                    segment_state = 'signed-off'
 
             bf.update_segment(target_segment,
                               request.POST['paragraph_no'],
@@ -378,7 +379,17 @@ def project_view(request, project_id):
     project = Project.objects.get(id=project_id)
 
     if request.method == 'POST':
-        if request.POST.get('task') == 'create_new_project_package':
+        if request.POST.get('task') == 'analyze_files':
+            kaplan_project = KaplanProject(project.get_project_metadata())
+            kaplan_project_report = kaplan_project.analyze()
+            project_report = ProjectReport()
+            project_report.content = json.dumps(kaplan_project_report)
+            project_report.project = project
+            project_report.save()
+
+            return JsonResponse({project_report.id: {'timestamp': project_report.created_at.isoformat(),
+                                                     'json': project_report.content}})
+        elif request.POST.get('task') == 'create_new_project_package':
             path = request.POST['project_package']
             files = request.POST.get('files', '').split(';')
             if files == ['']:
@@ -409,6 +420,7 @@ def project_view(request, project_id):
             return JsonResponse(project.get_project_metadata())
         else:
             files_dict = {}
+            reports_dict = {}
 
             for project_file in File.objects.filter(project=project):
                 filename = project_file.title + '.kxliff' if project_file.is_kxliff else project_file.title
@@ -416,7 +428,11 @@ def project_view(request, project_id):
                                                'path':os.path.join(project.get_target_dir(), filename),
                                                'can_generate_target_file':project_file.is_kxliff}
 
-            return JsonResponse(files_dict)
+            for project_report in ProjectReport.objects.filter(project=project):
+                reports_dict[project_report.id] = {'timestamp': project_report.created_at.isoformat(),
+                                                   'json': project_report.content}
+
+            return JsonResponse({'files':files_dict, 'reports':reports_dict})
 
 def kdb_directory(request):
     kdbs = KaplanDatabase.objects.filter(is_project_specific=False)

@@ -75,6 +75,12 @@ class Project(models.Model):
         return LANGUAGES.get(self.target_language, 'N/A')
 
 
+class ProjectReport(models.Model):
+    content = models.TextField(default='{}')
+    created_at = models.DateTimeField(auto_now_add=True)
+    project = models.ForeignKey('Project', on_delete=models.CASCADE)
+
+
 class KaplanDatabase(models.Model):
     title = models.CharField(max_length=60)
     path = models.TextField()

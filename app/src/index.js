@@ -13,6 +13,7 @@ function fireOnReady() {
     window.tMEntries = document.getElementById("tm-table");
 
     window.activeSegment = null;
+    window.activeReport = null;
 
     let activeProject = null;
     let activeFile = null;
@@ -196,7 +197,9 @@ function fireOnReady() {
 
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
-                files = JSON.parse(this.responseText);
+                responseJSON = JSON.parse(this.responseText);
+
+                files = responseJSON.files;
                 filesKeys = Object.keys(files);
 
                 filesTable.innerHTML = "";
@@ -243,8 +246,50 @@ function fireOnReady() {
 
                     filesTable.append(tr);
                 }
+
+                reports = responseJSON.reports;
+                reportsKeys = Object.keys(reports);
+
+                projectReportsTable = document.getElementById("reports-table").tBodies[0];
+                projectReportsTable.innerHTML = "<tr><th><h4>Reports</h4></th></tr>"
+
+                if (reportsKeys.length === 0) {
+                    tr = document.createElement("tr");
+
+                    td = document.createElement("td");
+                    td.textContent = "-";
+                    tr.appendChild(td);
+
+                    projectReportsTable.appendChild(tr);
+                }
+
+                for (i = 0; i < reportsKeys.length; i++) {
+                    report = reports[reportsKeys[i]];
+                    reportDateString = getDatetimeString(new Date(report.timestamp));
+
+                    tr = document.createElement("tr");
+                    tr.id = reportsKeys[i];
+                    tr.setAttribute("json", report.json)
+                    tr.ondblclick = function() {
+                        viewProjectReport(this);
+                    }
+
+                    td = document.createElement("td");
+                    td.textContent = reportDateString;
+                    tr.appendChild(td);
+
+                    projectReportsTable.appendChild(tr);
+                }
+
+                reportTable = document.getElementById("project-report");
+                reportTable.innerHTML = "<tr>"
+                                      + "<th class=\"name\"></th><th>Repetitions</th><th>100%</th><th>95%-99%</th><th>85%-94%</th><th>75%-84%</th><th>50%-74%</th><th>New</th><th>Total</th>"
+                                      + "</tr><tr>"
+                                      + "<td class=\"name\">-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>"
+                                      + "</tr>"
+
                 filesView.setAttribute("cur-p-id", projectId);
-                toggleView("files-view", "block", "files-header", "btn-files-view");
+                toggleView("files-view", "grid", "files-header", "btn-files-view");
                 document.getElementById("btn-files-view").disabled = false;
             }
         }
@@ -474,7 +519,7 @@ function fireOnReady() {
         toggleView("projects-view", "block", "projects-header", "btn-projects-view");
     }
     document.getElementById("btn-files-view").onclick = function() {
-        toggleView("files-view", "block", "files-header", "btn-files-view");
+        toggleView("files-view", "grid", "files-header", "btn-files-view");
     }
     document.getElementById("btn-editor-view").onclick = function() {
         toggleView("editor-view", "grid", "editor-header", "btn-editor-view");
