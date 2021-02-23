@@ -251,50 +251,52 @@ window.viewProjectReport = function(tableRow) {
 function fireOnReady() {
     const mYSQLTable = document.getElementById('mysql-table')
 
-    let connection = mysql.createConnection(settingsJSON.mysql);
+    if (settingsJSON.mysql) {
+      let connection = mysql.createConnection(settingsJSON.mysql);
 
-    connection.connect(function(error) {
+      connection.connect(function(error) {
         if (error) {
-            console.error(error);
-            alert(error);
+          console.error(error);
+          alert(error);
         } else {
-            document.getElementById('btn-mysql-view').disabled = false;
-            mYSQLTable.innerHTML = null;
-            tr = document.createElement('tr');
-            tr.innerHTML = '<th class="name">Cloud TM</th><th>Source Language</th><th>Target Language</th>'
-            mYSQLTable.appendChild(tr);
+          document.getElementById('btn-mysql-view').disabled = false;
+          mYSQLTable.innerHTML = null;
+          tr = document.createElement('tr');
+          tr.innerHTML = '<th class="name">Cloud TM</th><th>Source Language</th><th>Target Language</th>'
+          mYSQLTable.appendChild(tr);
 
-            connection.query('SELECT * FROM kaplan_tables', function (error, result, fields) {
-                if (error) {
-                    console.error(error)
-                    alert(error)
-                } else if (result.length === 0) {
-                    tr = document.createElement('tr');
-                    tr.innerHTML = '<td colspan="3">No tables found</td>'
-                    mYSQLTable.appendChild(tr);
-                } else {
-                    result.map(function(row) {
-                        tr = document.createElement('tr');
-                        tr.setAttribute('cloud-tm-id', row.id);
+          connection.query('SELECT * FROM kaplan_tables', function (error, result, fields) {
+            if (error) {
+              console.error(error)
+              alert(error)
+            } else if (result.length === 0) {
+              tr = document.createElement('tr');
+              tr.innerHTML = '<td colspan="3">No tables found</td>'
+              mYSQLTable.appendChild(tr);
+            } else {
+              result.map(function(row) {
+                tr = document.createElement('tr');
+                tr.setAttribute('cloud-tm-id', row.id);
 
-                        td = document.createElement('td');
-                        td.textContent = row.name;
-                        tr.appendChild(td);
+                td = document.createElement('td');
+                td.textContent = row.name;
+                tr.appendChild(td);
 
-                        td = document.createElement('td');
-                        td.textContent = row.source;
-                        tr.appendChild(td);
+                td = document.createElement('td');
+                td.textContent = row.source;
+                tr.appendChild(td);
 
-                        td = document.createElement('td');
-                        td.textContent = row.target;
-                        tr.appendChild(td);
+                td = document.createElement('td');
+                td.textContent = row.target;
+                tr.appendChild(td);
 
-                        mYSQLTable.appendChild(tr);
-                    })
-                }
-            })
+                mYSQLTable.appendChild(tr);
+              })
+            }
+          })
         }
-    });
+      });  
+    }
 
     document.getElementById('btn-analyze-files').onclick = function() {
         this.disabled = 'true';
