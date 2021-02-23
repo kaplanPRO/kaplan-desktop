@@ -330,7 +330,12 @@ function fireOnReady() {
                     td.textContent = getDatetimeString(report.timestamp);
                     tr.appendChild(td);
 
-                    projectReportsTable.appendChild(tr);
+                    if (projectReportsTable.getElementsByTagName('tr').length > 1) {
+                        projectReportsTable.insertBefore(tr,
+                                                         projectReportsTable.getElementsByTagName('tr')[1]);
+                    } else {
+                        projectReportsTable.appendChild(tr);
+                    }
 
                 }
             }

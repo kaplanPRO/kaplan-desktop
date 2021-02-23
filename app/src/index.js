@@ -263,7 +263,7 @@ function fireOnReady() {
                     projectReportsTable.appendChild(tr);
                 }
 
-                for (i = 0; i < reportsKeys.length; i++) {
+                for (i = reportsKeys.length - 1; i >= 0; i--) {
                     report = reports[reportsKeys[i]];
                     reportDateString = getDatetimeString(new Date(report.timestamp));
 
