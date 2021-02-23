@@ -13,6 +13,7 @@ function fireOnReady() {
     window.tMEntries = document.getElementById("tm-table");
 
     window.activeSegment = null;
+    window.activeReport = null;
 
     let activeProject = null;
     let activeFile = null;
@@ -196,7 +197,9 @@ function fireOnReady() {
 
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
-                files = JSON.parse(this.responseText);
+                responseJSON = JSON.parse(this.responseText);
+
+                files = responseJSON.files;
                 filesKeys = Object.keys(files);
 
                 filesTable.innerHTML = "";
@@ -224,7 +227,9 @@ function fireOnReady() {
                         window.fileTitle = this.getElementsByTagName("td")[0].innerHTML;
                         setFooter();
 
-                        fetchSegments(projectId, this.getAttribute("file-id"));
+                        fetchSegments(projectId,
+                                      this.getAttribute("file-id"),
+                                      this.getAttribute("can-generate-target-file"));
 
                         if (activeFile != null) {
                             activeFile.classList.remove("active");
@@ -241,8 +246,50 @@ function fireOnReady() {
 
                     filesTable.append(tr);
                 }
+
+                reports = responseJSON.reports;
+                reportsKeys = Object.keys(reports);
+
+                projectReportsTable = document.getElementById("reports-table").tBodies[0];
+                projectReportsTable.innerHTML = "<tr><th><h4>Reports</h4></th></tr>"
+
+                if (reportsKeys.length === 0) {
+                    tr = document.createElement("tr");
+
+                    td = document.createElement("td");
+                    td.textContent = "-";
+                    tr.appendChild(td);
+
+                    projectReportsTable.appendChild(tr);
+                }
+
+                for (i = reportsKeys.length - 1; i >= 0; i--) {
+                    report = reports[reportsKeys[i]];
+                    reportDateString = getDatetimeString(new Date(report.timestamp));
+
+                    tr = document.createElement("tr");
+                    tr.id = reportsKeys[i];
+                    tr.setAttribute("json", report.json)
+                    tr.ondblclick = function() {
+                        viewProjectReport(this);
+                    }
+
+                    td = document.createElement("td");
+                    td.textContent = reportDateString;
+                    tr.appendChild(td);
+
+                    projectReportsTable.appendChild(tr);
+                }
+
+                reportTable = document.getElementById("project-report");
+                reportTable.innerHTML = "<tr>"
+                                      + "<th class=\"name\"></th><th>Repetitions</th><th>100%</th><th>95%-99%</th><th>85%-94%</th><th>75%-84%</th><th>50%-74%</th><th>New</th><th>Total</th>"
+                                      + "</tr><tr>"
+                                      + "<td class=\"name\">-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>"
+                                      + "</tr>"
+
                 filesView.setAttribute("cur-p-id", projectId);
-                toggleView("files-view", "block", "files-header", "btn-files-view");
+                toggleView("files-view", "grid", "files-header", "btn-files-view");
                 document.getElementById("btn-files-view").disabled = false;
             }
         }
@@ -252,7 +299,7 @@ function fireOnReady() {
     }
 
     // Fetches the segments in a file
-    function fetchSegments(projectId, fileId) {
+    function fetchSegments(projectId, fileId, supportsComments, mode="translation") {
         window.mergeButton.disabled = true;
         window.selectedTU = null;
         window.selectedSegments = [];
@@ -325,6 +372,49 @@ function fireOnReady() {
                                     tag.contentEditable = "false";
                                 })
                             })
+                            if (supportsComments === "true") {
+                                notesTD = document.createElement("td");
+                                notesTD.classList.add("notes");
+                                segmentNotes = segments[s_i].getElementsByTagName("notes")
+                                if (segmentNotes.length > 0 && segmentNotes[0].childNodes.length > 0) {
+                                    segmentNotes[0].childNodes.forEach(function(segmentNote) {
+                                        noteDiv = document.createElement("div");
+                                        noteDiv.classList.add("note");
+                                        noteDiv.id = segmentNote.id;
+                                        noteDiv.setAttribute("segment", segmentNote.getAttribute("segment"));
+
+                                        closeSpan = document.createElement("span");
+                                        closeSpan.textContent = "X";
+                                        closeSpan.onclick = function() {
+                                            resolveComment(this);
+                                        }
+                                        noteDiv.appendChild(closeSpan);
+
+                                        authorP = document.createElement("p");
+                                        authorP.textContent = "Author: " + segmentNote.getAttribute("added_by");
+                                        noteDiv.appendChild(authorP);
+
+                                        timeP = document.createElement("p");
+                                        timeP.textContent = "Time: " + getDatetimeString(segmentNote.getAttribute("added_at") + "Z");
+                                        noteDiv.appendChild(timeP);
+
+                                        noteDiv.appendChild(document.createElement("hr"));
+
+                                        noteP = document.createElement("p");
+                                        noteP.textContent = segmentNote.textContent;
+                                        noteDiv.appendChild(noteP);
+
+                                        notesTD.appendChild(noteDiv);
+                                    })
+                                }
+                                noteButton = document.createElement("button");
+                                noteButton.textContent = "+";
+                                noteButton.setAttribute("tabindex", "-1");
+                                noteButton.onclick = function() { openCommentForm(this) };
+                                notesTD.appendChild(noteButton);
+
+                                segment_row.appendChild(notesTD);
+                            }
 
                             translation_unit_table.appendChild(segment_row);
                         }
@@ -336,6 +426,9 @@ function fireOnReady() {
                     }
                 }
                 editorView.setAttribute("cur-f-id", fileId);
+                editorView.setAttribute("mode", mode);
+                document.getElementById("editor-header").className = mode;
+                window.editorMode = mode;
                 toggleView("editor-view", "grid", "editor-header", "btn-editor-view");
                 document.getElementById("btn-editor-view").disabled = false;
             }
@@ -426,7 +519,7 @@ function fireOnReady() {
         toggleView("projects-view", "block", "projects-header", "btn-projects-view");
     }
     document.getElementById("btn-files-view").onclick = function() {
-        toggleView("files-view", "block", "files-header", "btn-files-view");
+        toggleView("files-view", "grid", "files-header", "btn-files-view");
     }
     document.getElementById("btn-editor-view").onclick = function() {
         toggleView("editor-view", "grid", "editor-header", "btn-editor-view");

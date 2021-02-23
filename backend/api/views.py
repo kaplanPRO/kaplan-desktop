@@ -3,7 +3,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import File, Project, KaplanDatabase
+from .models import File, KaplanDatabase, Project, ProjectReport
 
 # Installed libraries
 import kaplan
@@ -16,6 +16,7 @@ from lxml import etree
 import mysql.connector
 
 # Standard Python libraries
+import datetime
 import difflib
 import html
 from io import BytesIO
@@ -80,6 +81,15 @@ def import_project(request):
             new_project.language_resources.add(new_kdb)
 
         new_project.save()
+
+    if 'reports' in project_metadata:
+        for i in project_metadata['reports']:
+            new_project_report = ProjectReport()
+            new_project_report.content = json.dumps(project_metadata['reports'][i]['json'])
+            new_project_report.project = new_project
+            new_project_report.save()
+            new_project_report.created_at = datetime.datetime.fromisoformat(project_metadata['reports'][i]['created_at'])
+            new_project_report.save()
 
     return JsonResponse({new_project.id: {'title': new_project.title,
                                           'source_language': new_project.get_source_language(),
@@ -201,7 +211,15 @@ def project_file(request, project_id, file_id):
     bf = kaplan.open_bilingualfile(os.path.join(project.get_target_dir(), filename))
 
     if request.method == 'POST':
-        if request.POST.get('task') == 'generate_target_translation':
+        if request.POST.get('task') == 'add_comment':
+            bf.add_comment(request.POST['segment'],
+                           request.POST['comment'],
+                           request.POST['author'])
+            bf.save(project.get_target_dir())
+
+            return JsonResponse({'status': 'success'})
+
+        elif request.POST.get('task') == 'generate_target_translation':
             bf.generate_target_translation(project.get_target_dir(),
                                            os.path.join(project.get_source_dir(), project_file.title))
 
@@ -214,11 +232,26 @@ def project_file(request, project_id, file_id):
 
             return JsonResponse({'status': 'success'})
 
+        elif request.POST.get('task') == 'resolve_comment':
+            bf.resolve_comment(request.POST['segment'],
+                               request.POST['comment'],
+                               request.POST['author'])
+            bf.save(project.get_target_dir())
+
+            return JsonResponse({'status': 'success'})
+
         else:
+            editor_mode = request.POST['editor_mode']
             segment_state = request.POST['segment_state']
             source_segment = request.POST['source_segment']
             target_segment = request.POST['target_segment']
             author_id = request.POST['author_id']
+
+            if editor_mode == 'review' and segment_state == 'translated':
+                if float(bf.xliff_version) > 2.0:
+                    segment_state = 'reviewed'
+                else:
+                    segment_state = 'signed-off'
 
             bf.update_segment(target_segment,
                               request.POST['paragraph_no'],
@@ -355,7 +388,17 @@ def project_view(request, project_id):
     project = Project.objects.get(id=project_id)
 
     if request.method == 'POST':
-        if request.POST.get('task') == 'create_new_project_package':
+        if request.POST.get('task') == 'analyze_files':
+            kaplan_project = KaplanProject(project.get_project_metadata())
+            kaplan_project_report = kaplan_project.analyze()
+            project_report = ProjectReport()
+            project_report.content = json.dumps(kaplan_project_report)
+            project_report.project = project
+            project_report.save()
+
+            return JsonResponse({project_report.id: {'timestamp': project_report.created_at.isoformat(),
+                                                     'json': project_report.content}})
+        elif request.POST.get('task') == 'create_new_project_package':
             path = request.POST['project_package']
             files = request.POST.get('files', '').split(';')
             if files == ['']:
@@ -386,6 +429,7 @@ def project_view(request, project_id):
             return JsonResponse(project.get_project_metadata())
         else:
             files_dict = {}
+            reports_dict = {}
 
             for project_file in File.objects.filter(project=project):
                 filename = project_file.title + '.kxliff' if project_file.is_kxliff else project_file.title
@@ -393,7 +437,11 @@ def project_view(request, project_id):
                                                'path':os.path.join(project.get_target_dir(), filename),
                                                'can_generate_target_file':project_file.is_kxliff}
 
-            return JsonResponse(files_dict)
+            for project_report in ProjectReport.objects.filter(project=project):
+                reports_dict[project_report.id] = {'timestamp': project_report.created_at.isoformat(),
+                                                   'json': project_report.content}
+
+            return JsonResponse({'files':files_dict, 'reports':reports_dict})
 
 def kdb_directory(request):
     kdbs = KaplanDatabase.objects.filter(is_project_specific=False)

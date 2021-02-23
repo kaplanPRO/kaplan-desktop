@@ -37,19 +37,39 @@
             <button id="btn-create-new-project-package">Create Project Package</button>
             <button id="btn-create-return-project-package">Create Return Package</button>
             <button id="btn-update-from-package">Update From Package</button>
+            <button id="btn-analyze-files">Analyze</button>
         </header>
         <main id="files-view">
-            <table id="files-table">
-                <tr>
-                    <th>
-                        <h4>File Name</h4>
-                    </th>
-                    <th></th>
-                </tr>
-            </table>
+            <div>
+                <table id="files-table">
+                    <tr>
+                        <th>Files</th>
+                        <th></th>
+                    </tr>
+                </table>
+            </div>
+            <div id="project-reports">
+                <div class="y-scroll">
+                    <table id="reports-table">
+                        <tr>
+                            <th>Reports</th>
+                        </tr>
+                        <tr>
+                            <td>-</td>
+                        </tr>
+                    </table>
+                </div>
+                <div id="project-report-div">
+                    <table id="project-report">
+                        <tr><th class="name"></th><th>Repetitions</th><th>100%</th><th>95%-99%</th><th>85%-94%</th><th>75%-84%</th><th>50%-74%</th><th>New</th><th>Total</th></tr>
+                        <tr><td class="name">-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+                    </table>
+                </div>
+            </div>
         </main>
         <header id="editor-header">
             <button id="btn-segment-merge" disabled>Merge</button>
+            <span class="hidden">Review Mode</span>
         </header>
         <main id="editor-view">
             <div id="hits-div">

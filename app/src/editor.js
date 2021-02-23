@@ -66,11 +66,112 @@ function selectSegmentForMerge(segmentHeader) {
         mergeButton.disabled = true;
     }
 }
+function openCommentForm(buttonElement) {
+    buttonElement.classList.add("hidden");
 
+    noteDiv = document.createElement("div");
+    noteDiv.classList.add("note");
+
+    noteForm = document.createElement("form");
+
+    noteLabel = document.createElement("label");
+    noteLabel.setAttribute("for", "comment");
+    noteLabel.textContent = "Comment:";
+    noteForm.appendChild(noteLabel);
+
+    noteTextarea = document.createElement("textarea");
+    noteTextarea.setAttribute("name", "comment");
+    noteForm.appendChild(noteTextarea);
+
+    submitButton = document.createElement("button");
+    submitButton.setAttribute("type", "submit");
+    submitButton.textContent = "Submit";
+    noteForm.appendChild(submitButton);
+
+    cancelButton = document.createElement("button");
+    cancelButton.className = "cancel";
+    cancelButton.setAttribute("type", "button");
+    cancelButton.textContent = "Cancel";
+    cancelButton.onclick = function() {
+        this.parentNode.parentNode.parentNode.getElementsByTagName("button")[0].classList.remove("hidden");
+        this.parentNode.parentNode.remove();
+    }
+    noteForm.appendChild(cancelButton);
+
+    noteDiv.appendChild(noteForm);
+    buttonElement.parentNode.appendChild(noteDiv);
+
+    noteForm.onsubmit = function(e) {
+        e.preventDefault();
+        noteFormData = new FormData(noteForm);
+        noteFormData.append("segment", this.parentNode.parentNode.parentNode.id);
+        noteFormData.append("author", username);
+        noteFormData.append("task", "add_comment");
+
+        if (noteFormData.get("comment") === "") {
+            this.parentNode.parentNode.getElementsByTagName("button")[0].classList.remove("hidden");
+            this.parentNode.remove();
+
+            return false;
+        }
+
+        let xhttp = new XMLHttpRequest();
+        let queryURL = "http://127.0.0.1:8000/project/"
+                     + filesView.getAttribute("cur-p-id")
+                     + "/file/"
+                     + editorView.getAttribute("cur-f-id");
+
+         xhttp.onreadystatechange = function() {
+             if (this.readyState == 4 && this.status == 200) {
+                 console.log("Comment submitted succesfully!");
+
+                 noteDiv = document.createElement("div");
+                 noteDiv.classList.add("note");
+
+                 noteP = document.createElement("p");
+                 noteP.textContent = noteFormData.get("comment");
+                 noteDiv.appendChild(noteP);
+
+                 noteForm.parentNode.parentNode.appendChild(noteDiv);
+
+                 noteForm.parentNode.remove();
+             }
+         }
+
+         xhttp.open("POST", queryURL, true);
+         xhttp.send(noteFormData);
+
+    }
+}
+function resolveComment(closeSpan) {
+    noteDiv = closeSpan.parentNode;
+
+    let noteFormData = new FormData();
+    noteFormData.append("segment", noteDiv.getAttribute("segment"));
+    noteFormData.append("comment", noteDiv.id);
+    noteFormData.append("author", username);
+    noteFormData.append("task", "resolve_comment");
+
+    let xhttp = new XMLHttpRequest();
+    let queryURL = "http://127.0.0.1:8000/project/"
+                 + filesView.getAttribute("cur-p-id")
+                 + "/file/"
+                 + editorView.getAttribute("cur-f-id");
+
+     xhttp.onreadystatechange = function() {
+         if (this.readyState == 4 && this.status == 200) {
+            noteDiv.remove();
+         }
+     }
+
+     xhttp.open("POST", queryURL, true);
+     xhttp.send(noteFormData);
+
+}
 function submitSegment(target_cell, segment_state) {
     paragraph_no = target_cell.parentNode.getAttribute("p-id");
     segment_no = target_cell.parentNode.getAttribute("id");
-    source_segment = "<source>" + target_cell.parentNode.getElementsByClassName("source")[0].innerHTML.replace(/<ph contenteditable="false">\\n<\/ph>/g, "\n") + "</source>";
+    source_segment = "<source>" + target_cell.parentNode.getElementsByClassName("source")[0].innerHTML.replace(/&nbsp;/g, " ").replace(/<ph contenteditable="false">\\n<\/ph>/g, "\n") + "</source>";
     target_segment = target_cell.innerHTML.replace(/&nbsp;/g, " ").replace(/<ph contenteditable="false">\\n<\/ph>/g, "\n");
 
     if (target_segment == "") {
@@ -90,6 +191,7 @@ function submitSegment(target_cell, segment_state) {
                  + "/file/"
                  + editorView.getAttribute("cur-f-id");
     let segmentForm = new FormData();
+    segmentForm.append("editor_mode", editorMode);
     segmentForm.append("segment_state", segment_state);
     segmentForm.append("source_segment", source_segment);
     segmentForm.append("target_segment", target_segment);
@@ -119,7 +221,7 @@ function lookupSegment(sourceSegment) {
                   + editorView.getAttribute("cur-f-id")
                   + "?task=lookup"
                   + "&source_segment="
-                  + encodeURIComponent("<source>" + sourceSegment.innerHTML.replace(/<ph contenteditable="false">\\n<\/ph>/g, "\n") + "</source>");
+                  + encodeURIComponent("<source>" + sourceSegment.innerHTML.replace(/&nbsp;/g, " ").replace(/<ph contenteditable="false">\\n<\/ph>/g, "\n") + "</source>");
 
     const parser = new DOMParser();
 

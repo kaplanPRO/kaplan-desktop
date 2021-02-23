@@ -4,6 +4,7 @@ from kaplan.language_codes import language_codes
 
 LANGUAGES = dict((code, language) for language, code in language_codes)
 
+import json
 import os
 # Create your models here.
 
@@ -11,6 +12,27 @@ class File(models.Model):
     title = models.CharField(max_length=60)
     project = models.ForeignKey('Project', on_delete=models.CASCADE)
     is_kxliff = models.BooleanField(default=False)
+
+
+class KaplanDatabase(models.Model):
+    title = models.CharField(max_length=60)
+    path = models.TextField()
+    source_language = models.CharField(max_length=20)
+    target_language = models.CharField(max_length=20)
+    is_project_specific = models.BooleanField(default=False)
+    role = models.CharField(max_length=2, choices=(('tm', 'Translation Memory'), ('tb', 'Termbase')))
+
+    def get_source_language(self):
+        return LANGUAGES.get(self.source_language, 'N/A')
+
+    def get_target_language(self):
+        return LANGUAGES.get(self.target_language, 'N/A')
+
+
+class ProjectReport(models.Model):
+    content = models.TextField(default='{}')
+    created_at = models.DateTimeField(auto_now_add=True)
+    project = models.ForeignKey('Project', on_delete=models.CASCADE)
 
 
 class Project(models.Model):
@@ -60,6 +82,15 @@ class Project(models.Model):
             if termbases != {}:
                 project_metadata['termbases'] = termbases
 
+        project_reports = ProjectReport.objects.filter(project=self)
+        if len(project_reports) > 0:
+            reports = {}
+            for project_report in project_reports:
+                reports[len(reports)+1] = {'created_at': project_report.created_at.isoformat(),
+                                           'json': json.loads(project_report.content)}
+
+            project_metadata['reports'] = reports
+
         return project_metadata
 
     def get_source_dir(self):
@@ -70,21 +101,6 @@ class Project(models.Model):
 
     def get_target_dir(self):
         return os.path.join(self.directory, self.target_language)
-
-    def get_target_language(self):
-        return LANGUAGES.get(self.target_language, 'N/A')
-
-
-class KaplanDatabase(models.Model):
-    title = models.CharField(max_length=60)
-    path = models.TextField()
-    source_language = models.CharField(max_length=20)
-    target_language = models.CharField(max_length=20)
-    is_project_specific = models.BooleanField(default=False)
-    role = models.CharField(max_length=2, choices=(('tm', 'Translation Memory'), ('tb', 'Termbase')))
-
-    def get_source_language(self):
-        return LANGUAGES.get(self.source_language, 'N/A')
 
     def get_target_language(self):
         return LANGUAGES.get(self.target_language, 'N/A')
