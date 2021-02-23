@@ -395,7 +395,7 @@ function fireOnReady() {
                                         noteDiv.appendChild(authorP);
 
                                         timeP = document.createElement("p");
-                                        timeP.textContent = "Time: " + segmentNote.getAttribute("added_at");
+                                        timeP.textContent = "Time: " + getDatetimeString(segmentNote.getAttribute("added_at") + "Z");
                                         noteDiv.appendChild(timeP);
 
                                         noteDiv.appendChild(document.createElement("hr"));
