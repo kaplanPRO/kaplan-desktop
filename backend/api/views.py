@@ -82,6 +82,15 @@ def import_project(request):
 
         new_project.save()
 
+    if 'reports' in project_metadata:
+        for i in project_metadata['reports']:
+            new_project_report = ProjectReport()
+            new_project_report.content = json.dumps(project_metadata['reports'][i]['json'])
+            new_project_report.project = new_project
+            new_project_report.save()
+            new_project_report.created_at = datetime.datetime.fromisoformat(project_metadata['reports'][i]['created_at'])
+            new_project_report.save()
+
     return JsonResponse({new_project.id: {'title': new_project.title,
                                           'source_language': new_project.get_source_language(),
                                           'target_language': new_project.get_target_language()}})
