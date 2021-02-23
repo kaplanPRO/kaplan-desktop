@@ -56,7 +56,7 @@ div.note span {
     cursor: pointer;
 }
 div.y-scroll {
-    overflow-y: scroll;
+    overflow-y: auto;
 }
 div#hits-div {
     display: grid;
@@ -71,7 +71,7 @@ div#project-report-div {
 }
 div#project-reports {
     display: grid;
-    grid-template-columns: minmax(min-content, max-content) auto minmax(min-content, max-content);
+    grid-template-columns: max-content 1fr max-content;
 }
 div#segments-div {
     overflow-y: scroll;
