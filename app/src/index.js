@@ -764,55 +764,63 @@ function fireOnReady() {
     window.fetchSegments = fetchSegments;
 
     document.getElementById("tm-first-row").onkeyup = function() {
-        if (this.value === "" || activeTM == null) {
+        if (activeTM == null) {
             return
+        } else if (this.value === "") {
+           firstRow = 0;
+        } else {
+            firstRow = parseInt(this.value);
         }
-        firstRow = parseInt(this.value);
-        lastRow = firstRow + 100;
-        if (document.getElementById("tm-last-row").value) {
+        if (document.getElementById("tm-last-row").value === "") {
+            lastRow = 0
+        } else {
             lastRow = parseInt(document.getElementById("tm-last-row").value);
         }
         fetchEntries("tm", activeTM.id, firstRow, lastRow);
     }
     document.getElementById("tm-last-row").onkeyup = function() {
-        if (this.value === "" || activeTM == null) {
+        if (activeTM == null) {
             return
-        }
-        lastRow = parseInt(this.value);
-        if (lastRow > 100) {
-            firstRow = lastRow - 100;
+        } else if (this.value === "") {
+            lastRow = 0;
         } else {
-            firstRow = 0;
+            lastRow = parseInt(this.value);
         }
-        if (document.getElementById("tm-first-row").value) {
-            firstRow = parseInt(document.getElementById("tm-last-row").value);
+        if (document.getElementById("tm-first-row").value === "") {
+            firstRow = 0;
+        } else {
+            firstRow = parseInt(document.getElementById("tm-first-row").value);
         }
         fetchEntries("tm", activeTM.id, firstRow, lastRow);
     }
 
     document.getElementById("tb-first-row").onkeyup = function() {
-        if (this.value === "" || activeTB == null) {
+        if (activeTB == null) {
             return
+        } else if (this.value === "") {
+           firstRow = 0;
+        } else {
+            firstRow = parseInt(this.value);
         }
-        firstRow = parseInt(this.value);
-        lastRow = firstRow + 100;
-        if (document.getElementById("tb-last-row").value) {
+        if (document.getElementById("tb-last-row").value === "") {
+            lastRow = 0
+        } else {
             lastRow = parseInt(document.getElementById("tb-last-row").value);
         }
         fetchEntries("tb", activeTB.id, firstRow, lastRow);
     }
     document.getElementById("tb-last-row").onkeyup = function() {
-        if (this.value === "" || activeTB == null) {
+        if (activeTB == null) {
             return
-        }
-        lastRow = parseInt(this.value);
-        if (lastRow > 100) {
-            firstRow = lastRow - 100;
+        } else if (this.value === "") {
+            lastRow = 0;
         } else {
-            firstRow = 0;
+            lastRow = parseInt(this.value);
         }
-        if (document.getElementById("tb-first-row").value) {
-            firstRow = parseInt(document.getElementById("tb-last-row").value);
+        if (document.getElementById("tb-first-row").value === "") {
+            firstRow = 0;
+        } else {
+            firstRow = parseInt(document.getElementById("tb-first-row").value);
         }
         fetchEntries("tb", activeTB.id, firstRow, lastRow);
     }
