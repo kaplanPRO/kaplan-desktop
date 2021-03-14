@@ -500,11 +500,14 @@ def kdb_view(request, kdb_id):
         else:
             kdb_entries = {}
             kdb_entry_i = 0
-            for kdb_entry in kdb.conn.execute('''SELECT * FROM main''').fetchall():
+            for kdb_entry in kdb.get_entries():
                 kdb_entries[kdb_entry_i] = {
                     'id': kdb_entry[0],
                     'source': kdb_entry[1],
                     'target': kdb_entry[2],
+                    'state': kdb_entry[3],
+                    'time': kdb_entry[4],
+                    'submitted_by': kdb_entry[5]
                 }
                 kdb_entry_i += 1
 
