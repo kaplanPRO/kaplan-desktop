@@ -187,7 +187,7 @@ function fireOnReady() {
                 console.log("Projects fetched.")
             }
             else if (this.readyState == 4 && this.status != 200) {
-                console.log("Projects not fetched. Trying again in 2 seconds.")
+                console.error("Projects not fetched. Trying again in 2 seconds.")
                 setTimeout(() => {
                 fetchProjects();
                 }, 2000)
@@ -512,9 +512,9 @@ function fireOnReady() {
                 console.log(role.toUpperCase() + "s fetched.");
             }
             else if (this.readyState == 4 && this.status != 200) {
-                console.log(role.toUpperCase() + "s not fetched. Trying again in 2 seconds.")
+                console.error(role.toUpperCase() + "s not fetched. Trying again in 2 seconds.")
                 setTimeout(() => {
-                    fetchKDBs(role, tableHeader);
+                    fetchKDBs(role, tableHeader, kDBtable);
                 }, 2000)
             }
         }
