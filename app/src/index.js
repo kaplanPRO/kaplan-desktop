@@ -33,7 +33,7 @@ function fireOnReady() {
     }, 1000);
 
     // Fetches the entries in a kdb file
-    function fetchEntries(kdb_role, kdb_id) {
+    function fetchEntries(kdb_role, kdb_id, firstRow=0, lastRow=100) {
         let entries;
         let entry;
         let entryKeys;
@@ -54,22 +54,23 @@ function fireOnReady() {
 
                 kDBEntries.innerHTML = null;
 
-                tr = document.createElement("tr");
+                if (firstRow !== 0) {
+                    firstRow = firstRow - 1;
+                }
 
-                th = document.createElement("th");
-                th.textContent = "Source";
-                tr.appendChild(th);
+                if (lastRow === 0 || lastRow > entryKeys.length) {
+                    lastRow = entryKeys.length;
+                }
 
-                th = document.createElement("th");
-                th.textContent = "Target";
-                tr.appendChild(th);
-
-                kDBEntries.appendChild(tr);
-
-                for (i = 0; i < entryKeys.length; i++) {
+                for (i = firstRow; i < lastRow; i++) {
                     entry = entries[entryKeys[i]];
 
                     tr = document.createElement("tr");
+
+                    th = document.createElement("th");
+                    th.id = entry.id;
+                    th.textContent = entry.id;
+                    tr.appendChild(th);
 
                     td = document.createElement("td");
                     td.textContent = entry.source;
@@ -81,6 +82,14 @@ function fireOnReady() {
                     tr.appendChild(td);
 
                     kDBEntries.appendChild(tr);
+                }
+                let entry_count_message;
+                if (entryKeys.length === 1) { entry_count_message = "1 entry"}
+                else { entry_count_message = entryKeys.length + " entries"}
+                if (kdb_role === "tm") {
+                    document.getElementById("tm-entry-count").textContent = entry_count_message;
+                } else {
+                    document.getElementById("tb-entry-count").textContent = entry_count_message;
                 }
             }
         }
@@ -178,7 +187,7 @@ function fireOnReady() {
                 console.log("Projects fetched.")
             }
             else if (this.readyState == 4 && this.status != 200) {
-                console.log("Projects not fetched. Trying again in 2 seconds.")
+                console.error("Projects not fetched. Trying again in 2 seconds.")
                 setTimeout(() => {
                 fetchProjects();
                 }, 2000)
@@ -503,9 +512,9 @@ function fireOnReady() {
                 console.log(role.toUpperCase() + "s fetched.");
             }
             else if (this.readyState == 4 && this.status != 200) {
-                console.log(role.toUpperCase() + "s not fetched. Trying again in 2 seconds.")
+                console.error(role.toUpperCase() + "s not fetched. Trying again in 2 seconds.")
                 setTimeout(() => {
-                    fetchKDBs(role, tableHeader);
+                    fetchKDBs(role, tableHeader, kDBtable);
                 }, 2000)
             }
         }
@@ -753,6 +762,68 @@ function fireOnReady() {
     }
 
     window.fetchSegments = fetchSegments;
+
+    document.getElementById("tm-first-row").onkeyup = function() {
+        if (activeTM == null) {
+            return
+        } else if (this.value === "") {
+           firstRow = 0;
+        } else {
+            firstRow = parseInt(this.value);
+        }
+        if (document.getElementById("tm-last-row").value === "") {
+            lastRow = 0
+        } else {
+            lastRow = parseInt(document.getElementById("tm-last-row").value);
+        }
+        fetchEntries("tm", activeTM.id, firstRow, lastRow);
+    }
+    document.getElementById("tm-last-row").onkeyup = function() {
+        if (activeTM == null) {
+            return
+        } else if (this.value === "") {
+            lastRow = 0;
+        } else {
+            lastRow = parseInt(this.value);
+        }
+        if (document.getElementById("tm-first-row").value === "") {
+            firstRow = 0;
+        } else {
+            firstRow = parseInt(document.getElementById("tm-first-row").value);
+        }
+        fetchEntries("tm", activeTM.id, firstRow, lastRow);
+    }
+
+    document.getElementById("tb-first-row").onkeyup = function() {
+        if (activeTB == null) {
+            return
+        } else if (this.value === "") {
+           firstRow = 0;
+        } else {
+            firstRow = parseInt(this.value);
+        }
+        if (document.getElementById("tb-last-row").value === "") {
+            lastRow = 0
+        } else {
+            lastRow = parseInt(document.getElementById("tb-last-row").value);
+        }
+        fetchEntries("tb", activeTB.id, firstRow, lastRow);
+    }
+    document.getElementById("tb-last-row").onkeyup = function() {
+        if (activeTB == null) {
+            return
+        } else if (this.value === "") {
+            lastRow = 0;
+        } else {
+            lastRow = parseInt(this.value);
+        }
+        if (document.getElementById("tb-first-row").value === "") {
+            firstRow = 0;
+        } else {
+            firstRow = parseInt(document.getElementById("tb-first-row").value);
+        }
+        fetchEntries("tb", activeTB.id, firstRow, lastRow);
+    }
 };
 
 if (document.readyState === "complete") {

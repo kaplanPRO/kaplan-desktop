@@ -4,6 +4,8 @@ const fs = require('fs');
 const path = require('path');
 const { exec, spawn, spawnSync } = require('child_process');
 
+let backendServer;
+
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) { // eslint-disable-line global-require
     app.quit();
@@ -39,9 +41,8 @@ else if (fs.existsSync(path.join(app.getAppPath(), 'backend')))
 
     process.env.KAPLAN_SETTINGS = JSON.stringify(settingsJSON);
 
-    const child = spawn(pathToBackend,
-                        ['runserver'],
-                        {detached: true});
+    backendServer = spawn(pathToBackend,
+                          ['runserver', '--noreload']);
 }
 
 let pathToIcon;
@@ -75,9 +76,7 @@ const createWindow = () => {
 app.on('ready', createWindow);
 
 // This method will be called by app.quit().
-app.on('before-quit', () => {
-    if (fs.existsSync(path.join(app.getAppPath(), 'backend'))) {process.kill(-child.pid)}
-});
+app.on('before-quit', () => { backendServer.kill() });
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {

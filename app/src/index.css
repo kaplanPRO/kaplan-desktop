@@ -51,6 +51,9 @@ footer {
     grid-row: 3;
     padding: 0.25em;
 }
+div.kdb-slice {
+    text-align: center;
+}
 div.note span {
     float: right;
     cursor: pointer;
@@ -154,7 +157,7 @@ main#overlay {
     vertical-align: middle;
     width: 100vw;
 }
-main#tb-view div, main#tm-view div {
+main#tb-view div:not(.kdb-slice), main#tm-view div:not(.kdb-slice) {
     overflow-y: scroll;
     max-width: 100%;
 }
@@ -200,30 +203,24 @@ table#tb-hits, table#tm-hits {
     grid-column: 1/3;
     grid-row: 2;
 }
-table#tb-hits, table#tb-table, table#tm-hits, table#tm-table, table.segments-table {
+table#tb-hits, table#tb-table, table#tm-hits, table#tm-table, table#tb-table, table#tm-table, table.segments-table {
     overflow-wrap: break-word;
     table-layout: fixed;
 }
-table#tb-hits th, table#tm-hits th, table.segments-table th {
+table#tb-hits th, table#tm-hits th, table#tb-table th, table#tm-table th, table.segments-table th {
     border-bottom: 1px solid #c5c5c5;
     border-top: 1px solid #c5c5c5;
     user-select: none;
     width: 4%;
 }
-table#tb-hits td, table#tm-hits td, table.segments-table td.source, table.segments-table td.target {
+table#tb-hits td, table#tm-hits td, table#tb-table td, table#tm-table td, table.segments-table td.source, table.segments-table td.target {
     border-bottom: 1px solid #c5c5c5;
     border-left: 1px solid #c5c5c5;
     border-top: 1px solid #c5c5c5;
     user-select: text;
 }
-table#tb-hits td, table#tm-hits td {
+table#tb-hits td, table#tm-hits td, table#tb-table td, table#tm-table td {
     width: 48%;
-}
-table#tb-table td, table#tm-table td {
-    border-bottom: 1px solid #c5c5c5;
-    border-top: 1px solid #c5c5c5;
-    padding: 0.5rem;
-    width: 50%;
 }
 table.segments-table td.source, table.segments-table td.target {
     width: 35%;
