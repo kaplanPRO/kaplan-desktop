@@ -116,8 +116,11 @@ window.openFileContextMenu = (e, fileId, filePath, canGenerateTargetFile) => {
     fileMenu.popup({ window: indexWindow });
 }
 
-window.openKDBContextMenu = (e, kDBPath, kDBId) => {
+window.openKDBContextMenu = (e, tableRow) => {
     e.preventDefault();
+    const kDBId =  tableRow.getAttribute('id');
+    const isOutdated = tableRow.getAttribute('is_outdated');
+    const kDBPath = tableRow.getAttribute('path');
 
     const kDBMenu = new Menu();
 
@@ -168,6 +171,28 @@ window.openKDBContextMenu = (e, kDBPath, kDBId) => {
     kDBMenu.append(new MenuItem({ type: 'separator' }));
 
     kDBMenu.append(new MenuItem({ label: 'Show in file explorer', click() { shell.showItemInFolder(kDBPath) } }));
+
+    if (isOutdated === 'true') {
+        kDBMenu.append(new MenuItem({ type: 'separator' }));
+
+        kDBMenu.append(new MenuItem({ label: 'Upgrade', click() {
+            let queryURL = 'http://127.0.0.1:8000/kdb/' + kDBId;
+
+            let formData = new FormData();
+            formData.append('task', 'upgrade');
+
+            let xhttp = new XMLHttpRequest();
+
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    tableRow.setAttribute('is_outdated', 'false');
+                }
+            }
+
+            xhttp.open('POST', queryURL);
+            xhttp.send(formData);
+        } }));
+    }
 
     kDBMenu.popup({ window: indexWindow });
 }
@@ -295,7 +320,7 @@ function fireOnReady() {
             }
           })
         }
-      });  
+      });
     }
 
     document.getElementById('btn-analyze-files').onclick = function() {

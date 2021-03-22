@@ -460,6 +460,7 @@ def kdb_directory(request):
             'source_language': kdb.get_source_language(),
             'target_language': kdb.get_target_language(),
             'path': kdb.path,
+            'is_outdated': KDB(kdb.path).is_outdated
         }
         kdbs_dict[kdb.id] = kdb_dict
 
@@ -491,6 +492,10 @@ def kdb_view(request, kdb_id):
 
             else:
                 raise TypeError('File type not supported for import.')
+        elif request.POST.get('task') == 'upgrade':
+            kdb.upgrade()
+
+            return JsonResponse({'status': 'success'})
 
     else:
         if request.GET.get('task') == 'export':

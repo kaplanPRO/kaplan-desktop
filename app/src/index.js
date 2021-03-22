@@ -473,8 +473,9 @@ function fireOnReady() {
                     tr = document.createElement("tr");
                     tr.setAttribute("id", kDB.id);
                     tr.setAttribute("path", kDB.path);
+                    tr.setAttribute("is_outdated", kDB.is_outdated);
                     tr.oncontextmenu = function(e) {
-                        openKDBContextMenu(e, this.getAttribute("path"), this.getAttribute("id"));
+                        openKDBContextMenu(e, this);
                     }
                     tr.ondblclick = function() {
                         if (role == "tm"){
