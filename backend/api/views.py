@@ -319,6 +319,7 @@ def project_file(request, project_id, file_id):
                 tm_result = (int(tm_result[0]*100),
                              etree.tostring(tm_result[1], encoding='UTF-8').decode(),
                              etree.tostring(tm_result[2], encoding='UTF-8').decode(),
+                             etree.tostring(tm_result[3], encoding='UTF-8').decode(),
                              'Local TM')
 
                 if tm_result not in tm_hits:
@@ -349,6 +350,7 @@ def project_file(request, project_id, file_id):
                 sm.set_seq2(row[0])
                 if sm.ratio() >= 0.5:
                     tm_result = (int(sm.ratio()*100),
+                                 '<difference>' + row[0] + '</difference>',
                                  '<source>' + row[0] + '</source>',
                                  '<target>' + row[1] + '</target>',
                                  'TM Server')
@@ -360,9 +362,11 @@ def project_file(request, project_id, file_id):
 
         for i in range(len(tm_hits)):
             tm_hits[i] = {'ratio': tm_hits[i][0],
-                          'source': tm_hits[i][1],
-                          'target': tm_hits[i][2],
-                          'origin': tm_hits[i][3]}
+                          'difference': tm_hits[i][1],
+                          'source': tm_hits[i][2],
+                          'target': tm_hits[i][3],
+                          'origin': tm_hits[i][4]}
+
         tb_hits = []
         for project_tb in project.language_resources.all().filter(role='tb'):
             project_tb = KDB(project_tb.path,

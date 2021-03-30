@@ -234,7 +234,7 @@ function lookupSegment(sourceSegment) {
             tMHitsTable.innerHTML = "";
             [...Object.keys(translationUnits)].forEach(function(i) {
                 translationUnit = document.createElement("unit");
-                translationUnit.appendChild(parser.parseFromString(translationUnits[i].source, "text/xml").documentElement);
+                translationUnit.appendChild(parser.parseFromString(translationUnits[i].difference, "text/xml").documentElement);
                 translationUnit.appendChild(parser.parseFromString(translationUnits[i].target, "text/xml").documentElement);
 
                 tr = document.createElement("tr");
@@ -245,10 +245,11 @@ function lookupSegment(sourceSegment) {
                 tr.appendChild(th);
 
                 td = document.createElement("td");
-                td.innerHTML = translationUnit.getElementsByTagName("source")[0].innerHTML
+                td.innerHTML = translationUnit.getElementsByTagName("difference")[0].innerHTML
                                .replace(/\\n/g, "<kaplan:placeholder>")
                                .replace(/\n/g, "<ph>\\n</ph>")
-                               .replace(/<kaplan:placeholder>/g, "\\n");
+                               .replace(/<kaplan:placeholder>/g, "\\n")
+                               .replace(/<span change/g, "<span class");
                 tr.appendChild(td);
 
                 td = document.createElement("td");

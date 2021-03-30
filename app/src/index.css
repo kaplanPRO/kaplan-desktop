@@ -254,6 +254,12 @@ table td.language {
 table th.name {
     width: 40%;
 }
+table#tm-hits span.add {
+    text-decoration: underline;
+}
+table#tm-hits span.remove {
+    text-decoration: line-through;
+}
 ec, g, sc, ph, x {
     background-color: orangered;
     color: #FFF;
