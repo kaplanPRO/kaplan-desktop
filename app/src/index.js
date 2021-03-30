@@ -73,11 +73,11 @@ function fireOnReady() {
                     tr.appendChild(th);
 
                     td = document.createElement("td");
-                    td.textContent = entry.source;
+                    td.innerHTML = entry.source;
                     tr.appendChild(td);
 
                     td = document.createElement("td");
-                    td.textContent = entry.target;
+                    td.innerHTML = entry.target;
                     td.classList.add("target");
                     tr.appendChild(td);
 

@@ -510,10 +510,18 @@ def kdb_view(request, kdb_id):
             kdb_entries = {}
             kdb_entry_i = 0
             for kdb_entry in kdb.get_entries():
+                source = KDB.entry_to_segment(kdb_entry[1], 'source', safe_mode=False)
+                for child in source:
+                    if child.attrib.get('equiv'):
+                        child.text = html.unescape(child.attrib.get('equiv'))
+                target = KDB.entry_to_segment(kdb_entry[2], 'target', safe_mode=False)
+                for child in target:
+                    if child.attrib.get('equiv'):
+                        child.text = html.unescape(child.attrib.get('equiv'))
                 kdb_entries[kdb_entry_i] = {
                     'id': kdb_entry[0],
-                    'source': kdb_entry[1],
-                    'target': kdb_entry[2],
+                    'source': etree.tostring(source, encoding='UTF-8').decode(),
+                    'target': etree.tostring(target, encoding='UTF-8').decode(),
                     'state': kdb_entry[3],
                     'time': kdb_entry[4],
                     'submitted_by': kdb_entry[5]
