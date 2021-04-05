@@ -379,6 +379,7 @@ function fireOnReady() {
                                         tag.addEventListener("click", function() { tagClickHandler(this) });
                                     }
                                     tag.contentEditable = "false";
+                                    tag.draggable = "true";
                                 })
                             })
                             if (supportsComments === "true") {
