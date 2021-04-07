@@ -68,6 +68,7 @@ function selectSegmentForMerge(segmentHeader) {
 }
 function openCommentForm(buttonElement) {
     buttonElement.classList.add("hidden");
+    buttonElement.nextSibling.classList.add("hidden");
 
     noteDiv = document.createElement("div");
     noteDiv.classList.add("note");
@@ -94,6 +95,7 @@ function openCommentForm(buttonElement) {
     cancelButton.textContent = "Cancel";
     cancelButton.onclick = function() {
         this.parentNode.parentNode.parentNode.getElementsByTagName("button")[0].classList.remove("hidden");
+        this.parentNode.parentNode.parentNode.getElementsByTagName("button")[1].classList.remove("hidden");
         this.parentNode.parentNode.remove();
     }
     noteForm.appendChild(cancelButton);
@@ -110,6 +112,7 @@ function openCommentForm(buttonElement) {
 
         if (noteFormData.get("comment") === "") {
             this.parentNode.parentNode.getElementsByTagName("button")[0].classList.remove("hidden");
+            this.parentNode.parentNode.getElementsByTagName("button")[1].classList.remove("hidden");
             this.parentNode.remove();
 
             return false;
@@ -132,7 +135,10 @@ function openCommentForm(buttonElement) {
                  noteP.textContent = noteFormData.get("comment");
                  noteDiv.appendChild(noteP);
 
-                 noteForm.parentNode.parentNode.appendChild(noteDiv);
+                 noteForm.parentNode.parentNode.insertBefore(noteDiv, noteForm.parentNode.parentNode.getElementsByTagName("button")[0]);
+
+                 noteForm.parentNode.parentNode.getElementsByTagName("button")[0].classList.remove("hidden");
+                 noteForm.parentNode.parentNode.getElementsByTagName("button")[1].classList.remove("hidden");
 
                  noteForm.parentNode.remove();
              }
@@ -140,6 +146,122 @@ function openCommentForm(buttonElement) {
 
          xhttp.open("POST", queryURL, true);
          xhttp.send(noteFormData);
+
+    }
+}
+function openLQIForm(buttonElement) {
+    buttonElement.classList.add("hidden");
+    buttonElement.previousSibling.classList.add("hidden");
+
+    lQIDiv = document.createElement("div");
+    lQIDiv.classList.add("note");
+
+    lQIForm = document.createElement("form");
+
+    typeLabel = document.createElement("label");
+    typeLabel.setAttribute("for", "type");
+    typeLabel.textContent = "Type:";
+    lQIForm.appendChild(typeLabel);
+
+    typeInput = document.createElement("input");
+    typeInput.setAttribute("name", "type");
+    typeInput.setAttribute("type", "text");
+    lQIForm.appendChild(typeInput);
+
+    severityLabel = document.createElement("label");
+    severityLabel.setAttribute("for", "severity");
+    severityLabel.textContent = "Severity:";
+    lQIForm.appendChild(severityLabel);
+
+    severityInput = document.createElement("input");
+    severityInput.setAttribute("name", "severity");
+    severityInput.setAttribute("type", "number");
+    severityInput.setAttribute("step", "0.01");
+    severityInput.setAttribute("max", "1.00");
+    severityInput.setAttribute("min", "0.00");
+    severityInput.setAttribute("placeholder", "0.00");
+    severityInput.setAttribute("title", "0.00-1.00")
+    lQIForm.appendChild(severityInput);
+
+    noteLabel = document.createElement("label");
+    noteLabel.setAttribute("for", "comment");
+    noteLabel.textContent = "Comment:";
+    lQIForm.appendChild(noteLabel);
+
+    noteTextarea = document.createElement("textarea");
+    noteTextarea.setAttribute("name", "comment");
+    lQIForm.appendChild(noteTextarea);
+
+    submitButton = document.createElement("button");
+    submitButton.setAttribute("type", "submit");
+    submitButton.textContent = "Submit";
+    lQIForm.appendChild(submitButton);
+
+    cancelButton = document.createElement("button");
+    cancelButton.className = "cancel";
+    cancelButton.setAttribute("type", "button");
+    cancelButton.textContent = "Cancel";
+    cancelButton.onclick = function() {
+        this.parentNode.parentNode.parentNode.getElementsByTagName("button")[0].classList.remove("hidden");
+        this.parentNode.parentNode.parentNode.getElementsByTagName("button")[1].classList.remove("hidden");
+        this.parentNode.parentNode.remove();
+    }
+    lQIForm.appendChild(cancelButton);
+
+    lQIDiv.appendChild(lQIForm);
+    buttonElement.parentNode.appendChild(lQIDiv);
+
+    lQIForm.onsubmit = function(e) {
+        e.preventDefault();
+
+        lQIFormData = new FormData(lQIForm);
+
+
+        if (lQIFormData.get("type") == "") {
+            this.parentNode.parentNode.getElementsByTagName("button")[0].classList.remove("hidden");
+            this.parentNode.parentNode.getElementsByTagName("button")[1].classList.remove("hidden");
+            this.parentNode.remove();
+
+            return false;
+        }
+
+        lQIFormData.append("tu", this.parentNode.parentNode.parentNode.getAttribute("p-id"));
+        lQIFormData.append("segment", this.parentNode.parentNode.parentNode.id);
+        lQIFormData.append("author", username);
+        lQIFormData.append("task", "add_lqi");
+
+        let xhttp = new XMLHttpRequest();
+        let queryURL = "http://127.0.0.1:8000/project/"
+                     + filesView.getAttribute("cur-p-id")
+                     + "/file/"
+                     + editorView.getAttribute("cur-f-id");
+
+         xhttp.onreadystatechange = function() {
+             if (this.readyState == 4 && this.status == 200) {
+                 console.log("LQI submitted succesfully!");
+
+                 noteDiv = document.createElement("div");
+                 noteDiv.classList.add("note");
+
+                 noteP = document.createElement("p");
+                 noteP.textContent = lQIFormData.get("type");
+                 noteDiv.appendChild(noteP);
+
+                 noteP = document.createElement("p");
+                 noteP.textContent = lQIFormData.get("comment");
+                 noteDiv.appendChild(noteP);
+
+                 lQIForm.parentNode.parentNode.insertBefore(noteDiv, lQIForm.parentNode.parentNode.getElementsByTagName("button")[0]);
+
+                 lQIForm.parentNode.parentNode.getElementsByTagName("button")[0].classList.remove("hidden");
+                 lQIForm.parentNode.parentNode.getElementsByTagName("button")[1].classList.remove("hidden");
+
+                 lQIForm.parentNode.remove();
+             }
+         }
+
+         xhttp.open("POST", queryURL, true);
+         xhttp.send(lQIFormData);
 
     }
 }
@@ -167,6 +289,30 @@ function resolveComment(closeSpan) {
      xhttp.open("POST", queryURL, true);
      xhttp.send(noteFormData);
 
+}
+function resolveLQI(closeSpan) {
+    lQIDiv = closeSpan.parentNode;
+
+    let lQIFormData = new FormData();
+    lQIFormData.append("segment", lQIDiv.getAttribute("segment"));
+    lQIFormData.append("comment", lQIDiv.id);
+    lQIFormData.append("author", username);
+    lQIFormData.append("task", "resolve_lqi");
+
+    let xhttp = new XMLHttpRequest();
+    let queryURL = "http://127.0.0.1:8000/project/"
+                 + filesView.getAttribute("cur-p-id")
+                 + "/file/"
+                 + editorView.getAttribute("cur-f-id");
+
+     xhttp.onreadystatechange = function() {
+         if (this.readyState == 4 && this.status == 200) {
+            noteDiv.remove();
+         }
+     }
+
+     xhttp.open("POST", queryURL, true);
+     xhttp.send(lQIFormData);
 }
 function submitSegment(target_cell, segment_state) {
     paragraph_no = target_cell.parentNode.getAttribute("p-id");

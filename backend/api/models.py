@@ -43,6 +43,7 @@ class Project(models.Model):
     language_resources = models.ManyToManyField('KaplanDatabase', blank=True)
     is_exported = models.BooleanField(default=False)
     is_imported = models.BooleanField(default=False)
+    task = models.CharField(max_length=10, blank=True, null=True)
     miscellaneous = models.TextField(default='{}')
 
     def get_project_metadata(self):

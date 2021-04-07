@@ -98,13 +98,19 @@ window.setSpellCheckerLanguages = (arrayOfLanguages) => {
     indexWindow.webContents.session.setSpellCheckerLanguages(finalArrayOfLanguages);
 }
 
-window.openFileContextMenu = (e, fileId, filePath, canGenerateTargetFile) => {
+window.openFileContextMenu = (e, fileId, filePath, canGenerateTargetFile, isImported, task) => {
     e.preventDefault();
 
     const fileMenu = new Menu();
-    fileMenu.append(new MenuItem({ label: 'Open in translation mode', click() { fetchSegments(filesView.getAttribute('cur-p-id'), fileId, canGenerateTargetFile, "translation") } }));
-    fileMenu.append(new MenuItem({ label: 'Open in review mode', click() { fetchSegments(filesView.getAttribute('cur-p-id'), fileId, canGenerateTargetFile, "review") } }));
-    fileMenu.append(new MenuItem({ type: 'separator' }));
+    if (isImported === false || isImported === 'false' || task === 'translation') {
+        fileMenu.append(new MenuItem({ label: 'Open in translation mode', click() { fetchSegments(filesView.getAttribute('cur-p-id'), fileId, canGenerateTargetFile, "translation") } }));
+    }
+    if (isImported === false || isImported === 'false' || task === 'review') {
+        fileMenu.append(new MenuItem({ label: 'Open in review mode', click() { fetchSegments(filesView.getAttribute('cur-p-id'), fileId, canGenerateTargetFile, "review") } }));
+    }
+    if (fileMenu.items.length > 0) {
+        fileMenu.append(new MenuItem({ type: 'separator' }));
+    }
     if (canGenerateTargetFile === 'true') {
         fileMenu.append(new MenuItem({ label: 'Generate target translation', click() { getTargetTranslation(fileId) } }));
     } else {

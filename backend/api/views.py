@@ -16,7 +16,7 @@ from lxml import etree
 import mysql.connector
 
 # Standard Python libraries
-import datetime
+from datetime import datetime
 import difflib
 import html
 from io import BytesIO
@@ -42,6 +42,7 @@ def import_project(request):
     new_project.source_language = project_metadata['src']
     new_project.target_language = project_metadata['trg']
     new_project.is_imported = True
+    new_project.task = project_metadata.get('task', 'translation')
     new_project.save()
 
     for i in project_metadata['files']:
@@ -88,7 +89,7 @@ def import_project(request):
             new_project_report.content = json.dumps(project_metadata['reports'][i]['json'])
             new_project_report.project = new_project
             new_project_report.save()
-            new_project_report.created_at = datetime.datetime.fromisoformat(project_metadata['reports'][i]['created_at'])
+            new_project_report.created_at = datetime.fromisoformat(project_metadata['reports'][i]['created_at'])
             new_project_report.save()
 
     return JsonResponse({new_project.id: {'title': new_project.title,
@@ -193,7 +194,8 @@ def project_directory(request):
                                     'target_language': project.get_target_language(),
                                     'target_language_code': project.target_language,
                                     'is_exported': project.is_exported,
-                                    'is_imported': project.is_imported}
+                                    'is_imported': project.is_imported,
+                                    'task': project.task}
 
     return JsonResponse(projects_dict)
 
@@ -219,6 +221,18 @@ def project_file(request, project_id, file_id):
 
             return JsonResponse({'status': 'success'})
 
+        elif request.POST.get('task') == 'add_lqi':
+            bf.add_loc_quality_issue(request.POST['tu'],
+                                     request.POST['segment'],
+                                     request.POST['type'],
+                                     request.POST['comment'],
+                                     request.POST['severity'],
+                                     request.POST['author'])
+
+            bf.save(project.get_target_dir())
+
+            return JsonResponse({'status': 'success'})
+
         elif request.POST.get('task') == 'generate_target_translation':
             bf.generate_target_translation(project.get_target_dir(),
                                            os.path.join(project.get_source_dir(), project_file.title))
@@ -236,6 +250,14 @@ def project_file(request, project_id, file_id):
             bf.resolve_comment(request.POST['segment'],
                                request.POST['comment'],
                                request.POST['author'])
+            bf.save(project.get_target_dir())
+
+            return JsonResponse({'status': 'success'})
+
+        elif request.POST.get('task') == 'resolve_lqi':
+            bf.resolve_loc_quality_issue(request.POST['segment'],
+                                         request.POST['comment'],
+                                         request.POST['author'])
             bf.save(project.get_target_dir())
 
             return JsonResponse({'status': 'success'})
@@ -385,7 +407,35 @@ def project_file(request, project_id, file_id):
         return JsonResponse({'tm':tm_hits, 'tb':tb_hits})
 
     else:
-        return HttpResponse(etree.tostring(bf.get_translation_units(), encoding="UTF-8"))
+        translation_units = bf.get_translation_units()
+
+        for tu in translation_units:
+            for segment in tu:
+                segment_notes = []
+                if isinstance(bf, KXLIFF):
+                    for segment_lqi in bf.get_segment_lqi(segment.attrib.get('id', 0)):
+                        if segment_lqi.attrib.get('resolved'):
+                            continue
+                        lqi_comment = segment_lqi.attrib.get('comment')
+                        if lqi_comment is None:
+                            lqi_comment == ''
+                        segment_lqi.tag = 'lqi'
+                        segment_lqi.text = lqi_comment
+                        segment_notes.append((datetime.fromisoformat(segment_lqi.attrib['added_at']), segment_lqi))
+                for child in segment:
+                    if child.tag == 'notes':
+                        for segment_note in child:
+                            segment_notes.append((datetime.fromisoformat(segment_note.attrib['added_at']), segment_note))
+                        segment.remove(child)
+
+                if len(segment_notes) > 0:
+                    sorted(segment_notes)
+                    notes = etree.Element('notes')
+                    for datetime_iso, segment_note in segment_notes:
+                        notes.append(segment_note)
+                    segment.append(notes)
+
+        return HttpResponse(etree.tostring(translation_units, encoding="UTF-8"))
 
 @csrf_exempt
 def project_view(request, project_id):
@@ -408,7 +458,9 @@ def project_view(request, project_id):
             if files == ['']:
                 raise ValueError('No files selected.')
 
-            KaplanProject(project.get_project_metadata()).export(path, files)
+            KaplanProject(project.get_project_metadata()).export(path,
+                                                                 files,
+                                                                 task=request.POST['linguist_task'])
 
             project.is_exported = True
             project.save()

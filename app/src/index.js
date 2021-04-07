@@ -118,6 +118,7 @@ function fireOnReady() {
                     tr.setAttribute("project-id", projectsKeys[i]);
                     tr.setAttribute("is-imported", project.is_imported);
                     tr.setAttribute("is-exported", project.is_exported);
+                    tr.setAttribute("task", project.task);
 
                     td = document.createElement("td");
                     td.className = "project-title";
@@ -144,7 +145,9 @@ function fireOnReady() {
                         langPair = [this.children[1].getAttribute("lang-code"), this.children[2].getAttribute("lang-code")];
                         window.setSpellCheckerLanguages(langPair);
 
-                        fetchProject(this.getAttribute("project-id"));
+                        fetchProject(this.getAttribute("project-id"),
+                                     this.getAttribute("is-imported"),
+                                     this.getAttribute("task"));
 
                         if (activeProject != null) {
                             activeProject.classList.remove("active");
@@ -199,7 +202,7 @@ function fireOnReady() {
     }
 
     // Fetches a list of the files in a project
-    function fetchProject(projectId) {
+    function fetchProject(projectId, isImported, task) {
         let files;
         let filesKeys;
         let xhttp = new XMLHttpRequest();
@@ -238,7 +241,8 @@ function fireOnReady() {
 
                         fetchSegments(projectId,
                                       this.getAttribute("file-id"),
-                                      this.getAttribute("can-generate-target-file"));
+                                      this.getAttribute("can-generate-target-file"),
+                                      task);
 
                         if (activeFile != null) {
                             activeFile.classList.remove("active");
@@ -250,7 +254,9 @@ function fireOnReady() {
                         openFileContextMenu(e,
                                             this.getAttribute("file-id"),
                                             this.getAttribute("file-path"),
-                                            this.getAttribute("can-generate-target-file"));
+                                            this.getAttribute("can-generate-target-file"),
+                                            isImported,
+                                            task);
                     }
 
                     filesTable.append(tr);
@@ -393,12 +399,21 @@ function fireOnReady() {
                                         noteDiv.id = segmentNote.id;
                                         noteDiv.setAttribute("segment", segmentNote.getAttribute("segment"));
 
-                                        closeSpan = document.createElement("span");
-                                        closeSpan.textContent = "X";
-                                        closeSpan.onclick = function() {
-                                            resolveComment(this);
+                                        if (segmentNote.tagName === "note") {
+                                            closeSpan = document.createElement("span");
+                                            closeSpan.textContent = "X";
+                                            closeSpan.onclick = function() {
+                                                resolveComment(this);
+                                            }
+                                            noteDiv.appendChild(closeSpan);
+                                        } else if (segmentNote.tagName === "lqi" && mode === "review") {
+                                          closeSpan = document.createElement("span");
+                                          closeSpan.textContent = "X";
+                                          closeSpan.onclick = function() {
+                                              resolveLQI(this);
+                                          }
+                                          noteDiv.appendChild(closeSpan);
                                         }
-                                        noteDiv.appendChild(closeSpan);
 
                                         authorP = document.createElement("p");
                                         authorP.textContent = "Author: " + segmentNote.getAttribute("added_by");
@@ -407,6 +422,12 @@ function fireOnReady() {
                                         timeP = document.createElement("p");
                                         timeP.textContent = "Time: " + getDatetimeString(segmentNote.getAttribute("added_at") + "Z");
                                         noteDiv.appendChild(timeP);
+
+                                        if (segmentNote.tagName === "lqi") {
+                                            noteP = document.createElement("p");
+                                            noteP.textContent = "Error: " + segmentNote.getAttribute("type");
+                                            noteDiv.appendChild(noteP);
+                                        }
 
                                         noteDiv.appendChild(document.createElement("hr"));
 
@@ -422,6 +443,16 @@ function fireOnReady() {
                                 noteButton.setAttribute("tabindex", "-1");
                                 noteButton.onclick = function() { openCommentForm(this) };
                                 notesTD.appendChild(noteButton);
+
+                                if (mode === "review") {
+                                    lQIButton = document.createElement("button");
+                                    lQIButton.className = "cancel";
+                                    lQIButton.textContent = '-';
+                                    lQIButton.setAttribute("tabindex", "-1");
+                                    lQIButton.onclick = function() { openLQIForm(this) };
+                                    notesTD.appendChild(lQIButton);
+
+                                }
 
                                 segment_row.appendChild(notesTD);
                             }
@@ -622,6 +653,23 @@ function fireOnReady() {
             packageTable.appendChild(tr);
         });
 
+        if (task === "create_new_project_package") {
+            tr = document.createElement("tr");
+            th = document.createElement("th");
+            th.textContent = "Task:"
+            tr.appendChild(th);
+
+            td = document.createElement("td");
+            taskOptions = document.createElement("select");
+            taskOptions.setAttribute("name", "linguist-task");
+            taskOptions.append(new Option("Translation", "translation"));
+            taskOptions.append(new Option("Review", "review"));
+            td.appendChild(taskOptions);
+            tr.appendChild(td)
+
+            packageTable.appendChild(tr);
+        }
+
         tr = document.createElement("tr");
         td = document.createElement("td");
         td.setAttribute("colspan", 2);
@@ -750,6 +798,9 @@ function fireOnReady() {
         }
         parameters.append("files", filesToPackage.join(";"));
         parameters.append("task", this.getAttribute("task"));
+        if (this["linguist-task"] != null) {
+            parameters.append("linguist_task", this["linguist-task"].value);
+        }
 
         let xhttp = new XMLHttpRequest();
 

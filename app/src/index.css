@@ -240,9 +240,13 @@ table.segments-table td.notes div.note {
 }
 table.segments-table tr td.notes button {
     display: none;
+    margin-right: 0.5rem;
 }
-table.segments-table tr:focus-within td.notes button:not(.hidden), table.segments-table tr td.notes form button {
-    display: block;
+table.segments-table tr:focus-within td.notes button:not(.hidden) {
+    display: inline;
+}
+table.segments-table tr td.notes form button {
+    display: block !important;
 }
 table.segments-table tr td.notes form label {
     display: block;
