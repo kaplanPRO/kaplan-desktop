@@ -148,13 +148,13 @@ main#files-view {
 }
 main#overlay {
     background-color: rgb(256,256,256,0.5);
+    grid-template: 1fr auto 1fr / 1fr auto 1fr;
     height: 100vh;
     left: 0px;
     margin: 0;
     padding: 0;
     position: absolute;
     top: 0px;
-    vertical-align: middle;
     width: 100vw;
 }
 main#tb-view div:not(.kdb-slice), main#tm-view div:not(.kdb-slice) {
@@ -163,10 +163,11 @@ main#tb-view div:not(.kdb-slice), main#tm-view div:not(.kdb-slice) {
 }
 main#overlay form {
     background-color: white;
-    position: absolute;
-    top: 25%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    border: 1px solid #000;
+    border-radius: 1rem;
+    grid-column: 2;
+    grid-row: 2;
+    padding: 1rem;
 }
 button {
     background-color: inherit;

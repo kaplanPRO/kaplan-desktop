@@ -625,7 +625,7 @@ function fireOnReady() {
         let buttonText = task.split("_")[0]
         buttonText = buttonText[0].toUpperCase() + buttonText.slice(1)
 
-        overlay.style.display = "block";
+        overlay.style.display = "grid";
 
         packageForm.setAttribute("task", task);
         if (pathToKPP) {
