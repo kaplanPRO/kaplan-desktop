@@ -43,6 +43,8 @@ def import_project(request):
     new_project.target_language = project_metadata['trg']
     new_project.is_imported = True
     new_project.task = project_metadata.get('task', 'translation')
+    new_project.due_datetime = project_metadata.get('due_datetime', None)
+    new_project.notes = project_metadata.get('notes', '')
     new_project.save()
 
     for i in project_metadata['files']:
@@ -195,7 +197,9 @@ def project_directory(request):
                                     'target_language_code': project.target_language,
                                     'is_exported': project.is_exported,
                                     'is_imported': project.is_imported,
-                                    'task': project.task}
+                                    'task': project.task,
+                                    'due_datetime': project.due_datetime,
+                                    'notes': project.notes}
 
     return JsonResponse(projects_dict)
 
@@ -458,9 +462,15 @@ def project_view(request, project_id):
             if files == ['']:
                 raise ValueError('No files selected.')
 
+            deadline = request.POST.get('deadline', None)
+            if deadline is not None:
+                deadline = datetime.fromisoformat(deadline[:-1])
+
             KaplanProject(project.get_project_metadata()).export(path,
                                                                  files,
-                                                                 task=request.POST['linguist_task'])
+                                                                 task=request.POST.get('linguist_task', 'translation'),
+                                                                 due_datetime=deadline,
+                                                                 notes=request.POST.get('notes', ''))
 
             project.is_exported = True
             project.save()

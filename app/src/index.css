@@ -253,7 +253,7 @@ table.segments-table tr td.notes form label {
     display: block;
     font-weight: bold;
 }
-table td.language {
+table td.language, table td.deadline {
     text-align: center;
 }
 table th.name {

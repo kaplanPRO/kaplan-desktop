@@ -172,6 +172,17 @@ function fireOnReady() {
                         }
                     }
 
+                    if (project.due_datetime) {
+                        td = document.createElement("td");
+                        td.className = "deadline";
+                        td.textContent = getDatetimeString(new Date(project.due_datetime));
+                        tr.appendChild(td);
+                    }
+
+                    if (project.notes) {
+                        tr.setAttribute("title", project.notes);
+                    }
+
                     projectsTable.prepend(tr);
                 }
                 tr = document.createElement("tr");
@@ -184,6 +195,9 @@ function fireOnReady() {
                 tr.append(th);
                 th = document.createElement("th");
                 th.innerHTML = "Target Language";
+                tr.append(th)
+                th = document.createElement("th");
+                th.innerHTML = "Deadline";
                 tr.append(th)
                 projectsTable.prepend(tr);
 
@@ -668,6 +682,33 @@ function fireOnReady() {
             tr.appendChild(td)
 
             packageTable.appendChild(tr);
+
+            tr = document.createElement("tr");
+            th = document.createElement("th");
+            th.textContent = "Deadline:"
+            tr.appendChild(th);
+
+            td = document.createElement("td");
+            dateTimeInput = document.createElement("input");
+            dateTimeInput.setAttribute("name", "deadline");
+            dateTimeInput.setAttribute("type", "datetime-local");
+            td.appendChild(dateTimeInput);
+            tr.appendChild(td);
+
+            packageTable.appendChild(tr);
+
+            tr = document.createElement("tr");
+            th = document.createElement("th");
+            th.textContent = "Notes:"
+            tr.appendChild(th);
+
+            td = document.createElement("td");
+            textArea = document.createElement("textarea");
+            textArea.setAttribute("name", "notes");
+            td.appendChild(textArea);
+            tr.appendChild(td);
+
+            packageTable.appendChild(tr);
         }
 
         tr = document.createElement("tr");
@@ -800,6 +841,13 @@ function fireOnReady() {
         parameters.append("task", this.getAttribute("task"));
         if (this["linguist-task"] != null) {
             parameters.append("linguist_task", this["linguist-task"].value);
+        }
+        if (this["notes"] != null) {
+            parameters.append("notes", this["notes"].value);
+        }
+        if (this["deadline"] != null) {
+            deadline = new Date(this["deadline"].value),
+            parameters.append("deadline", deadline.toISOString());
         }
 
         let xhttp = new XMLHttpRequest();

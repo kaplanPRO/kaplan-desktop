@@ -44,6 +44,8 @@ class Project(models.Model):
     is_exported = models.BooleanField(default=False)
     is_imported = models.BooleanField(default=False)
     task = models.CharField(max_length=10, blank=True, null=True)
+    due_datetime = models.DateTimeField(blank=True, null=True)
+    notes = models.TextField(blank=True)
     miscellaneous = models.TextField(default='{}')
 
     def get_project_metadata(self):
