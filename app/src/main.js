@@ -151,11 +151,11 @@ const template = [
         submenu: [
             {
                 label: 'About',
-                click: async () => { shell.openExternal('https://sourceforge.net/projects/kaplan-desktop/') }
+                click: async () => { shell.openExternal('https://kaplan.pro/') }
             },
             {
                 label: 'Wiki',
-                click: async () => { shell.openExternal('https://sourceforge.net/p/kaplan-desktop/wiki/') }
+                click: async () => { shell.openExternal('https://kaplan.pro/#/docs') }
             }
         ]
     }
