@@ -94,6 +94,9 @@ class Project(models.Model):
 
             project_metadata['reports'] = reports
 
+        if self.due_datetime:
+            project_metadata['due_datetime'] = self.due_datetime.isoformat()
+
         return project_metadata
 
     def get_source_dir(self):

@@ -180,6 +180,10 @@ function fireOnReady() {
       }
       formData.append("files", files.join(';'));
 
+      if (this['deadline'].value) {
+          formData.append('deadline', this['deadline'].value);
+      }
+
       let xhttp = new XMLHttpRequest();
 
       xhttp.onreadystatechange = function() {

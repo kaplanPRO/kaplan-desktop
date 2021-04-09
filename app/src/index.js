@@ -631,7 +631,9 @@ function fireOnReady() {
         }
     }
 
-    function openPackageMenu(task, projectFiles, pathToKPP=null) {
+    function openPackageMenu(task, projectMetadata, pathToKPP=null) {
+
+        projectFiles = projectMetadata.files
 
         let packageForm = overlay.getElementsByTagName("form")[0];
         let packageTable = overlay.getElementsByTagName("table")[0];
@@ -693,6 +695,10 @@ function fireOnReady() {
             dateTimeInput.setAttribute("name", "deadline");
             dateTimeInput.setAttribute("type", "datetime-local");
             td.appendChild(dateTimeInput);
+            if (projectMetadata.due_datetime) {
+              deadline = getDatetimeString(projectMetadata.due_datetime);
+              dateTimeInput.value = deadline.split(" ").join("T");
+            }
             tr.appendChild(td);
 
             packageTable.appendChild(tr);
@@ -746,7 +752,7 @@ function fireOnReady() {
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 openPackageMenu("create_new_project_package",
-                                JSON.parse(this.responseText).files);
+                                JSON.parse(this.responseText));
             }
         }
 
@@ -763,7 +769,7 @@ function fireOnReady() {
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 openPackageMenu("create_return_project_package",
-                                JSON.parse(this.responseText).files);
+                                JSON.parse(this.responseText));
             }
         }
 
@@ -789,7 +795,7 @@ function fireOnReady() {
         xhttp.onreadystatechange = function() {
              if (this.readyState == 4 && this.status == 200) {
                   openPackageMenu("update_from_project_package",
-                                  JSON.parse(this.responseText).files,
+                                  JSON.parse(this.responseText),
                                   pathToKPP);
              }
          }

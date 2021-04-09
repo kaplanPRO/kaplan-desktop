@@ -107,6 +107,7 @@ def new_project(request):
     project_lrs = [KaplanDatabase.objects.get(id=int(kdb_id)) for kdb_id in request.POST.get('language_resources', '').split(';') if kdb_id]
     project_clrs = request.POST.get('cloud_language_resources', '{}')
     project_files = [project_file for project_file in request.POST['files'].split(';') if kaplan.can_process(project_file)]
+    project_deadline = request.POST.get('deadline')
 
     if len(project_files) == 0:
         return JsonResponse({'error': 'No compatible files selected!'}, status=500)
@@ -124,6 +125,8 @@ def new_project(request):
     project.save()
     for project_lr in project_lrs:
         project.language_resources.add(project_lr)
+    if project_deadline:
+        project.due_datetime = datetime.fromisoformat(project_deadline)
     project.miscellaneous = project_clrs
     project.save()
 
