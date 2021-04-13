@@ -131,6 +131,18 @@ function fireOnReady() {
       });
   }
 
+  document.getElementById('btn-override-settings').onclick = function() {
+      if (this.textContent === 'Show') {
+          this.textContent = 'Hide';
+          this.closest('table').classList.add('show-overrides');
+      } else {
+          this.textContent = 'Show';
+          this.closest('table').classList.remove('show-overrides');
+          this.closest('form')['source-direction'].value = '-----';
+          this.closest('form')['target-direction'].value = '-----';
+      }
+  }
+
   document.forms[0].onsubmit = function(e) {
       e.preventDefault();
 

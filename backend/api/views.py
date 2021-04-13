@@ -3,7 +3,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import File, KaplanDatabase, Project, ProjectReport
+from .models import File, LanguageProfile, KaplanDatabase, Project, ProjectReport
 
 # Installed libraries
 import kaplan
@@ -40,7 +40,11 @@ def import_project(request):
     new_project.title = project_metadata['title']
     new_project.directory = project_dir
     new_project.source_language = project_metadata['src']
+    new_project.source_language_name = project_metadata.get('src_name')
+    new_project.source_direction = project_metadata.get('src_dir')
     new_project.target_language = project_metadata['trg']
+    new_project.target_language_name = project_metadata.get('trg_name')
+    new_project.target_direction = project_metadata.get('trg_dir')
     new_project.is_imported = True
     new_project.task = project_metadata.get('task', 'translation')
     new_project.due_datetime = project_metadata.get('due_datetime', None)
@@ -180,6 +184,33 @@ def new_kdb(request):
     new_kdb.save()
 
     return JsonResponse({'status': 'success'})
+
+@csrf_exempt
+def languages(request):
+    if request.method == 'POST':
+        code = request.POST['code']
+        name = request.POST['name']
+        direction = request.POST['direction']
+
+        try:
+            language_profile = LanguageProfile.objects.get(code=code)
+            protocol = 'update'
+        except:
+            language_profile = LanguageProfile()
+            language_profile.code = code
+            protocol = 'create'
+
+        language_profile.name = name
+        language_profile.direction = direction
+        language_profile.save()
+
+        return JsonResponse({'code':code, 'name':name, 'protocol':protocol})
+    else:
+        lp_dict = {}
+        for language_profile in LanguageProfile.objects.all():
+            lp_dict[language_profile.code] = [language_profile.name, language_profile.direction]
+
+        return JsonResponse(lp_dict)
 
 @csrf_exempt
 def package(request):
@@ -415,6 +446,8 @@ def project_file(request, project_id, file_id):
 
     else:
         translation_units = bf.get_translation_units()
+        translation_units.attrib['source_direction'] = project.get_source_direction()
+        translation_units.attrib['target_direction'] = project.get_target_direction()
 
         for tu in translation_units:
             for segment in tu:

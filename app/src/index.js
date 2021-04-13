@@ -347,7 +347,10 @@ function fireOnReady() {
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 segmentsDiv.innerHTML = "";
-                translation_units = parser.parseFromString(this.responseText, "text/xml").documentElement.children;
+                translation_units = parser.parseFromString(this.responseText, "text/xml").documentElement;
+                sourceDirection = translation_units.getAttribute("source_direction");
+                targetDirection = translation_units.getAttribute("target_direction");
+                translation_units = translation_units.children;
                 for (i = 0; i < translation_units.length; i++) {
                     pId = translation_units[i].getAttribute("id");
                     segments = translation_units[i].getElementsByTagName("segment")
@@ -370,6 +373,7 @@ function fireOnReady() {
 
                             source_td = document.createElement("td");
                             source_td.classList.add("source");
+                            source_td.setAttribute("dir", sourceDirection);
                             source_td.innerHTML = segments[s_i].getElementsByTagName("source")[0].innerHTML
                                                   .replace(/\\n/g, "<kaplan:placeholder>")
                                                   .replace(/\n/g, "<ph>\\n</ph>")
@@ -379,6 +383,7 @@ function fireOnReady() {
 
                             target_td = document.createElement("td");
                             target_td.classList.add("target");
+                            target_td.setAttribute("dir", targetDirection);
                             target_td.contentEditable = "true";
                             target_td.innerHTML = segments[s_i].getElementsByTagName("target")[0].innerHTML
                                                   .replace(/\\n/g, "<kaplan:placeholder>")

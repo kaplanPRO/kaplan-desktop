@@ -99,6 +99,10 @@ div#sidebar nav {
 div#sidebar.minimized span {
     display: none;
 }
+div#tab-language-profiles {
+    display: none;
+    grid-template-columns: 1fr 4fr;
+}
 div#tab-mysql {
     display: none;
 }
@@ -186,6 +190,9 @@ table {
 }
 table td, table th {
     padding: 0.5rem;
+}
+table:not(.show-overrides) tr.override-setting {
+    display: none;
 }
 table#project-report * {
     padding: 0.5rem;

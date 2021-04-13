@@ -1,12 +1,36 @@
 from django.db import models
 
-from kaplan.language_codes import language_codes
-
-LANGUAGES = dict((code, language) for language, code in language_codes)
-
 import json
 import os
 # Create your models here.
+
+class LanguageProfile(models.Model):
+    TEXT_DIRECTION_CHOICES = [
+        ('ltr', 'Left to Right'),
+        ('rtl', 'Right to Left')
+    ]
+
+    code = models.CharField(max_length=10, unique=True)
+    name = models.CharField(max_length=60)
+    direction = models.CharField(max_length=3, choices=TEXT_DIRECTION_CHOICES, default='ltr')
+
+    class Meta:
+        ordering = ['name']
+
+    @staticmethod
+    def get_language_direction(language_code):
+        try:
+            return LanguageProfile.objects.get(code=language_code).direction
+        except:
+            return 'ltr'
+
+    @staticmethod
+    def get_language_name(language_code):
+        try:
+            return LanguageProfile.objects.get(code=language_code).name
+        except:
+            return 'N/A'
+
 
 class File(models.Model):
     title = models.CharField(max_length=60)
@@ -23,10 +47,10 @@ class KaplanDatabase(models.Model):
     role = models.CharField(max_length=2, choices=(('tm', 'Translation Memory'), ('tb', 'Termbase')))
 
     def get_source_language(self):
-        return LANGUAGES.get(self.source_language, 'N/A')
+        return LanguageProfile.get_language_name(self.source_language)
 
     def get_target_language(self):
-        return LANGUAGES.get(self.target_language, 'N/A')
+        return LanguageProfile.get_language_name(self.target_language)
 
 
 class ProjectReport(models.Model):
@@ -36,6 +60,11 @@ class ProjectReport(models.Model):
 
 
 class Project(models.Model):
+    TEXT_DIRECTION_CHOICES = [
+        ('ltr', 'Left to Right'),
+        ('rtl', 'Right to Left')
+    ]
+
     title = models.CharField(max_length=60)
     directory = models.TextField()
     source_language = models.CharField(max_length=20)
@@ -46,6 +75,10 @@ class Project(models.Model):
     task = models.CharField(max_length=10, blank=True, null=True)
     due_datetime = models.DateTimeField(blank=True, null=True)
     notes = models.TextField(blank=True)
+    source_language_name = models.CharField(max_length=60, blank=True, null=True)
+    source_direction = models.CharField(max_length=3, choices=TEXT_DIRECTION_CHOICES, blank=True, null=True)
+    target_language_name = models.CharField(max_length=60, blank=True, null=True)
+    target_direction = models.CharField(max_length=3, choices=TEXT_DIRECTION_CHOICES, blank=True, null=True)
     miscellaneous = models.TextField(default='{}')
 
     def get_project_metadata(self):
@@ -53,7 +86,11 @@ class Project(models.Model):
             'title': self.title,
             'directory': self.directory,
             'source_language': self.source_language,
-            'target_language': self.target_language
+            'source_language_name': self.get_source_language(),
+            'source_language_direction': self.get_source_direction(),
+            'target_language': self.target_language,
+            'target_language_name': self.get_target_language(),
+            'target_language_direction': self.get_target_direction()
         }
 
         project_metadata['files'] = {}
@@ -103,10 +140,28 @@ class Project(models.Model):
         return os.path.join(self.directory, self.source_language)
 
     def get_source_language(self):
-        return LANGUAGES.get(self.source_language, 'N/A')
+        if self.source_language_name:
+            return self.source_language_name
+        else:
+            return LanguageProfile.get_language_name(self.source_language)
 
     def get_target_dir(self):
         return os.path.join(self.directory, self.target_language)
 
     def get_target_language(self):
-        return LANGUAGES.get(self.target_language, 'N/A')
+        if self.target_language_name:
+            return self.target_language_name
+        else:
+            return LanguageProfile.get_language_name(self.target_language)
+
+    def get_source_direction(self):
+        if self.source_direction:
+            return self.source_direction
+        else:
+            return LanguageProfile.get_language_direction(self.source_language)
+
+    def get_target_direction(self):
+        if self.target_direction:
+            return self.target_direction
+        else:
+            return LanguageProfile.get_language_direction(self.target_language)
