@@ -1,6 +1,5 @@
-const electron = require('electron')
-const { ipcRenderer } = electron
-const { app } = electron.remote;
+const { ipcRenderer } = require('electron');
+const { app } = require('@electron/remote');
 const fs = require('fs');
 const mysql = require('mysql');
 const path = require('path');

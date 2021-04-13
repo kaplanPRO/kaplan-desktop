@@ -45,6 +45,8 @@ else if (fs.existsSync(path.join(app.getAppPath(), 'backend')))
                           ['runserver', '--noreload']);
 }
 
+require('@electron/remote/main').initialize()
+
 let pathToIcon;
 
 if (['deb','linux','rpm'].includes(process.platform)) {
@@ -62,6 +64,7 @@ const createWindow = () => {
         icon: pathToIcon,
         webPreferences: {
             enableRemoteModule: true,
+            contextIsolation: false,
             preload: path.join(__dirname, 'index-preload.js')
         },
     });

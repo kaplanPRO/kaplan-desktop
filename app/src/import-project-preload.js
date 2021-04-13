@@ -1,8 +1,8 @@
-const { ipcRenderer, remote } = require('electron');
-const { dialog } = require('electron').remote;
+const { ipcRenderer } = require('electron');
+const { dialog, getCurrentWindow } = require('@electron/remote');
 const fs = require('fs');
 
-const importProjectWindow = remote.getCurrentWindow();
+const importProjectWindow = getCurrentWindow();
 
 window.indexRefresh = () => {
     ipcRenderer.sendTo(1, 'kaplan-index', 'main#projects-view');

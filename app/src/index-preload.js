@@ -1,5 +1,5 @@
-const { ipcRenderer, remote, shell } = require('electron');
-const { app, BrowserWindow, dialog, getCurrentWindow, Menu, MenuItem, getGlobal } = remote;
+const { ipcRenderer, shell } = require('electron');
+const { app, BrowserWindow, dialog, getCurrentWindow, Menu, MenuItem, getGlobal } = require('@electron/remote');
 const fs = require('fs');
 const mysql = require('mysql');
 const os = require('os');
@@ -34,6 +34,7 @@ window.createNewKDB = (role) => {
         parent: indexWindow,
         webPreferences: {
             enableRemoteModule: true,
+            contextIsolation: false,
             preload: path.join(__dirname, 'new-kdb-preload.js')
         }
     })
@@ -49,6 +50,7 @@ window.newProject = () => {
         parent: indexWindow,
         webPreferences: {
             enableRemoteModule: true,
+            contextIsolation: false,
             preload: path.join(__dirname, 'new-project-preload.js')
         }
     })
@@ -64,6 +66,7 @@ window.importProject = () => {
         parent: indexWindow,
         webPreferences: {
             enableRemoteModule: true,
+            contextIsolation: false,
             preload: path.join(__dirname, 'import-project-preload.js')
         }
     })
@@ -388,6 +391,7 @@ function fireOnReady() {
             parent: indexWindow,
             webPreferences: {
                 enableRemoteModule: true,
+                contextIsolation: false,
                 preload: path.join(__dirname, 'new-cloud-tm-preload.js')
             }
         })

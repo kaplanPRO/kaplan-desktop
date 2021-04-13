@@ -1,5 +1,5 @@
-const { ipcRenderer, remote } = require('electron');
-const { dialog, getCurrentWindow, getGlobal, webContents } = remote;
+const { ipcRenderer } = require('electron');
+const { dialog, getCurrentWindow, getGlobal, webContents } = require('@electron/remote');
 
 const newKDBWindow = getCurrentWindow();
 
