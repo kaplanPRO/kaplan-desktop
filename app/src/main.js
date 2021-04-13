@@ -154,8 +154,12 @@ const template = [
                 click: async () => { shell.openExternal('https://kaplan.pro/') }
             },
             {
+                label: 'Release notes',
+                click: async () => { shell.openExternal('https://github.com/kaplanPRO/kaplan-desktop/releases/latest')}
+            },
+            {
                 label: 'Wiki',
-                click: async () => { shell.openExternal('https://kaplan.pro/#/docs') }
+                click: async () => { shell.openExternal('https://kaplan.pro/docs') }
             }
         ]
     }
