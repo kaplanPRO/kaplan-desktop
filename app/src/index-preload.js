@@ -117,6 +117,8 @@ window.openFileContextMenu = (e, fileId, filePath, canGenerateTargetFile, isImpo
         fileMenu.append(new MenuItem({ label: 'Generate target translation', enabled: false }));
     }
     fileMenu.append(new MenuItem({ type: 'separator' }));
+    fileMenu.append(new MenuItem({ label: 'Generate LQI Report', click() { getLQIReport(fileId) } }));
+    fileMenu.append(new MenuItem({ type: 'separator' }));
     fileMenu.append(new MenuItem({ label: 'Show in file explorer', click() { shell.showItemInFolder(filePath) } }));
 
     fileMenu.popup({ window: indexWindow });

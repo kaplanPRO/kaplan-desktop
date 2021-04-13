@@ -300,6 +300,14 @@ def project_file(request, project_id, file_id):
 
             return JsonResponse({'status': 'success'})
 
+        elif request.POST.get('task') == 'generate_lqi_report':
+            output_path = request.POST['output']
+            if not output_path.lower().endswith('.html'):
+                output_path += '.html'
+            bf.generate_lqi_report(output_path)
+
+            return JsonResponse({'status': 'success'})
+
         else:
             editor_mode = request.POST['editor_mode']
             segment_state = request.POST['segment_state']
