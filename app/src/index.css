@@ -161,6 +161,9 @@ main#overlay {
     top: 0px;
     width: 100vw;
 }
+main#projects-view {
+    overflow-y: scroll;
+}
 main#tb-view div:not(.kdb-slice), main#tm-view div:not(.kdb-slice) {
     overflow-y: scroll;
     max-width: 100%;
