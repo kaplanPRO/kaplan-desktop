@@ -851,8 +851,8 @@ function fireOnReady() {
         if (this["notes"] != null) {
             parameters.append("notes", this["notes"].value);
         }
-        if (this["deadline"] != null) {
-            deadline = new Date(this["deadline"].value),
+        if (this["deadline"] != null && this["deadline"].value != "") {
+            deadline = new Date(this["deadline"].value);
             parameters.append("deadline", deadline.toISOString());
         }
 
