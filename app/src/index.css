@@ -99,6 +99,10 @@ div#sidebar nav {
 div#sidebar.minimized span {
     display: none;
 }
+div#tab-language-profiles {
+    display: none;
+    grid-template-columns: 1fr 4fr;
+}
 div#tab-mysql {
     display: none;
 }
@@ -148,14 +152,17 @@ main#files-view {
 }
 main#overlay {
     background-color: rgb(256,256,256,0.5);
+    grid-template: 1fr auto 1fr / 1fr auto 1fr;
     height: 100vh;
     left: 0px;
     margin: 0;
     padding: 0;
     position: absolute;
     top: 0px;
-    vertical-align: middle;
     width: 100vw;
+}
+main#projects-view {
+    overflow-y: scroll;
 }
 main#tb-view div:not(.kdb-slice), main#tm-view div:not(.kdb-slice) {
     overflow-y: scroll;
@@ -163,10 +170,11 @@ main#tb-view div:not(.kdb-slice), main#tm-view div:not(.kdb-slice) {
 }
 main#overlay form {
     background-color: white;
-    position: absolute;
-    top: 25%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    border: 1px solid #000;
+    border-radius: 1rem;
+    grid-column: 2;
+    grid-row: 2;
+    padding: 1rem;
 }
 button {
     background-color: inherit;
@@ -185,6 +193,9 @@ table {
 }
 table td, table th {
     padding: 0.5rem;
+}
+table:not(.show-overrides) tr.override-setting {
+    display: none;
 }
 table#project-report * {
     padding: 0.5rem;
@@ -240,19 +251,29 @@ table.segments-table td.notes div.note {
 }
 table.segments-table tr td.notes button {
     display: none;
+    margin-right: 0.5rem;
 }
-table.segments-table tr:focus-within td.notes button:not(.hidden), table.segments-table tr td.notes form button {
-    display: block;
+table.segments-table tr:focus-within td.notes button:not(.hidden) {
+    display: inline;
+}
+table.segments-table tr td.notes form button {
+    display: block !important;
 }
 table.segments-table tr td.notes form label {
     display: block;
     font-weight: bold;
 }
-table td.language {
+table td.language, table td.deadline {
     text-align: center;
 }
 table th.name {
     width: 40%;
+}
+table#tm-hits span.add {
+    text-decoration: underline;
+}
+table#tm-hits span.remove {
+    text-decoration: line-through;
 }
 ec, g, sc, ph, x {
     background-color: orangered;

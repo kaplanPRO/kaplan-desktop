@@ -11,5 +11,6 @@ urlpatterns = [
     path('project/import', views.import_project, name='import_project'),
     path('kdb', views.kdb_directory, name='kdb_directory'),
     path('kdb/new', views.new_kdb, name='new_kdb'),
-    path('kdb/<int:kdb_id>', views.kdb_view, name='kdb_view')
+    path('kdb/<int:kdb_id>', views.kdb_view, name='kdb_view'),
+    path('languages', views.languages, name='languages')
 ]

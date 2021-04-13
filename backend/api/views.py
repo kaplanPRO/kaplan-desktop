@@ -3,7 +3,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import File, KaplanDatabase, Project, ProjectReport
+from .models import File, LanguageProfile, KaplanDatabase, Project, ProjectReport
 
 # Installed libraries
 import kaplan
@@ -16,7 +16,7 @@ from lxml import etree
 import mysql.connector
 
 # Standard Python libraries
-import datetime
+from datetime import datetime
 import difflib
 import html
 from io import BytesIO
@@ -40,8 +40,15 @@ def import_project(request):
     new_project.title = project_metadata['title']
     new_project.directory = project_dir
     new_project.source_language = project_metadata['src']
+    new_project.source_language_name = project_metadata.get('src_name')
+    new_project.source_direction = project_metadata.get('src_dir')
     new_project.target_language = project_metadata['trg']
+    new_project.target_language_name = project_metadata.get('trg_name')
+    new_project.target_direction = project_metadata.get('trg_dir')
     new_project.is_imported = True
+    new_project.task = project_metadata.get('task', 'translation')
+    new_project.due_datetime = project_metadata.get('due_datetime', None)
+    new_project.notes = project_metadata.get('notes', '')
     new_project.save()
 
     for i in project_metadata['files']:
@@ -88,7 +95,7 @@ def import_project(request):
             new_project_report.content = json.dumps(project_metadata['reports'][i]['json'])
             new_project_report.project = new_project
             new_project_report.save()
-            new_project_report.created_at = datetime.datetime.fromisoformat(project_metadata['reports'][i]['created_at'])
+            new_project_report.created_at = datetime.fromisoformat(project_metadata['reports'][i]['created_at'])
             new_project_report.save()
 
     return JsonResponse({new_project.id: {'title': new_project.title,
@@ -104,6 +111,7 @@ def new_project(request):
     project_lrs = [KaplanDatabase.objects.get(id=int(kdb_id)) for kdb_id in request.POST.get('language_resources', '').split(';') if kdb_id]
     project_clrs = request.POST.get('cloud_language_resources', '{}')
     project_files = [project_file for project_file in request.POST['files'].split(';') if kaplan.can_process(project_file)]
+    project_deadline = request.POST.get('deadline')
 
     if len(project_files) == 0:
         return JsonResponse({'error': 'No compatible files selected!'}, status=500)
@@ -121,6 +129,8 @@ def new_project(request):
     project.save()
     for project_lr in project_lrs:
         project.language_resources.add(project_lr)
+    if project_deadline:
+        project.due_datetime = datetime.fromisoformat(project_deadline)
     project.miscellaneous = project_clrs
     project.save()
 
@@ -176,6 +186,33 @@ def new_kdb(request):
     return JsonResponse({'status': 'success'})
 
 @csrf_exempt
+def languages(request):
+    if request.method == 'POST':
+        code = request.POST['code']
+        name = request.POST['name']
+        direction = request.POST['direction']
+
+        try:
+            language_profile = LanguageProfile.objects.get(code=code)
+            protocol = 'update'
+        except:
+            language_profile = LanguageProfile()
+            language_profile.code = code
+            protocol = 'create'
+
+        language_profile.name = name
+        language_profile.direction = direction
+        language_profile.save()
+
+        return JsonResponse({'code':code, 'name':name, 'protocol':protocol})
+    else:
+        lp_dict = {}
+        for language_profile in LanguageProfile.objects.all():
+            lp_dict[language_profile.code] = [language_profile.name, language_profile.direction]
+
+        return JsonResponse(lp_dict)
+
+@csrf_exempt
 def package(request):
     project_package = request.POST['project_package']
 
@@ -193,7 +230,10 @@ def project_directory(request):
                                     'target_language': project.get_target_language(),
                                     'target_language_code': project.target_language,
                                     'is_exported': project.is_exported,
-                                    'is_imported': project.is_imported}
+                                    'is_imported': project.is_imported,
+                                    'task': project.task,
+                                    'due_datetime': project.due_datetime,
+                                    'notes': project.notes}
 
     return JsonResponse(projects_dict)
 
@@ -219,6 +259,18 @@ def project_file(request, project_id, file_id):
 
             return JsonResponse({'status': 'success'})
 
+        elif request.POST.get('task') == 'add_lqi':
+            bf.add_loc_quality_issue(request.POST['tu'],
+                                     request.POST['segment'],
+                                     request.POST['type'],
+                                     request.POST['comment'],
+                                     request.POST['severity'],
+                                     request.POST['author'])
+
+            bf.save(project.get_target_dir())
+
+            return JsonResponse({'status': 'success'})
+
         elif request.POST.get('task') == 'generate_target_translation':
             bf.generate_target_translation(project.get_target_dir(),
                                            os.path.join(project.get_source_dir(), project_file.title))
@@ -237,6 +289,22 @@ def project_file(request, project_id, file_id):
                                request.POST['comment'],
                                request.POST['author'])
             bf.save(project.get_target_dir())
+
+            return JsonResponse({'status': 'success'})
+
+        elif request.POST.get('task') == 'resolve_lqi':
+            bf.resolve_loc_quality_issue(request.POST['segment'],
+                                         request.POST['comment'],
+                                         request.POST['author'])
+            bf.save(project.get_target_dir())
+
+            return JsonResponse({'status': 'success'})
+
+        elif request.POST.get('task') == 'generate_lqi_report':
+            output_path = request.POST['output']
+            if not output_path.lower().endswith('.html'):
+                output_path += '.html'
+            bf.generate_lqi_report(output_path)
 
             return JsonResponse({'status': 'success'})
 
@@ -319,6 +387,7 @@ def project_file(request, project_id, file_id):
                 tm_result = (int(tm_result[0]*100),
                              etree.tostring(tm_result[1], encoding='UTF-8').decode(),
                              etree.tostring(tm_result[2], encoding='UTF-8').decode(),
+                             etree.tostring(tm_result[3], encoding='UTF-8').decode(),
                              'Local TM')
 
                 if tm_result not in tm_hits:
@@ -349,6 +418,7 @@ def project_file(request, project_id, file_id):
                 sm.set_seq2(row[0])
                 if sm.ratio() >= 0.5:
                     tm_result = (int(sm.ratio()*100),
+                                 '<difference>' + row[0] + '</difference>',
                                  '<source>' + row[0] + '</source>',
                                  '<target>' + row[1] + '</target>',
                                  'TM Server')
@@ -360,9 +430,11 @@ def project_file(request, project_id, file_id):
 
         for i in range(len(tm_hits)):
             tm_hits[i] = {'ratio': tm_hits[i][0],
-                          'source': tm_hits[i][1],
-                          'target': tm_hits[i][2],
-                          'origin': tm_hits[i][3]}
+                          'difference': tm_hits[i][1],
+                          'source': tm_hits[i][2],
+                          'target': tm_hits[i][3],
+                          'origin': tm_hits[i][4]}
+
         tb_hits = []
         for project_tb in project.language_resources.all().filter(role='tb'):
             project_tb = KDB(project_tb.path,
@@ -381,7 +453,37 @@ def project_file(request, project_id, file_id):
         return JsonResponse({'tm':tm_hits, 'tb':tb_hits})
 
     else:
-        return HttpResponse(etree.tostring(bf.get_translation_units(), encoding="UTF-8"))
+        translation_units = bf.get_translation_units()
+        translation_units.attrib['source_direction'] = project.get_source_direction()
+        translation_units.attrib['target_direction'] = project.get_target_direction()
+
+        for tu in translation_units:
+            for segment in tu:
+                segment_notes = []
+                if isinstance(bf, KXLIFF):
+                    for segment_lqi in bf.get_segment_lqi(segment.attrib.get('id', 0)):
+                        if segment_lqi.attrib.get('resolved'):
+                            continue
+                        lqi_comment = segment_lqi.attrib.get('comment')
+                        if lqi_comment is None:
+                            lqi_comment == ''
+                        segment_lqi.tag = 'lqi'
+                        segment_lqi.text = lqi_comment
+                        segment_notes.append((datetime.fromisoformat(segment_lqi.attrib['added_at']), segment_lqi))
+                for child in segment:
+                    if child.tag == 'notes':
+                        for segment_note in child:
+                            segment_notes.append((datetime.fromisoformat(segment_note.attrib['added_at']), segment_note))
+                        segment.remove(child)
+
+                if len(segment_notes) > 0:
+                    sorted(segment_notes)
+                    notes = etree.Element('notes')
+                    for datetime_iso, segment_note in segment_notes:
+                        notes.append(segment_note)
+                    segment.append(notes)
+
+        return HttpResponse(etree.tostring(translation_units, encoding="UTF-8"))
 
 @csrf_exempt
 def project_view(request, project_id):
@@ -404,7 +506,15 @@ def project_view(request, project_id):
             if files == ['']:
                 raise ValueError('No files selected.')
 
-            KaplanProject(project.get_project_metadata()).export(path, files)
+            deadline = request.POST.get('deadline', None)
+            if deadline is not None:
+                deadline = datetime.fromisoformat(deadline[:-1])
+
+            KaplanProject(project.get_project_metadata()).export(path,
+                                                                 files,
+                                                                 task=request.POST.get('linguist_task', 'translation'),
+                                                                 due_datetime=deadline,
+                                                                 notes=request.POST.get('notes', ''))
 
             project.is_exported = True
             project.save()
@@ -460,6 +570,7 @@ def kdb_directory(request):
             'source_language': kdb.get_source_language(),
             'target_language': kdb.get_target_language(),
             'path': kdb.path,
+            'is_outdated': KDB(kdb.path).is_outdated
         }
         kdbs_dict[kdb.id] = kdb_dict
 
@@ -491,6 +602,10 @@ def kdb_view(request, kdb_id):
 
             else:
                 raise TypeError('File type not supported for import.')
+        elif request.POST.get('task') == 'upgrade':
+            kdb.upgrade()
+
+            return JsonResponse({'status': 'success'})
 
     else:
         if request.GET.get('task') == 'export':
@@ -501,10 +616,18 @@ def kdb_view(request, kdb_id):
             kdb_entries = {}
             kdb_entry_i = 0
             for kdb_entry in kdb.get_entries():
+                source = KDB.entry_to_segment(kdb_entry[1], 'source', safe_mode=False)
+                for child in source:
+                    if child.attrib.get('equiv'):
+                        child.text = html.unescape(child.attrib.get('equiv'))
+                target = KDB.entry_to_segment(kdb_entry[2], 'target', safe_mode=False)
+                for child in target:
+                    if child.attrib.get('equiv'):
+                        child.text = html.unescape(child.attrib.get('equiv'))
                 kdb_entries[kdb_entry_i] = {
                     'id': kdb_entry[0],
-                    'source': kdb_entry[1],
-                    'target': kdb_entry[2],
+                    'source': etree.tostring(source, encoding='UTF-8').decode(),
+                    'target': etree.tostring(target, encoding='UTF-8').decode(),
                     'state': kdb_entry[3],
                     'time': kdb_entry[4],
                     'submitted_by': kdb_entry[5]

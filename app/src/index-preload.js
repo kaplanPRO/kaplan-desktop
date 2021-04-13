@@ -1,5 +1,5 @@
-const { ipcRenderer, remote, shell } = require('electron');
-const { app, BrowserWindow, dialog, getCurrentWindow, Menu, MenuItem, getGlobal } = remote;
+const { ipcRenderer, shell } = require('electron');
+const { app, BrowserWindow, dialog, getCurrentWindow, Menu, MenuItem, getGlobal } = require('@electron/remote');
 const fs = require('fs');
 const mysql = require('mysql');
 const os = require('os');
@@ -34,6 +34,7 @@ window.createNewKDB = (role) => {
         parent: indexWindow,
         webPreferences: {
             enableRemoteModule: true,
+            contextIsolation: false,
             preload: path.join(__dirname, 'new-kdb-preload.js')
         }
     })
@@ -49,6 +50,7 @@ window.newProject = () => {
         parent: indexWindow,
         webPreferences: {
             enableRemoteModule: true,
+            contextIsolation: false,
             preload: path.join(__dirname, 'new-project-preload.js')
         }
     })
@@ -64,6 +66,7 @@ window.importProject = () => {
         parent: indexWindow,
         webPreferences: {
             enableRemoteModule: true,
+            contextIsolation: false,
             preload: path.join(__dirname, 'import-project-preload.js')
         }
     })
@@ -98,26 +101,37 @@ window.setSpellCheckerLanguages = (arrayOfLanguages) => {
     indexWindow.webContents.session.setSpellCheckerLanguages(finalArrayOfLanguages);
 }
 
-window.openFileContextMenu = (e, fileId, filePath, canGenerateTargetFile) => {
+window.openFileContextMenu = (e, fileId, filePath, canGenerateTargetFile, isImported, task) => {
     e.preventDefault();
 
     const fileMenu = new Menu();
-    fileMenu.append(new MenuItem({ label: 'Open in translation mode', click() { fetchSegments(filesView.getAttribute('cur-p-id'), fileId, canGenerateTargetFile, "translation") } }));
-    fileMenu.append(new MenuItem({ label: 'Open in review mode', click() { fetchSegments(filesView.getAttribute('cur-p-id'), fileId, canGenerateTargetFile, "review") } }));
-    fileMenu.append(new MenuItem({ type: 'separator' }));
+    if (isImported === false || isImported === 'false' || task === 'translation') {
+        fileMenu.append(new MenuItem({ label: 'Open in translation mode', click() { fetchSegments(filesView.getAttribute('cur-p-id'), fileId, canGenerateTargetFile, "translation") } }));
+    }
+    if (isImported === false || isImported === 'false' || task === 'review') {
+        fileMenu.append(new MenuItem({ label: 'Open in review mode', click() { fetchSegments(filesView.getAttribute('cur-p-id'), fileId, canGenerateTargetFile, "review") } }));
+    }
+    if (fileMenu.items.length > 0) {
+        fileMenu.append(new MenuItem({ type: 'separator' }));
+    }
     if (canGenerateTargetFile === 'true') {
         fileMenu.append(new MenuItem({ label: 'Generate target translation', click() { getTargetTranslation(fileId) } }));
     } else {
         fileMenu.append(new MenuItem({ label: 'Generate target translation', enabled: false }));
     }
     fileMenu.append(new MenuItem({ type: 'separator' }));
+    fileMenu.append(new MenuItem({ label: 'Generate LQI Report', click() { getLQIReport(fileId) } }));
+    fileMenu.append(new MenuItem({ type: 'separator' }));
     fileMenu.append(new MenuItem({ label: 'Show in file explorer', click() { shell.showItemInFolder(filePath) } }));
 
     fileMenu.popup({ window: indexWindow });
 }
 
-window.openKDBContextMenu = (e, kDBPath, kDBId) => {
+window.openKDBContextMenu = (e, tableRow) => {
     e.preventDefault();
+    const kDBId =  tableRow.getAttribute('id');
+    const isOutdated = tableRow.getAttribute('is_outdated');
+    const kDBPath = tableRow.getAttribute('path');
 
     const kDBMenu = new Menu();
 
@@ -168,6 +182,28 @@ window.openKDBContextMenu = (e, kDBPath, kDBId) => {
     kDBMenu.append(new MenuItem({ type: 'separator' }));
 
     kDBMenu.append(new MenuItem({ label: 'Show in file explorer', click() { shell.showItemInFolder(kDBPath) } }));
+
+    if (isOutdated === 'true') {
+        kDBMenu.append(new MenuItem({ type: 'separator' }));
+
+        kDBMenu.append(new MenuItem({ label: 'Upgrade', click() {
+            let queryURL = 'http://127.0.0.1:8000/kdb/' + kDBId;
+
+            let formData = new FormData();
+            formData.append('task', 'upgrade');
+
+            let xhttp = new XMLHttpRequest();
+
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    tableRow.setAttribute('is_outdated', 'false');
+                }
+            }
+
+            xhttp.open('POST', queryURL);
+            xhttp.send(formData);
+        } }));
+    }
 
     kDBMenu.popup({ window: indexWindow });
 }
@@ -295,7 +331,7 @@ function fireOnReady() {
             }
           })
         }
-      });  
+      });
     }
 
     document.getElementById('btn-analyze-files').onclick = function() {
@@ -355,6 +391,7 @@ function fireOnReady() {
             parent: indexWindow,
             webPreferences: {
                 enableRemoteModule: true,
+                contextIsolation: false,
                 preload: path.join(__dirname, 'new-cloud-tm-preload.js')
             }
         })

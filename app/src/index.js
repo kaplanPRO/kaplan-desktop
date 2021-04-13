@@ -73,11 +73,11 @@ function fireOnReady() {
                     tr.appendChild(th);
 
                     td = document.createElement("td");
-                    td.textContent = entry.source;
+                    td.innerHTML = entry.source;
                     tr.appendChild(td);
 
                     td = document.createElement("td");
-                    td.textContent = entry.target;
+                    td.innerHTML = entry.target;
                     td.classList.add("target");
                     tr.appendChild(td);
 
@@ -118,6 +118,7 @@ function fireOnReady() {
                     tr.setAttribute("project-id", projectsKeys[i]);
                     tr.setAttribute("is-imported", project.is_imported);
                     tr.setAttribute("is-exported", project.is_exported);
+                    tr.setAttribute("task", project.task);
 
                     td = document.createElement("td");
                     td.className = "project-title";
@@ -144,7 +145,9 @@ function fireOnReady() {
                         langPair = [this.children[1].getAttribute("lang-code"), this.children[2].getAttribute("lang-code")];
                         window.setSpellCheckerLanguages(langPair);
 
-                        fetchProject(this.getAttribute("project-id"));
+                        fetchProject(this.getAttribute("project-id"),
+                                     this.getAttribute("is-imported"),
+                                     this.getAttribute("task"));
 
                         if (activeProject != null) {
                             activeProject.classList.remove("active");
@@ -169,6 +172,17 @@ function fireOnReady() {
                         }
                     }
 
+                    if (project.due_datetime) {
+                        td = document.createElement("td");
+                        td.className = "deadline";
+                        td.textContent = getDatetimeString(new Date(project.due_datetime));
+                        tr.appendChild(td);
+                    }
+
+                    if (project.notes) {
+                        tr.setAttribute("title", project.notes);
+                    }
+
                     projectsTable.prepend(tr);
                 }
                 tr = document.createElement("tr");
@@ -181,6 +195,9 @@ function fireOnReady() {
                 tr.append(th);
                 th = document.createElement("th");
                 th.innerHTML = "Target Language";
+                tr.append(th)
+                th = document.createElement("th");
+                th.innerHTML = "Deadline";
                 tr.append(th)
                 projectsTable.prepend(tr);
 
@@ -199,7 +216,7 @@ function fireOnReady() {
     }
 
     // Fetches a list of the files in a project
-    function fetchProject(projectId) {
+    function fetchProject(projectId, isImported, task) {
         let files;
         let filesKeys;
         let xhttp = new XMLHttpRequest();
@@ -238,7 +255,8 @@ function fireOnReady() {
 
                         fetchSegments(projectId,
                                       this.getAttribute("file-id"),
-                                      this.getAttribute("can-generate-target-file"));
+                                      this.getAttribute("can-generate-target-file"),
+                                      task);
 
                         if (activeFile != null) {
                             activeFile.classList.remove("active");
@@ -250,7 +268,9 @@ function fireOnReady() {
                         openFileContextMenu(e,
                                             this.getAttribute("file-id"),
                                             this.getAttribute("file-path"),
-                                            this.getAttribute("can-generate-target-file"));
+                                            this.getAttribute("can-generate-target-file"),
+                                            isImported,
+                                            task);
                     }
 
                     filesTable.append(tr);
@@ -327,7 +347,10 @@ function fireOnReady() {
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 segmentsDiv.innerHTML = "";
-                translation_units = parser.parseFromString(this.responseText, "text/xml").documentElement.children;
+                translation_units = parser.parseFromString(this.responseText, "text/xml").documentElement;
+                sourceDirection = translation_units.getAttribute("source_direction");
+                targetDirection = translation_units.getAttribute("target_direction");
+                translation_units = translation_units.children;
                 for (i = 0; i < translation_units.length; i++) {
                     pId = translation_units[i].getAttribute("id");
                     segments = translation_units[i].getElementsByTagName("segment")
@@ -350,6 +373,7 @@ function fireOnReady() {
 
                             source_td = document.createElement("td");
                             source_td.classList.add("source");
+                            source_td.setAttribute("dir", sourceDirection);
                             source_td.innerHTML = segments[s_i].getElementsByTagName("source")[0].innerHTML
                                                   .replace(/\\n/g, "<kaplan:placeholder>")
                                                   .replace(/\n/g, "<ph>\\n</ph>")
@@ -359,6 +383,7 @@ function fireOnReady() {
 
                             target_td = document.createElement("td");
                             target_td.classList.add("target");
+                            target_td.setAttribute("dir", targetDirection);
                             target_td.contentEditable = "true";
                             target_td.innerHTML = segments[s_i].getElementsByTagName("target")[0].innerHTML
                                                   .replace(/\\n/g, "<kaplan:placeholder>")
@@ -379,6 +404,7 @@ function fireOnReady() {
                                         tag.addEventListener("click", function() { tagClickHandler(this) });
                                     }
                                     tag.contentEditable = "false";
+                                    tag.draggable = "true";
                                 })
                             })
                             if (supportsComments === "true") {
@@ -392,12 +418,21 @@ function fireOnReady() {
                                         noteDiv.id = segmentNote.id;
                                         noteDiv.setAttribute("segment", segmentNote.getAttribute("segment"));
 
-                                        closeSpan = document.createElement("span");
-                                        closeSpan.textContent = "X";
-                                        closeSpan.onclick = function() {
-                                            resolveComment(this);
+                                        if (segmentNote.tagName === "note") {
+                                            closeSpan = document.createElement("span");
+                                            closeSpan.textContent = "X";
+                                            closeSpan.onclick = function() {
+                                                resolveComment(this);
+                                            }
+                                            noteDiv.appendChild(closeSpan);
+                                        } else if (segmentNote.tagName === "lqi" && mode === "review") {
+                                          closeSpan = document.createElement("span");
+                                          closeSpan.textContent = "X";
+                                          closeSpan.onclick = function() {
+                                              resolveLQI(this);
+                                          }
+                                          noteDiv.appendChild(closeSpan);
                                         }
-                                        noteDiv.appendChild(closeSpan);
 
                                         authorP = document.createElement("p");
                                         authorP.textContent = "Author: " + segmentNote.getAttribute("added_by");
@@ -406,6 +441,12 @@ function fireOnReady() {
                                         timeP = document.createElement("p");
                                         timeP.textContent = "Time: " + getDatetimeString(segmentNote.getAttribute("added_at") + "Z");
                                         noteDiv.appendChild(timeP);
+
+                                        if (segmentNote.tagName === "lqi") {
+                                            noteP = document.createElement("p");
+                                            noteP.textContent = "Error: " + segmentNote.getAttribute("type");
+                                            noteDiv.appendChild(noteP);
+                                        }
 
                                         noteDiv.appendChild(document.createElement("hr"));
 
@@ -421,6 +462,16 @@ function fireOnReady() {
                                 noteButton.setAttribute("tabindex", "-1");
                                 noteButton.onclick = function() { openCommentForm(this) };
                                 notesTD.appendChild(noteButton);
+
+                                if (mode === "review") {
+                                    lQIButton = document.createElement("button");
+                                    lQIButton.className = "cancel";
+                                    lQIButton.textContent = '-';
+                                    lQIButton.setAttribute("tabindex", "-1");
+                                    lQIButton.onclick = function() { openLQIForm(this) };
+                                    notesTD.appendChild(lQIButton);
+
+                                }
 
                                 segment_row.appendChild(notesTD);
                             }
@@ -473,8 +524,9 @@ function fireOnReady() {
                     tr = document.createElement("tr");
                     tr.setAttribute("id", kDB.id);
                     tr.setAttribute("path", kDB.path);
+                    tr.setAttribute("is_outdated", kDB.is_outdated);
                     tr.oncontextmenu = function(e) {
-                        openKDBContextMenu(e, this.getAttribute("path"), this.getAttribute("id"));
+                        openKDBContextMenu(e, this);
                     }
                     tr.ondblclick = function() {
                         if (role == "tm"){
@@ -584,7 +636,9 @@ function fireOnReady() {
         }
     }
 
-    function openPackageMenu(task, projectFiles, pathToKPP=null) {
+    function openPackageMenu(task, projectMetadata, pathToKPP=null) {
+
+        projectFiles = projectMetadata.files
 
         let packageForm = overlay.getElementsByTagName("form")[0];
         let packageTable = overlay.getElementsByTagName("table")[0];
@@ -592,7 +646,7 @@ function fireOnReady() {
         let buttonText = task.split("_")[0]
         buttonText = buttonText[0].toUpperCase() + buttonText.slice(1)
 
-        overlay.style.display = "block";
+        overlay.style.display = "grid";
 
         packageForm.setAttribute("task", task);
         if (pathToKPP) {
@@ -619,6 +673,54 @@ function fireOnReady() {
             tr.appendChild(td);
             packageTable.appendChild(tr);
         });
+
+        if (task === "create_new_project_package") {
+            tr = document.createElement("tr");
+            th = document.createElement("th");
+            th.textContent = "Task:"
+            tr.appendChild(th);
+
+            td = document.createElement("td");
+            taskOptions = document.createElement("select");
+            taskOptions.setAttribute("name", "linguist-task");
+            taskOptions.append(new Option("Translation", "translation"));
+            taskOptions.append(new Option("Review", "review"));
+            td.appendChild(taskOptions);
+            tr.appendChild(td)
+
+            packageTable.appendChild(tr);
+
+            tr = document.createElement("tr");
+            th = document.createElement("th");
+            th.textContent = "Deadline:"
+            tr.appendChild(th);
+
+            td = document.createElement("td");
+            dateTimeInput = document.createElement("input");
+            dateTimeInput.setAttribute("name", "deadline");
+            dateTimeInput.setAttribute("type", "datetime-local");
+            td.appendChild(dateTimeInput);
+            if (projectMetadata.due_datetime) {
+              deadline = getDatetimeString(projectMetadata.due_datetime);
+              dateTimeInput.value = deadline.split(" ").join("T");
+            }
+            tr.appendChild(td);
+
+            packageTable.appendChild(tr);
+
+            tr = document.createElement("tr");
+            th = document.createElement("th");
+            th.textContent = "Notes:"
+            tr.appendChild(th);
+
+            td = document.createElement("td");
+            textArea = document.createElement("textarea");
+            textArea.setAttribute("name", "notes");
+            td.appendChild(textArea);
+            tr.appendChild(td);
+
+            packageTable.appendChild(tr);
+        }
 
         tr = document.createElement("tr");
         td = document.createElement("td");
@@ -655,7 +757,7 @@ function fireOnReady() {
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 openPackageMenu("create_new_project_package",
-                                JSON.parse(this.responseText).files);
+                                JSON.parse(this.responseText));
             }
         }
 
@@ -672,7 +774,7 @@ function fireOnReady() {
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 openPackageMenu("create_return_project_package",
-                                JSON.parse(this.responseText).files);
+                                JSON.parse(this.responseText));
             }
         }
 
@@ -698,7 +800,7 @@ function fireOnReady() {
         xhttp.onreadystatechange = function() {
              if (this.readyState == 4 && this.status == 200) {
                   openPackageMenu("update_from_project_package",
-                                  JSON.parse(this.responseText).files,
+                                  JSON.parse(this.responseText),
                                   pathToKPP);
              }
          }
@@ -748,6 +850,16 @@ function fireOnReady() {
         }
         parameters.append("files", filesToPackage.join(";"));
         parameters.append("task", this.getAttribute("task"));
+        if (this["linguist-task"] != null) {
+            parameters.append("linguist_task", this["linguist-task"].value);
+        }
+        if (this["notes"] != null) {
+            parameters.append("notes", this["notes"].value);
+        }
+        if (this["deadline"] != null && this["deadline"].value != "") {
+            deadline = new Date(this["deadline"].value);
+            parameters.append("deadline", deadline.toISOString());
+        }
 
         let xhttp = new XMLHttpRequest();
 

@@ -1,11 +1,12 @@
-const electron = require('electron')
-const { ipcRenderer } = electron
-const { app } = electron.remote;
+const { ipcRenderer } = require('electron');
+const { app } = require('@electron/remote');
 const fs = require('fs');
 const mysql = require('mysql');
 const path = require('path');
 
 function fireOnReady() {
+  const languageProfiles = document.getElementById('saved-language-profiles');
+
   const pathToSettings = path.join(app.getPath('userData'), 'settings.json');
 
   fs.exists(pathToSettings, (exists) => {
@@ -27,17 +28,65 @@ function fireOnReady() {
   })
 
   document.getElementById('btn-user-profile').onclick = function() {
+    document.getElementById('btn-language-profiles').classList.remove('active');
     document.getElementById('btn-mysql').classList.remove('active');
     this.classList.add('active');
     document.getElementById('tab-mysql').style.display = 'none';
+    document.getElementById('tab-language-profiles').style.display = 'none';
     document.getElementById('tab-user-profile').style.display = 'block';
+  }
+
+  document.getElementById('btn-language-profiles').onclick = function() {
+    document.getElementById('btn-user-profile').classList.remove('active');
+    document.getElementById('btn-mysql').classList.remove('active');
+    this.classList.add('active');
+    document.getElementById('tab-user-profile').style.display = 'none';
+    document.getElementById('tab-mysql').style.display = 'none';
+    document.getElementById('tab-language-profiles').style.display = 'grid';
   }
 
   document.getElementById('btn-mysql').onclick = function() {
     document.getElementById('btn-user-profile').classList.remove('active');
+    document.getElementById('btn-language-profiles').classList.remove('active');
     this.classList.add('active');
     document.getElementById('tab-user-profile').style.display = 'none';
+    document.getElementById('tab-language-profiles').style.display = 'none';
     document.getElementById('tab-mysql').style.display = 'block';
+  }
+
+  let xhttp = new XMLHttpRequest();
+  let queryURL = 'http://127.0.0.1:8000/languages'
+
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      responseJSON = JSON.parse(this.responseText);
+      Object.keys(responseJSON).forEach((key, i) => {
+        languageProfiles.appendChild(new Option(responseJSON[key][0], key));
+      });
+    }
+  }
+
+  xhttp.open('GET', queryURL, true)
+  xhttp.send()
+
+  document.getElementById('form-language-profile').onsubmit = function(e) {
+    e.preventDefault();
+
+    let xhttp = new XMLHttpRequest();
+    let queryURL = 'http://127.0.0.1:8000/languages'
+
+    xhttp.onreadystatechange = function() {
+      if (this.readyState == 4 && this.status == 200) {
+        responseJSON = JSON.parse(this.responseText);
+        if (responseJSON.protocol === 'create') {
+          languageProfiles.appendChild(new Option(responseJSON.name, responseJSON.code));
+        }
+
+      }
+    }
+
+    xhttp.open('POST', queryURL, true)
+    xhttp.send(new FormData(this))
   }
 
   document.getElementById('form-user-profile').onsubmit = function(e) {

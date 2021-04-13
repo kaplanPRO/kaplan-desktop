@@ -45,6 +45,8 @@ else if (fs.existsSync(path.join(app.getAppPath(), 'backend')))
                           ['runserver', '--noreload']);
 }
 
+require('@electron/remote/main').initialize()
+
 let pathToIcon;
 
 if (['deb','linux','rpm'].includes(process.platform)) {
@@ -62,6 +64,7 @@ const createWindow = () => {
         icon: pathToIcon,
         webPreferences: {
             enableRemoteModule: true,
+            contextIsolation: false,
             preload: path.join(__dirname, 'index-preload.js')
         },
     });
@@ -151,11 +154,15 @@ const template = [
         submenu: [
             {
                 label: 'About',
-                click: async () => { shell.openExternal('https://sourceforge.net/projects/kaplan-desktop/') }
+                click: async () => { shell.openExternal('https://kaplan.pro/') }
+            },
+            {
+                label: 'Release notes',
+                click: async () => { shell.openExternal('https://github.com/kaplanPRO/kaplan-desktop/releases/latest')}
             },
             {
                 label: 'Wiki',
-                click: async () => { shell.openExternal('https://sourceforge.net/p/kaplan-desktop/wiki/') }
+                click: async () => { shell.openExternal('https://kaplan.pro/docs') }
             }
         ]
     }

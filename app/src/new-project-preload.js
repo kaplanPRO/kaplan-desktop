@@ -1,6 +1,5 @@
-const electron = require('electron')
-const { ipcRenderer } = electron
-const { app, dialog } = electron.remote;
+const { ipcRenderer } = require('electron');
+const { app, dialog } = require('@electron/remote');
 const fs = require('fs');
 const mysql = require('mysql');
 const path = require('path');
@@ -131,6 +130,18 @@ function fireOnReady() {
       });
   }
 
+  document.getElementById('btn-override-settings').onclick = function() {
+      if (this.textContent === 'Show') {
+          this.textContent = 'Hide';
+          this.closest('table').classList.add('show-overrides');
+      } else {
+          this.textContent = 'Show';
+          this.closest('table').classList.remove('show-overrides');
+          this.closest('form')['source-direction'].value = '-----';
+          this.closest('form')['target-direction'].value = '-----';
+      }
+  }
+
   document.forms[0].onsubmit = function(e) {
       e.preventDefault();
 
@@ -179,6 +190,10 @@ function fireOnReady() {
           formData.append("cloud_language_resources", JSON.stringify({'mysql':cloudLanguageResources}));
       }
       formData.append("files", files.join(';'));
+
+      if (this['deadline'].value) {
+          formData.append('deadline', this['deadline'].value);
+      }
 
       let xhttp = new XMLHttpRequest();
 
