@@ -7,7 +7,7 @@
 
 Hello. Welcome to the source repo for Kaplan Desktop. It’s been in the works for quite some time and it is exciting to go out and show it to fellow linguists. Please do not hesitate to reach out to contact@kaplan.pro should you have any inquiries.
 
-The documentation for the app itself is available [here](https://kaplan.pro/#/docs).
+The documentation for the app itself is available [here](https://kaplan.pro/docs).
 
 ## Installation
 There are a few options:
@@ -43,41 +43,25 @@ This is by far the most efficient method and the steps are more or less the same
   >
   > pip install pyinstaller
 
-6. Create a .spec file for pyinstaller:
+6. Have pyinstaller build the backend Django server:
 
-  > pyi-makespec --name=backend manage.py
+  > pyinstaller --name=backend --hidden-import backend.urls --distpath ../app --clean --noconfirm manage.py
 
-7. Open the backend.spec file with a text editor and change two lines:
+7. Install yarn.
 
-  > hiddenimports=['api.urls'],
-  >
-  > .
-  >
-  > .
-  >
-  > excludes=['db-sqlite3'],
-
-8. We’re ready to have pyinstaller build the executable:
-
-  > pyinstaller --clean --noconfirm backend.spec
-
-  This will create a folder called “backend” under /backend/dist/ Move this folder to the /app/ directory.
-
-9. Install yarn.
-
-10. Navigate to /app/ and have yarn install the Nodejs libraries:
+8. Navigate to /app/ and have yarn install the Nodejs libraries:
 
   > yarn install
 
-11. (Windows-specific step) Remove the following line from package.json
+9. (Windows-specific step) Remove the following line from package.json
 
   > "executableName": "kaplan-desktop",
 
-12. Have yarn build the executable:
+10. Have yarn build the executable:
 
   > yarn make
 
-13. The resulting executable(s) will be under /app/out/
+11. The resulting executable(s) will be under /app/out/
 
 ## Links:
 1. [Kaplan Homepage](https://kaplan.pro)
