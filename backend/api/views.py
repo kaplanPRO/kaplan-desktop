@@ -457,32 +457,6 @@ def project_file(request, project_id, file_id):
         translation_units.attrib['source_direction'] = project.get_source_direction()
         translation_units.attrib['target_direction'] = project.get_target_direction()
 
-        for tu in translation_units:
-            for segment in tu:
-                segment_notes = []
-                if isinstance(bf, KXLIFF):
-                    for segment_lqi in bf.get_segment_lqi(segment.attrib.get('id', 0)):
-                        if segment_lqi.attrib.get('resolved'):
-                            continue
-                        lqi_comment = segment_lqi.attrib.get('comment')
-                        if lqi_comment is None:
-                            lqi_comment == ''
-                        segment_lqi.tag = 'lqi'
-                        segment_lqi.text = lqi_comment
-                        segment_notes.append((datetime.fromisoformat(segment_lqi.attrib['added_at']), segment_lqi))
-                for child in segment:
-                    if child.tag == 'notes':
-                        for segment_note in child:
-                            segment_notes.append((datetime.fromisoformat(segment_note.attrib['added_at']), segment_note))
-                        segment.remove(child)
-
-                if len(segment_notes) > 0:
-                    sorted(segment_notes)
-                    notes = etree.Element('notes')
-                    for datetime_iso, segment_note in segment_notes:
-                        notes.append(segment_note)
-                    segment.append(notes)
-
         return HttpResponse(etree.tostring(translation_units, encoding="UTF-8"))
 
 @csrf_exempt

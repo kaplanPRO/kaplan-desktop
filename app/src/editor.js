@@ -68,7 +68,9 @@ function selectSegmentForMerge(segmentHeader) {
 }
 function openCommentForm(buttonElement) {
     buttonElement.classList.add("hidden");
-    buttonElement.nextSibling.classList.add("hidden");
+    if (buttonElement.nextSibling){
+      buttonElement.nextSibling.classList.add("hidden");
+    }
 
     noteDiv = document.createElement("div");
     noteDiv.classList.add("note");
