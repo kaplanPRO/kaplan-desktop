@@ -410,7 +410,7 @@ function fireOnReady() {
                             if (supportsComments === "true") {
                                 notesTD = document.createElement("td");
                                 notesTD.classList.add("notes");
-                                segmentNotes = segments[s_i].getElementsByTagName("notes")
+                                segmentNotes = segments[s_i].getElementsByTagName("misc")
                                 if (segmentNotes.length > 0 && segmentNotes[0].childNodes.length > 0) {
                                     segmentNotes[0].childNodes.forEach(function(segmentNote) {
                                         noteDiv = document.createElement("div");
