@@ -483,19 +483,14 @@ function targetKeydownHandler(e, target_cell) {
         if (e.ctrlKey) {
             target_cell.parentNode.classList.remove("draft");
             submitSegment(target_cell, "translated");
-            jumpToNextSegment = false;
+            jumpToNextConfirmedSegment = !e.shiftKey;
             targetList = [...document.getElementsByClassName("target")].slice(1);
-            for (i = 0; i < targetList.length; i++) {
+            currentId = targetList.findIndex(function(element){return element==target_cell})
+            for (i = currentId; i < targetList.length; i++) {
                 target = targetList[i];
-                if (!jumpToNextSegment) {
-                    if (target === target_cell) {
-                        jumpToNextSegment = true;
-                    }
-                } else {
-                    if (!target.parentNode.classList.contains("translated")) {
-                        target.focus();
-                        break;
-                    }
+                if (!target.parentNode.classList.contains("translated") && jumpToNextConfirmedSegment) {
+                    target.focus();
+                    break;
                 }
             }
         }
