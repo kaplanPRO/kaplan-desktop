@@ -500,7 +500,15 @@ function targetKeydownHandler(e, target_cell) {
             target_cell.innerHTML = target_cell.parentNode.getElementsByClassName("source")[0].innerHTML;
         }
     }
-    else if ( e.shiftKey || e.key == "Tab") {}
+    else if (e.key == "Tab") {
+        e.preventDefault();
+        targetList = [...document.getElementsByClassName("target")].slice(1);
+        currentId = targetList.findIndex(function(element){return element==target_cell})
+        if (currentId < targetList.length) {
+            targetList[currentId+1].focus();
+        }
+    }
+    else if ( e.shiftKey) {}
     else {
         target_cell.parentNode.classList.remove("translated");
         target_cell.parentNode.classList.add("draft");
