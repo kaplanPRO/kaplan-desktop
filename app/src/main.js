@@ -2,7 +2,7 @@ const electron = require('electron');
 const { app, BrowserWindow, getCurrentWindow, ipcMain, Menu, shell } = electron;
 const fs = require('fs');
 const path = require('path');
-const { exec, spawn, spawnSync } = require('child_process');
+const { spawn, spawnSync } = require('child_process');
 
 let backendServer;
 
