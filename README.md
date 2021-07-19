@@ -41,7 +41,7 @@ This is by far the most efficient method and the steps are more or less the same
   >
   > pip install -r requirements.txt
   >
-  > pip install pyinstaller
+  > pip install pyinstaller==4.3
 
 6. Have pyinstaller build the backend Django server:
 
