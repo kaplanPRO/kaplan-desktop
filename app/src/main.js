@@ -42,7 +42,7 @@ else if (fs.existsSync(path.join(app.getAppPath(), 'backend')))
     process.env.KAPLAN_SETTINGS = JSON.stringify(settingsJSON);
 
     backendServer = spawn(pathToBackend,
-                          ['runserver', '--noreload']);
+                          ['runserver', '127.0.0.1:8000', '--noreload']);
 }
 
 require('@electron/remote/main').initialize()
