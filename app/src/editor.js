@@ -489,7 +489,7 @@ function targetKeydownHandler(e, target_cell) {
             jumpToNextConfirmedSegment = !e.shiftKey;
             targetList = [...document.getElementsByClassName("target")].slice(1);
             currentId = targetList.findIndex(function(element){return element==target_cell})
-            for (i = currentId; i < targetList.length; i++) {
+            for (i = currentId+1; i < targetList.length; i++) {
                 target = targetList[i];
                 if (!target.parentNode.classList.contains("translated") && jumpToNextConfirmedSegment) {
                     target.focus();
