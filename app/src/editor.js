@@ -353,6 +353,9 @@ function submitSegment(target_cell, segment_state) {
         if (this.readyState == 4 && this.status == 200) {
             console.log("Segment #" + segment_no + " submitted succesfully!");
             target_cell.parentNode.className = segment_state;
+        } else if (this.readyState == 4 && this.status != 200) {
+            console.error("Segment #" + segment_no + " not submitted succesfully!");
+            target_cell.parentNode.className = 'error';
         }
     }
 
