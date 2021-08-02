@@ -353,6 +353,9 @@ function submitSegment(target_cell, segment_state) {
         if (this.readyState == 4 && this.status == 200) {
             console.log("Segment #" + segment_no + " submitted succesfully!");
             target_cell.parentNode.className = segment_state;
+        } else if (this.readyState == 4 && this.status != 200) {
+            console.error("Segment #" + segment_no + " not submitted succesfully!");
+            target_cell.parentNode.className = 'error';
         }
     }
 
@@ -486,7 +489,7 @@ function targetKeydownHandler(e, target_cell) {
             jumpToNextConfirmedSegment = !e.shiftKey;
             targetList = [...document.getElementsByClassName("target")].slice(1);
             currentId = targetList.findIndex(function(element){return element==target_cell})
-            for (i = currentId; i < targetList.length; i++) {
+            for (i = currentId+1; i < targetList.length; i++) {
                 target = targetList[i];
                 if (!target.parentNode.classList.contains("translated") && jumpToNextConfirmedSegment) {
                     target.focus();

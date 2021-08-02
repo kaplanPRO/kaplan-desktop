@@ -299,6 +299,9 @@ ph, g, x {
 tr.draft th {
     background-color: tan;
 }
+tr.error th {
+    background-color: red;
+}
 tr.translated th {
     background-color: teal;
 }
