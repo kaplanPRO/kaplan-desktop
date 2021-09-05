@@ -1,3 +1,3 @@
-Django==3.2.5
+Django==3.2.7
 kaplan==0.13.0
-mysql-connector-python==8.0.23
+mysql-connector-python==8.0.26
