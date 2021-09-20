@@ -30,6 +30,9 @@ function fireOnReady() {
         document.getElementById("btn-tm-hits").classList.remove("active");
         document.getElementById("tm-hits").style.display = "none";
     }
+    document.getElementById("btn-save-progress").onclick = function() {
+        save();
+    }
 }
 
 window.selectedTU = null;
@@ -316,6 +319,84 @@ function resolveLQI(closeSpan) {
      xhttp.open("POST", queryURL, true);
      xhttp.send(lQIFormData);
 }
+function save() {
+    document.getElementById("btn-save-progress").disabled = true;
+
+
+    let segments = [];
+
+    [...document.getElementById("editor-view").getElementsByClassName("target")].forEach((targetCell, i) => {
+        let target = targetCell.innerHTML.replace(/&nbsp;/g, " ").replace(/<ph draggable="true" contenteditable="false">\\n<\/ph>/g, "\n");
+        if (target == "")
+        {
+            target = "<target/>";
+        }
+        else
+        {
+            target = "<target>" + target + "</target>";
+        }
+
+        let state = targetCell.parentNode.classList;
+        if (state.contains("draft"))
+        {
+            state = "draft";
+        }
+        else if (state.contains("translated"))
+        {
+            state = "translated";
+        }
+        else if (state.contains("reviewed"))
+        {
+            state = "reviewed";
+        }
+        else if (target != "<target/>")
+        {
+            state = "draft";
+        }
+        else
+        {
+            state = "blank";
+        }
+        segment = {
+            "tu-i": targetCell.parentNode.getAttribute("p-id"),
+            "s-i": targetCell.parentNode.getAttribute("id"),
+            "source": "<source>" + targetCell.parentNode.getElementsByClassName("source")[0].innerHTML.replace(/&nbsp;/g, " ").replace(/<ph draggable="true" contenteditable="false">\\n<\/ph>/g, "\n") + "</source>",
+            "target": target,
+            "state": state
+        }
+
+        segments.push(segment);
+    });
+
+    let xhttp = new XMLHttpRequest();
+    let queryURL = "http://127.0.0.1:8000/project/"
+                 + filesView.getAttribute("cur-p-id")
+                 + "/file/"
+                 + editorView.getAttribute("cur-f-id");
+
+     let segmentsForm = new FormData();
+     segmentsForm.append("task", "save_progress");
+     segmentsForm.append("editor_mode", editorMode);
+     segmentsForm.append("segments", JSON.stringify(segments));
+     segmentsForm.append("author_id", window.username);
+
+     xhttp.onreadystatechange = function() {
+         if (this.readyState == 4 && this.status == 200) {
+             console.log("Segments submitted succesfully!");
+             [...document.getElementById("editor-view").getElementsByClassName("target")].forEach((targetCell, i) => {
+                targetCell.parentNode.classList.remove("error");
+             });
+
+         } else if (this.readyState == 4 && this.status != 200) {
+             console.error("Segments not submitted succesfully!");
+             document.getElementById("btn-save-progress").disabled = false;
+         }
+     }
+
+     xhttp.open("POST", queryURL, true);
+     xhttp.send(segmentsForm);
+
+}
 function submitSegment(target_cell, segment_state) {
     paragraph_no = target_cell.parentNode.getAttribute("p-id");
     segment_no = target_cell.parentNode.getAttribute("id");
@@ -505,6 +586,10 @@ function targetKeydownHandler(e, target_cell) {
         if (e.key == "Insert") {
             target_cell.innerHTML = target_cell.parentNode.getElementsByClassName("source")[0].innerHTML;
         }
+        else if (e.key == 's' || e.key == 'S')
+        {
+            save();
+        }
     }
     else if (e.key == "Tab") {
         e.preventDefault();
@@ -518,6 +603,7 @@ function targetKeydownHandler(e, target_cell) {
     else {
         target_cell.parentNode.classList.remove("translated");
         target_cell.parentNode.classList.add("draft");
+        document.getElementById("btn-save-progress").disabled = false;
     }
 };
 if (document.readyState === "complete") {
