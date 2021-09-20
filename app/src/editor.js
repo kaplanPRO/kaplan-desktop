@@ -30,6 +30,9 @@ function fireOnReady() {
         document.getElementById("btn-tm-hits").classList.remove("active");
         document.getElementById("tm-hits").style.display = "none";
     }
+    document.getElementById("btn-save-progress").onclick = function() {
+        save();
+    }
 }
 
 window.selectedTU = null;
@@ -316,7 +319,108 @@ function resolveLQI(closeSpan) {
      xhttp.open("POST", queryURL, true);
      xhttp.send(lQIFormData);
 }
-function submitSegment(target_cell, segment_state) {
+function save() {
+    document.getElementById("btn-save-progress").disabled = true;
+
+
+    let segments = [];
+
+    [...document.getElementById("editor-view").getElementsByClassName("target")].forEach((targetCell, i) => {
+        let target = targetCell.innerHTML.replace(/&nbsp;/g, " ").replace(/<ph draggable="true" contenteditable="false">\\n<\/ph>/g, "\n");
+        if (target == "")
+        {
+            target = "<target/>";
+        }
+        else
+        {
+            target = "<target>" + target + "</target>";
+        }
+
+        let state = targetCell.parentNode.classList;
+        if (state.contains("draft"))
+        {
+            state = "draft";
+        }
+        else if (state.contains("translated"))
+        {
+            state = "translated";
+        }
+        else if (state.contains("reviewed"))
+        {
+            state = "reviewed";
+        }
+        else if (target != "<target/>")
+        {
+            state = "draft";
+        }
+        else
+        {
+            state = "blank";
+        }
+        segment = {
+            "tu-i": targetCell.parentNode.getAttribute("p-id"),
+            "s-i": targetCell.parentNode.getAttribute("id"),
+            "source": "<source>" + targetCell.parentNode.getElementsByClassName("source")[0].innerHTML.replace(/&nbsp;/g, " ").replace(/<ph draggable="true" contenteditable="false">\\n<\/ph>/g, "\n") + "</source>",
+            "target": target,
+            "state": state
+        }
+
+        segments.push(segment);
+    });
+
+    let xhttp = new XMLHttpRequest();
+    let queryURL = "http://127.0.0.1:8000/project/"
+                 + filesView.getAttribute("cur-p-id")
+                 + "/file/"
+                 + editorView.getAttribute("cur-f-id");
+
+     let segmentsForm = new FormData();
+     segmentsForm.append("task", "save_progress");
+     segmentsForm.append("editor_mode", editorMode);
+     segmentsForm.append("segments", JSON.stringify(segments));
+     segmentsForm.append("author_id", window.username);
+
+     xhttp.onreadystatechange = function() {
+         if (this.readyState == 4 && this.status == 200) {
+             console.log("Segments submitted succesfully!");
+             [...document.getElementById("editor-view").getElementsByClassName("target")].forEach((targetCell, i) => {
+                targetCell.parentNode.classList.remove("error");
+             });
+
+         } else if (this.readyState == 4 && this.status != 200) {
+             console.error("Segments not submitted succesfully!");
+             document.getElementById("btn-save-progress").disabled = false;
+         }
+     }
+
+     xhttp.open("POST", queryURL, true);
+     xhttp.send(segmentsForm);
+
+}
+function submitSegment(target_cell, segment_state, nextSegment=null) {
+    if (segment_state == null)
+    {
+        if (target_cell.parentNode.className == "translated" || target_cell.parentNode.className == "reviewed")
+        {
+            return;
+        }
+        else if (target_cell.parentNode.classList.contains("blank"))
+        {
+            segment_state = "blank";
+        }
+        else if (target_cell.parentNode.classList.contains("draft"))
+        {
+            segment_state = "draft";
+        }
+        else if (target_cell.parentNode.classList.contains("translated"))
+        {
+            segment_state = "translated";
+        }
+        else
+        {
+            segment_state = "draft";
+        }
+    }
     paragraph_no = target_cell.parentNode.getAttribute("p-id");
     segment_no = target_cell.parentNode.getAttribute("id");
     source_segment = "<source>" + target_cell.parentNode.getElementsByClassName("source")[0].innerHTML.replace(/&nbsp;/g, " ").replace(/<ph draggable="true" contenteditable="false">\\n<\/ph>/g, "\n") + "</source>";
@@ -329,9 +433,9 @@ function submitSegment(target_cell, segment_state) {
       target_segment = "<target>" + target_segment + "</target>";
     }
 
-    if (segment_state == "draft" && !target_cell.parentNode.classList.contains("draft")) {
-        return false;
-    }
+    //if (segment_state == "draft" && !target_cell.parentNode.classList.contains("draft")) {
+    //    return false;
+    //}
 
     let xhttp = new XMLHttpRequest();
     let queryURL = "http://127.0.0.1:8000/project/"
@@ -353,6 +457,10 @@ function submitSegment(target_cell, segment_state) {
         if (this.readyState == 4 && this.status == 200) {
             console.log("Segment #" + segment_no + " submitted succesfully!");
             target_cell.parentNode.className = segment_state;
+            if (nextSegment)
+            {
+                nextSegment.focus();
+            }
         } else if (this.readyState == 4 && this.status != 200) {
             console.error("Segment #" + segment_no + " not submitted succesfully!");
             target_cell.parentNode.className = 'error';
@@ -477,37 +585,53 @@ function segmentSelect(segmentRow) {
 function tagClickHandler(tag) {
     tag.parentNode.parentNode.getElementsByClassName("target")[0].
     innerHTML += tag.outerHTML;
-    tag.parentNode.parentNode.classList.remove("translated");
+    tag.parentNode.parentNode.classList.remove(("translated", "reviewed", "blank"));
     tag.parentNode.parentNode.classList.add("draft");
+    tag.parentNode.parentNode.getElementsByClassName("target")[0].focus();
+    document.execCommand('selectAll', false, null);
+    document.getSelection().collapseToEnd();
 }
 function targetKeydownHandler(e, target_cell) {
     if (e.key == "Enter") {
         e.preventDefault();
         if (e.ctrlKey) {
             target_cell.parentNode.classList.remove("draft");
-            submitSegment(target_cell, "translated");
             jumpToNextConfirmedSegment = !e.shiftKey;
             targetList = [...document.getElementsByClassName("target")].slice(1);
             currentId = targetList.findIndex(function(element){return element==target_cell})
+            nextSegment = null;
             for (i = currentId+1; i < targetList.length; i++) {
                 target = targetList[i];
                 if (!target.parentNode.classList.contains("translated") && jumpToNextConfirmedSegment) {
-                    target.focus();
+                    nextSegment = target;
                     break;
                 }
             }
+            if (editorMode == "review")
+            {
+                segmentState = "reviewed";
+            }
+            else
+            {
+                segmentState = "translated";
+            }
+            submitSegment(target_cell, segmentState, nextSegment);
         }
     }
     else if (e.ctrlKey) {
         if (e.key == "Insert") {
             target_cell.innerHTML = target_cell.parentNode.getElementsByClassName("source")[0].innerHTML;
         }
+        else if (e.key == 's' || e.key == 'S')
+        {
+            save();
+        }
     }
     else if (e.key == "Tab") {
         e.preventDefault();
         targetList = [...document.getElementsByClassName("target")].slice(1);
         currentId = targetList.findIndex(function(element){return element==target_cell})
-        if (currentId < targetList.length) {
+        if (currentId < targetList.length-1) {
             targetList[currentId+1].focus();
         }
     }
@@ -515,6 +639,7 @@ function targetKeydownHandler(e, target_cell) {
     else {
         target_cell.parentNode.classList.remove("translated");
         target_cell.parentNode.classList.add("draft");
+        document.getElementById("btn-save-progress").disabled = false;
     }
 };
 if (document.readyState === "complete") {

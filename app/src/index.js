@@ -395,7 +395,7 @@ function fireOnReady() {
                                 window.activeSegment = this.parentNode;
                                 lookupSegment(this.parentNode.children[1]);
                             });
-                            target_td.addEventListener("focusout", function () { submitSegment(this, "draft") });
+                            target_td.addEventListener("focusout", function () { submitSegment(this, null) });
                             segment_row.appendChild(target_td);
 
                             ["sc", "ec", "ph", "g", "x"].forEach(function(tagName) {

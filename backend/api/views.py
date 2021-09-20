@@ -308,6 +308,28 @@ def project_file(request, project_id, file_id):
 
             return JsonResponse({'status': 'success'})
 
+        elif request.POST.get('task') == 'save_progress':
+            editor_mode = request.POST['editor_mode']
+            segments = json.loads(request.POST['segments'])
+
+            for segment in segments:
+                segment_state = segment['state']
+                if editor_mode == 'review' and segment_state == 'translated':
+                    if float(bf.xliff_version) > 2.0:
+                        segment_state = 'reviewed'
+                    else:
+                        segment_state = 'signed-off'
+
+                bf.update_segment(segment['target'],
+                                  segment['tu-i'],
+                                  segment.get('s-i'),
+                                  segment_state,
+                                  segment.get('author_id', 'N/A'))
+
+            bf.save(project.get_target_dir())
+
+            return JsonResponse({'status': 'success'})
+
         else:
             editor_mode = request.POST['editor_mode']
             segment_state = request.POST['segment_state']

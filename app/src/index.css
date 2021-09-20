@@ -305,6 +305,9 @@ tr.error th {
 tr.translated th {
     background-color: teal;
 }
+tr.reviewed th {
+    background-color: forestgreen;
+}
 tr.selected th {
     background-color: orangered;
     color: white;
