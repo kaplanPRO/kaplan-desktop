@@ -329,9 +329,9 @@ function submitSegment(target_cell, segment_state) {
       target_segment = "<target>" + target_segment + "</target>";
     }
 
-    if (segment_state == "draft" && !target_cell.parentNode.classList.contains("draft")) {
-        return false;
-    }
+    //if (segment_state == "draft" && !target_cell.parentNode.classList.contains("draft")) {
+    //    return false;
+    //}
 
     let xhttp = new XMLHttpRequest();
     let queryURL = "http://127.0.0.1:8000/project/"
