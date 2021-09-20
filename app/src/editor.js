@@ -397,7 +397,30 @@ function save() {
      xhttp.send(segmentsForm);
 
 }
-function submitSegment(target_cell, segment_state) {
+function submitSegment(target_cell, segment_state, nextSegment=null) {
+    if (segment_state == null)
+    {
+        if (target_cell.parentNode.className == "translated" || target_cell.parentNode.className == "reviewed")
+        {
+            return;
+        }
+        else if (target_cell.parentNode.classList.contains("blank"))
+        {
+            segment_state = "blank";
+        }
+        else if (target_cell.parentNode.classList.contains("draft"))
+        {
+            segment_state = "draft";
+        }
+        else if (target_cell.parentNode.classList.contains("translated"))
+        {
+            segment_state = "translated";
+        }
+        else
+        {
+            segment_state = "draft";
+        }
+    }
     paragraph_no = target_cell.parentNode.getAttribute("p-id");
     segment_no = target_cell.parentNode.getAttribute("id");
     source_segment = "<source>" + target_cell.parentNode.getElementsByClassName("source")[0].innerHTML.replace(/&nbsp;/g, " ").replace(/<ph draggable="true" contenteditable="false">\\n<\/ph>/g, "\n") + "</source>";
@@ -434,6 +457,10 @@ function submitSegment(target_cell, segment_state) {
         if (this.readyState == 4 && this.status == 200) {
             console.log("Segment #" + segment_no + " submitted succesfully!");
             target_cell.parentNode.className = segment_state;
+            if (nextSegment)
+            {
+                nextSegment.focus();
+            }
         } else if (this.readyState == 4 && this.status != 200) {
             console.error("Segment #" + segment_no + " not submitted succesfully!");
             target_cell.parentNode.className = 'error';
@@ -558,7 +585,7 @@ function segmentSelect(segmentRow) {
 function tagClickHandler(tag) {
     tag.parentNode.parentNode.getElementsByClassName("target")[0].
     innerHTML += tag.outerHTML;
-    tag.parentNode.parentNode.classList.remove("translated");
+    tag.parentNode.parentNode.classList.remove(("translated", "reviewed", "blank"));
     tag.parentNode.parentNode.classList.add("draft");
     tag.parentNode.parentNode.getElementsByClassName("target")[0].focus();
     document.execCommand('selectAll', false, null);
@@ -569,17 +596,26 @@ function targetKeydownHandler(e, target_cell) {
         e.preventDefault();
         if (e.ctrlKey) {
             target_cell.parentNode.classList.remove("draft");
-            submitSegment(target_cell, "translated");
             jumpToNextConfirmedSegment = !e.shiftKey;
             targetList = [...document.getElementsByClassName("target")].slice(1);
             currentId = targetList.findIndex(function(element){return element==target_cell})
+            nextSegment = null;
             for (i = currentId+1; i < targetList.length; i++) {
                 target = targetList[i];
                 if (!target.parentNode.classList.contains("translated") && jumpToNextConfirmedSegment) {
-                    target.focus();
+                    nextSegment = target;
                     break;
                 }
             }
+            if (editorMode == "review")
+            {
+                segmentState = "reviewed";
+            }
+            else
+            {
+                segmentState = "translated";
+            }
+            submitSegment(target_cell, segmentState, nextSegment);
         }
     }
     else if (e.ctrlKey) {
