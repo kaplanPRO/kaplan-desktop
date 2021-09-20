@@ -479,6 +479,9 @@ function tagClickHandler(tag) {
     innerHTML += tag.outerHTML;
     tag.parentNode.parentNode.classList.remove("translated");
     tag.parentNode.parentNode.classList.add("draft");
+    tag.parentNode.parentNode.getElementsByClassName("target")[0].focus();
+    document.execCommand('selectAll', false, null);
+    document.getSelection().collapseToEnd();
 }
 function targetKeydownHandler(e, target_cell) {
     if (e.key == "Enter") {
