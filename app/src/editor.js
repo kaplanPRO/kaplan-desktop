@@ -507,7 +507,7 @@ function targetKeydownHandler(e, target_cell) {
         e.preventDefault();
         targetList = [...document.getElementsByClassName("target")].slice(1);
         currentId = targetList.findIndex(function(element){return element==target_cell})
-        if (currentId < targetList.length) {
+        if (currentId < targetList.length-1) {
             targetList[currentId+1].focus();
         }
     }
