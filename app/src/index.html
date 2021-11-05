@@ -38,6 +38,7 @@
             <button id="btn-create-return-project-package">Create Return Package</button>
             <button id="btn-update-from-package">Update From Package</button>
             <button id="btn-analyze-files">Analyze</button>
+            <button id="btn-project-settings">Settings</button>
         </header>
         <main id="files-view">
             <div>
@@ -66,6 +67,32 @@
                     </table>
                 </div>
             </div>
+        </main>
+        <header id="project-settings-header"></header>
+        <main id="project-settings-view">
+            <form id="form-project-settings">
+              <table>
+                <tr>
+                  <th>
+                    <label for="tm">Translation Memories</label>
+                  </th>
+                  <td>
+                    <select id="select-project-settings-tm" name="tm" multiple></select>
+                  </td>
+                </tr>
+                <tr>
+                  <th>
+                    <label for="td">Termbases</label>
+                  </th>
+                  <td>
+                    <select id="select-project-settings-tb" name="tb" multiple></select>
+                  </td>
+                </tr>
+                <tr>
+                  <th></th><td><button type="submit" name="button">Update</button></td>
+                </tr>
+              </table>
+            </form>
         </main>
         <header id="editor-header">
             <button id="btn-segment-merge" disabled>Merge</button>

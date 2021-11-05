@@ -530,9 +530,39 @@ def project_view(request, project_id):
                                                request.POST['files'].split(';'))
 
             return JsonResponse({'message': 'Target files updated.'})
+        elif request.POST.get('task') == 'set_language_resources':
+            kdbs = []
+            tms = request.POST.get('tm')
+            if tms:
+                for tm_i in tms.split(';'):
+                    if tm_i == '':
+                        continue
+                    kdb = KaplanDatabase.objects.get(id=int(tm_i))
+                    if (kdb.source_language == project.source_language
+                        and kdb.target_language == project.target_language):
+                        kdbs.append(kdb)
+
+            tbs = request.POST.get('tb')
+            if tbs:
+                for tb_i in tbs.split(';'):
+                    if tb_i == '':
+                        continue
+                    kdb = KaplanDatabase.objects.get(id=int(tb_i))
+                    if (kdb.source_language == project.source_language
+                        and kdb.target_language == project.target_language):
+                        kdbs.append(kdb)
+
+
+            project.language_resources.clear()
+            project.language_resources.add(*kdbs)
+            project.save()
+
+            return JsonResponse({'status': 'success'})
     else:
         if request.GET.get('task') == 'get_manifest':
             return JsonResponse(project.get_project_metadata())
+        elif request.GET.get('task') == 'get_relevant_kdbs':
+            return JsonResponse(project.get_relevant_kdbs())
         else:
             files_dict = {}
             reports_dict = {}

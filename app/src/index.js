@@ -594,6 +594,10 @@ function fireOnReady() {
     document.getElementById("btn-mysql-view").onclick = function() {
         toggleView("mysql-view", "block", "mysql-header", "btn-mysql-view");
     }
+    document.getElementById("btn-project-settings").onclick = function() {
+        toggleView("project-settings-view", "block", "project-settings-header", null);
+        getRelevantKDBs();
+    }
 
     function setFooter() {
         let footerString;
@@ -614,13 +618,92 @@ function fireOnReady() {
     function toggleView(viewId, viewDisplay, headerId, buttonId) {
         activeView.style.display = "none";
         activeHeader.style.display = "none";
-        activeButton.classList.remove("active");
+        if (activeButton)
+        {
+          activeButton.classList.remove("active");
+        }
         activeView = document.getElementById(viewId);
         activeView.style.display = viewDisplay;
         activeHeader = document.getElementById(headerId);
         activeHeader.style.display = "block";
         activeButton = document.getElementById(buttonId);
-        activeButton.classList.add("active");
+        if (buttonId)
+        {
+          activeButton.classList.add("active");
+        }
+    }
+
+    function getRelevantKDBs() {
+        let xhttp = new XMLHttpRequest();
+
+        let queryURL = "http://127.0.0.1:8000/project/"
+                     + filesView.getAttribute("cur-p-id")
+                     + "?task=get_relevant_kdbs";
+
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                relevantKDBs = JSON.parse(this.responseText);
+                let projectTMSelect = document.getElementById("select-project-settings-tm");
+                projectTMSelect.innerHTML = null;
+                let projectTBSelect = document.getElementById("select-project-settings-tb");
+                projectTBSelect.innerHTML = null;
+                [...Object.keys(relevantKDBs["tm"])].forEach((key, i) => {
+                    let option = new Option(relevantKDBs["tm"][key]["name"], key);
+                    projectTMSelect.appendChild(option);
+                    option.selected = relevantKDBs["tm"][key]["selected"];
+                });
+                [...Object.keys(relevantKDBs["tb"])].forEach((key, i) => {
+                    let option = new Option(relevantKDBs["tb"][key]["name"], key);
+                    projectTBSelect.appendChild(option);
+                    option.selected=relevantKDBs["tb"][key]["selected"];
+                });
+            }
+        }
+
+        xhttp.open("GET",  queryURL, true);
+        xhttp.send();
+    }
+
+    document.getElementById("form-project-settings").onsubmit = function(e) {
+        e.preventDefault();
+
+        let xhttp = new XMLHttpRequest();
+
+        let parameters = new FormData();
+        parameters.append("task", "set_language_resources");
+
+        let tMs = "";
+        [...this['tm'].selectedOptions].forEach((option, i) => {
+            if (tMs != "")
+            {
+              tMs += ";"
+            }
+            tMs += option.value
+        })
+        if (tMs != "")
+        {
+          parameters.append("tm", tMs);
+        }
+
+        let tBs = "";
+        [...this['tb'].selectedOptions].forEach((option, i) => {
+            if (tBs != "")
+            {
+              tBs += ";"
+            }
+            tBs += option.value
+        })
+        if (tBs != "")
+        {
+          parameters.append("tb", tBs);
+        }
+
+        let queryURL = "http://127.0.0.1:8000/project/"
+                     + filesView.getAttribute("cur-p-id")
+                     + "?task=set_language_resources";
+
+         xhttp.open("POST", queryURL, true);
+         xhttp.send(parameters);
     }
 
     document.getElementById("toggle-sidebar").onclick = function() {
@@ -821,7 +904,7 @@ function fireOnReady() {
         window.importProject();
     }
 
-    document.forms[0].onsubmit = function(e) {
+    document.getElementById("project-package").onsubmit = function(e) {
         e.preventDefault();
         let filesToPackage = [];
 

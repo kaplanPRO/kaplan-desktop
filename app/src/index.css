@@ -135,13 +135,13 @@ header#projects-header, header#settings {
 input {
     padding: 0.25em;
 }
-main#editor-view, main#files-view, main#mysql-view, main#projects-view, main#tb-view, main#tm-view, main#overlay {
+main#editor-view, main#files-view, main#mysql-view, main#projects-view, main#project-settings-view, main#tb-view, main#tm-view, main#overlay {
     background-color: #f5f5f5;
     grid-column: 2;
     grid-row: 2;
     overflow: hidden;
 }
-main#editor-view, main#files-view, main#mysql-view, main#tb-view, main#tm-view, main#overlay {
+main#editor-view, main#files-view, main#mysql-view, main#project-settings-view, main#tb-view, main#tm-view, main#overlay {
     display: none;
 }
 main#editor-view, main#tb-view, main#tm-view {
@@ -160,6 +160,9 @@ main#overlay {
     position: absolute;
     top: 0px;
     width: 100vw;
+}
+main#project-settings-view table {
+    width: auto;
 }
 main#projects-view {
     overflow-y: scroll;

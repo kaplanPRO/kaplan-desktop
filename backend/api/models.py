@@ -165,3 +165,19 @@ class Project(models.Model):
             return self.target_direction
         else:
             return LanguageProfile.get_language_direction(self.target_language)
+
+    def get_relevant_kdbs(self):
+        project_kdbs = self.language_resources.all()
+        relevant_kdbs_dict = {'tm':{}, 'tb':{}}
+        for relevant_kdb in KaplanDatabase.objects \
+                            .filter(source_language=self.source_language) \
+                            .filter(target_language=self.target_language):
+
+            relevant_kdb_dict = {
+                'name': relevant_kdb.title,
+                'selected': relevant_kdb in project_kdbs
+            }
+
+            relevant_kdbs_dict[relevant_kdb.role][relevant_kdb.id] = relevant_kdb_dict
+
+        return relevant_kdbs_dict
