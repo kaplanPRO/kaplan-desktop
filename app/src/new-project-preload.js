@@ -106,7 +106,7 @@ function fireOnReady() {
   document.getElementById("btn-choose-files").onclick = () => {
       const options = {
           filters: [
-              { name: 'Source Files', extensions: ['docx', 'kxliff', 'odp', 'ods', 'odt', 'po', 'sdlxliff', 'txt', 'xliff'] }
+              { name: 'Source Files', extensions: ['docx', 'json', 'kxliff', 'odp', 'ods', 'odt', 'po', 'sdlxliff', 'txt', 'xliff'] }
           ],
           properties: ['openFile', 'multiSelections']
       };
