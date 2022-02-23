@@ -37,21 +37,31 @@ This is by far the most efficient method and the steps are more or less the same
 
 5. Update pip and install the required Python libraries:
 
-  > pip install --upgrade pip
-  >
-  > pip install -r requirements.txt
-  >
-  > pip install pyinstaller
+  ```
+  pip install --upgrade pip
+  ```
+
+  ```
+  pip install -r requirements.txt
+  ```
+
+  ```
+  pip install pyinstaller
+  ```
 
 6. Have pyinstaller build the backend Django server:
 
-  > pyinstaller --name=backend --hidden-import backend.urls --distpath ../app --clean --noconfirm manage.py
+  ```
+  pyinstaller --name=backend --hidden-import backend.urls --distpath ../app --clean --noconfirm manage.py
+  ```
 
 7. Install yarn.
 
 8. Navigate to /app/ and have yarn install the Nodejs libraries:
 
-  > yarn install
+  ```
+  yarn install
+  ```
 
 9. (Windows-specific step) Remove the following line from package.json
 
@@ -59,11 +69,14 @@ This is by far the most efficient method and the steps are more or less the same
 
 10. Have yarn build the executable:
 
-  > yarn make
+  ```
+  yarn make
+  ```
 
 11. The resulting executable(s) will be under /app/out/
 
 ## Links:
 1. [Kaplan Homepage](https://kaplan.pro)
-1. [Docs](https://kaplan.pro/#/docs)
+1. [Docs](https://kaplan.pro/docs)
 1. [Kaplan Desktop@Microsoft Store](https://www.microsoft.com/en-us/p/kaplan-desktop/9nb1v5xzbmx2)
+1. [Kaplan Desktop@Sourceforce](https://sourceforge.net/projects/kaplan-desktop/)
