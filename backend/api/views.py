@@ -19,7 +19,6 @@ import mysql.connector
 from datetime import datetime
 import difflib
 import html
-from io import BytesIO
 import json
 import os
 import zipfile
