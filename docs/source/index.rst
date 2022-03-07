@@ -4,8 +4,8 @@
    contain the root `toctree` directive.
 
 
-Kaplan Cloud
-============
+Kaplan Desktop
+==============
 
 .. toctree::
   :maxdepth: 2
